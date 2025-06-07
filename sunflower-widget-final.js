@@ -352,7 +352,7 @@ async function createWidget() {
         let itemType = itemData.name || itemData.type;
         let remaining = getTimeRemaining(itemData);
         
-        // Find existing group within 5 minutes tolerance or create new one
+        // Find existing group within 5 minutes of tolerance or create new one
         let foundGroup = false;
         for (let [existingKey, existingGroup] of Object.entries(groupedItems)) {
             if (existingGroup.type === itemType) {
@@ -665,34 +665,42 @@ async function loadFromAPI() {
         // 4. ANIMALS
         // Check chickens in henHouse
         if (apiData.farm && apiData.farm.henHouse && apiData.farm.henHouse.animals) {
+            console.log("🐔 Found henHouse animals:", Object.keys(apiData.farm.henHouse.animals).length);
             for (let [animalId, animalInfo] of Object.entries(apiData.farm.henHouse.animals)) {
                 if (animalInfo.type === "Chicken" && animalInfo.awakeAt && animalInfo.asleepAt) {
-                    // Only process animals with state "ready" or "sick", not "idle"
-                    if (animalInfo.state === "ready" || animalInfo.state === "sick") {
-                        let animalName = `${animalInfo.type} ${animalId}`;
-                        allItems[animalName] = {
-                            awakeAt: animalInfo.awakeAt, asleepAt: animalInfo.asleepAt,
-                            type: animalInfo.type, name: animalInfo.type, 
-                            category: 'animal', amount: 0, state: animalInfo.state
-                        };
-                    }
+                    // Traiter TOUS les poulets avec awakeAt/asleepAt, peu importe leur état
+                    let animalName = `${animalInfo.type} ${animalId}`;
+                    allItems[animalName] = {
+                        awakeAt: animalInfo.awakeAt, 
+                        asleepAt: animalInfo.asleepAt,
+                        type: animalInfo.type, 
+                        name: animalInfo.type, 
+                        category: 'animal', 
+                        amount: 0, 
+                        state: animalInfo.state || "unknown"
+                    };
+                    console.log(`✅ Added chicken: ${animalName} (state: ${animalInfo.state}, awakeAt: ${animalInfo.awakeAt})`);
                 }
             }
         }
         
         // Check cows and sheep in barn
         if (apiData.farm && apiData.farm.barn && apiData.farm.barn.animals) {
+            console.log("🐄 Found barn animals:", Object.keys(apiData.farm.barn.animals).length);
             for (let [animalId, animalInfo] of Object.entries(apiData.farm.barn.animals)) {
                 if ((animalInfo.type === "Cow" || animalInfo.type === "Sheep") && animalInfo.awakeAt && animalInfo.asleepAt) {
-                    // Only process animals with state "ready" or "sick", not "idle"
-                    if (animalInfo.state === "ready" || animalInfo.state === "sick") {
-                        let animalName = `${animalInfo.type} ${animalId}`;
-                        allItems[animalName] = {
-                            awakeAt: animalInfo.awakeAt, asleepAt: animalInfo.asleepAt,
-                            type: animalInfo.type, name: animalInfo.type, 
-                            category: 'animal', amount: 0, state: animalInfo.state
-                        };
-                    }
+                    // Traiter TOUS les animaux avec awakeAt/asleepAt, peu importe leur état
+                    let animalName = `${animalInfo.type} ${animalId}`;
+                    allItems[animalName] = {
+                        awakeAt: animalInfo.awakeAt, 
+                        asleepAt: animalInfo.asleepAt,
+                        type: animalInfo.type, 
+                        name: animalInfo.type, 
+                        category: 'animal', 
+                        amount: 0, 
+                        state: animalInfo.state || "unknown"
+                    };
+                    console.log(`✅ Added ${animalInfo.type}: ${animalName} (state: ${animalInfo.state}, awakeAt: ${animalInfo.awakeAt})`);
                 }
             }
         }
