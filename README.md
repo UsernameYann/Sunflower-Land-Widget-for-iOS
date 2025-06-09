@@ -7,11 +7,9 @@
 
 Here are some screenshots of the widget on iOS:
 
-![Sunflower Land Widget - Screenshot 1](IMG_9819.jpg)
-
-![Sunflower Land Widget - Screenshot 2](IMG_9820.jpg)
-
-![Sunflower Land Widget - Screenshot 3](IMG_9836.jpg)
+<img src="IMG_9819.jpg" alt="Sunflower Land Widget - Screenshot 1" width="300" />
+<img src="IMG_9820.jpg" alt="Sunflower Land Widget - Screenshot 2" width="300" />
+<img src="IMG_9836.jpg" alt="Sunflower Land Widget - Screenshot 3" width="300" />
 
 ---
 
@@ -20,18 +18,6 @@ Here are some screenshots of the widget on iOS:
 ### What is it?
 
 A small iPhone widget that shows your **Sunflower Land** game elements directly on your home screen — **with notifications** to keep you updated about your farm!
-
----
-
-## 📸 Preview / Aperçu
-
-Here are some screenshots of the widget on iOS:
-
-![Sunflower Land Widget - Screenshot 1](IMG_9819.jpg)
-
-![Sunflower Land Widget - Screenshot 2](IMG_9820.jpg)
-
-![Sunflower Land Widget - Screenshot 3](IMG_9836.jpg)
 
 ---
 
