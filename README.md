@@ -31,7 +31,7 @@ A small iPhone widget that shows your **Sunflower Land** game elements directly 
 2. **Add the script**  
    - Open Scriptable  
    - Tap the **+** button (top right)  
-   - Copy the entire content of `sunflower-widget-final.js`  
+   - Copy the entire content of `SFL-widget.js` or  `SFL-widget+Notif.js`
    - Paste it into the new script  
    - Name the script (e.g., "Sunflower Land")  
 
@@ -120,7 +120,7 @@ Un petit widget iPhone qui affiche tous les éléments de votre ferme **Sunflowe
 2. **Ajouter le script**  
    - Ouvrez Scriptable  
    - Appuyez sur le bouton **+** (en haut à droite)  
-   - Copiez tout le contenu du fichier `sunflower-widget-final.js`  
+   - Copiez tout le contenu du fichier `SFL-widget.js` ou  `SFL-widget+Notif.js`  
    - Collez-le dans le nouveau script  
    - Donnez un nom à votre script (ex : "Sunflower Land")  
 
