@@ -289,8 +289,8 @@ const SECONDS_PER_HOUR = 3600;
 const SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
 const GROUPING_TOLERANCE_SECONDS = SECONDS_PER_MINUTE;
 
-const NOTIFICATION_CHECK_INTERVAL_MINUTES = 15;
-const NOTIFICATION_LOOKAHEAD_HOURS = 1;
+const NOTIFICATION_CHECK_INTERVAL_SECONDS = 15;
+const NOTIFICATION_LOOKAHEAD_HOURS = 10;
 const GROUPING_TOLERANCE_MINUTES = 1;
 
 const RESOURCES_KEY = 'sunflower_resources';
@@ -1113,8 +1113,8 @@ function parseComposters(apiData, allItems) {
 }
 
 async function loadFromAPI() {
-    const API_RATE_LIMIT_SECONDS = 60;
-    const CACHE_EXPIRATION_MINUTES = 50;
+    const API_RATE_LIMIT_SECONDS = 15;
+    const CACHE_EXPIRATION_MINUTES = 600;
     
     try {
         let cacheTimestamp = safeKeychain('get', CACHE_TIMESTAMP_KEY);
