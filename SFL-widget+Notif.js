@@ -480,26 +480,20 @@ function calculateAnimalTimes(itemData, currentTime) {
     
     let loveTimeRemaining = null;
     
-    // Animal must be sleeping to be loved (currentTime < awakeAt)
     if (currentTime < itemData.awakeAt) {
         const sleepCycleDuration = itemData.awakeAt - itemData.asleepAt;
         const lovePeriodDuration = sleepCycleDuration / 3;
         
-        // First love period: animal must have slept for at least 1/3 of cycle
         const firstLoveAvailableAt = itemData.asleepAt + lovePeriodDuration;
         
         if (itemData.lovedAt) {
-            // If already loved, next love is available after cooldown period
             const nextLoveAvailableAt = itemData.lovedAt + lovePeriodDuration;
-            // Take the later of the two times
             const actualLoveAvailableAt = Math.max(firstLoveAvailableAt, nextLoveAvailableAt);
             loveTimeRemaining = (actualLoveAvailableAt - currentTime) / SECOND_TO_MS;
         } else {
-            // Never loved before, available after 1/3 sleep cycle
             loveTimeRemaining = (firstLoveAvailableAt - currentTime) / SECOND_TO_MS;
         }
         
-        // If love time is negative, it means love is available now
         if (loveTimeRemaining < 0) {
             loveTimeRemaining = 0;
         }
@@ -533,6 +527,10 @@ function addToAnimalGroup(groupedItems, itemName, itemData, remainingTime, isLov
             existingGroup.totalAmount += itemData.amount || 0;
             existingGroup.ids.push(idName);
             
+            if (!isLoveTime && itemData.hasReward && !existingGroup.hasReward) {
+                existingGroup.hasReward = true;
+            }
+            
             if (remainingTime < existingGroup.remainingTime) {
                 existingGroup.remainingTime = remainingTime;
             }
@@ -549,7 +547,8 @@ function addToAnimalGroup(groupedItems, itemName, itemData, remainingTime, isLov
         remainingTime: remainingTime,
         ids: [idName],
         isReady: remainingTime <= 0,
-        isLoveTime: isLoveTime
+        isLoveTime: isLoveTime,
+        hasReward: !isLoveTime && itemData.hasReward ? true : false
     };
     return false;
 }
@@ -701,6 +700,14 @@ function groupItemsByTime(allItems) {
                     existingGroup.totalAmount += itemData.amount || 0;
                     existingGroup.ids.push(itemName);
                     
+                    if (itemData.hasReward && !existingGroup.hasReward) {
+                        existingGroup.hasReward = true;
+                    }
+                    
+                    if (itemData.category === 'beehive' && itemData.hasSwarm && !existingGroup.hasSwarm) {
+                        existingGroup.hasSwarm = true;
+                    }
+                    
                     if (isLoveTime) {
                         existingGroup.isLoveTime = true;
                     }
@@ -723,8 +730,15 @@ function groupItemsByTime(allItems) {
         if (!foundGroup) {
             let key = `${itemType}_${Object.keys(groupedItems).length}`;
             groupedItems[key] = {
-                category: category, type: itemType, count: 1, totalAmount: itemData.amount || 0,
-                remainingTime: remaining, ids: [itemName], isReady: remaining <= 0
+                category: category, 
+                type: itemType, 
+                count: 1, 
+                totalAmount: itemData.amount || 0,
+                remainingTime: remaining, 
+                ids: [itemName], 
+                isReady: remaining <= 0, 
+                hasReward: itemData.hasReward ? true : false,
+                hasSwarm: itemData.hasSwarm || false
             };
             
             if (isLoveTime) {
@@ -768,9 +782,19 @@ function renderWidgetRows(widget, displayedGroups) {
     for (let group of displayedGroups) {
         const emoji = getItemEmoji(group.type, group.category);
         let itemName = group.type;
+        
         if (group.isLoveTime) {
             itemName = `${itemName} ❤️`;
         }
+        
+        if (group.hasReward) {
+            itemName = `${itemName} 🎁`;
+        }
+        
+        if (group.category === 'beehive' && group.hasSwarm) {
+            itemName = `${itemName} 🐝`;
+        }
+        
         const quantity = `x${group.count}`;
         const totalText = group.totalAmount > 0 ? ` (${group.totalAmount.toFixed(1)})` : "";
         
@@ -885,7 +909,6 @@ async function createWidget() {
 // ====== SUNFLOWER LAND API ======
 
 function parseResources(apiData, allItems) {
-
     const resourceTypes = {
         "trees": { name: "Tree", key: "wood", timestamp: "choppedAt" },
         "stones": { name: "Stone", key: "stone", timestamp: "minedAt" },
@@ -906,8 +929,12 @@ function parseResources(apiData, allItems) {
                 
                 let resourceName = `${config.name} ${resourceId}`;
                 allItems[resourceName] = {
-                    plantedAt: resource[config.timestamp], type: config.name,
-                    name: config.name, category: 'resource', amount: resource.amount || 0
+                    plantedAt: resource[config.timestamp], 
+                    type: config.name,
+                    name: config.name, 
+                    category: 'resource', 
+                    amount: resource.amount || 0,
+                    hasReward: resource.reward ? true : false
                 };
             }
         }
@@ -915,14 +942,17 @@ function parseResources(apiData, allItems) {
 }
 
 function parseCrops(apiData, allItems) {
-
     if (apiData.farm && apiData.farm.crops) {
         for (let [cropId, cropInfo] of Object.entries(apiData.farm.crops)) {
             if (cropInfo.crop && cropInfo.crop.plantedAt && cropInfo.crop.name) {
                 let cropName = `${cropInfo.crop.name} ${cropId}`;
                 allItems[cropName] = {
-                    plantedAt: cropInfo.crop.plantedAt, type: cropInfo.crop.name,
-                    name: cropInfo.crop.name, category: 'crop', amount: parseFloat(cropInfo.crop.amount) || 0
+                    plantedAt: cropInfo.crop.plantedAt, 
+                    type: cropInfo.crop.name,
+                    name: cropInfo.crop.name, 
+                    category: 'crop', 
+                    amount: parseFloat(cropInfo.crop.amount) || 0,
+                    hasReward: cropInfo.crop.reward ? true : false
                 };
             }
         }
@@ -930,7 +960,6 @@ function parseCrops(apiData, allItems) {
 }
 
 function parseFruits(apiData, allItems) {
-
     if (apiData.farm && apiData.farm.fruitPatches) {
         for (let [patchId, patchInfo] of Object.entries(apiData.farm.fruitPatches)) {
             if (patchInfo.fruit && patchInfo.fruit.name) {
@@ -945,7 +974,8 @@ function parseFruits(apiData, allItems) {
                     allItems[fruitName] = {
                         plantedAt: timestampToUse, type: fruit.name,
                         name: fruit.name, category: 'fruit', 
-                        amount: parseFloat(fruit.amount) || 0
+                        amount: parseFloat(fruit.amount) || 0,
+                        hasReward: fruit.reward ? true : false
                     };
                 }
             }
@@ -966,7 +996,8 @@ function parseAnimals(apiData, allItems) {
                     name: animalInfo.type, 
                     category: 'animal', 
                     amount: 0, 
-                    state: animalInfo.state || "unknown"
+                    state: animalInfo.state || "unknown",
+                    hasReward: animalInfo.reward ? true : false
                 };
             }
         }
@@ -984,7 +1015,8 @@ function parseAnimals(apiData, allItems) {
                     name: animalInfo.type, 
                     category: 'animal', 
                     amount: 0, 
-                    state: animalInfo.state || "unknown"
+                    state: animalInfo.state || "unknown",
+                    hasReward: animalInfo.reward ? true : false
                 };
             }
         }
@@ -992,14 +1024,17 @@ function parseAnimals(apiData, allItems) {
 }
 
 function parseFlowers(apiData, allItems) {
-
     if (apiData.farm && apiData.farm.flowers && apiData.farm.flowers.flowerBeds) {
         for (let [bedId, bedInfo] of Object.entries(apiData.farm.flowers.flowerBeds)) {
             if (bedInfo.flower && bedInfo.flower.plantedAt && bedInfo.flower.name) {
                 let flowerName = `${bedInfo.flower.name} ${bedId}`;
                 allItems[flowerName] = {
-                    plantedAt: bedInfo.flower.plantedAt, type: bedInfo.flower.name,
-                    name: bedInfo.flower.name, category: 'flower', amount: parseFloat(bedInfo.flower.amount) || 0
+                    plantedAt: bedInfo.flower.plantedAt, 
+                    type: bedInfo.flower.name,
+                    name: bedInfo.flower.name, 
+                    category: 'flower', 
+                    amount: parseFloat(bedInfo.flower.amount) || 0,
+                    hasReward: bedInfo.flower.reward ? true : false
                 };
             }
         }
@@ -1016,8 +1051,12 @@ function parseBeehives(apiData, allItems) {
                 
                 let hiveName = `Beehive ${hiveId}`;
                 allItems[hiveName] = {
-                    attachedUntil: latestFlower.attachedUntil, type: 'Beehive',
-                    name: 'Beehive', category: 'beehive', amount: 0
+                    attachedUntil: latestFlower.attachedUntil, 
+                    type: 'Beehive',
+                    name: 'Beehive', 
+                    category: 'beehive', 
+                    amount: 0,
+                    hasSwarm: hiveInfo.swarm || false
                 };
             }
         }
@@ -1271,7 +1310,9 @@ function getUpcomingItems(allItems) {
                 readyTime: readyTime,
                 remainingSeconds: remainingSeconds,
                 totalAmount: itemData.amount || 0,
-                emoji: getItemEmoji(itemData.name || itemData.type, itemData.category)
+                emoji: getItemEmoji(itemData.name || itemData.type, itemData.category),
+                hasReward: itemData.hasReward || false,
+                hasSwarm: itemData.hasSwarm || false
             });
         }
     }
@@ -1291,7 +1332,8 @@ function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFr
             remainingSeconds: wakeRemaining,
             totalAmount: itemData.amount || 0,
             emoji: getItemEmoji(itemData.name || itemData.type, itemData.category),
-            isLoveTime: false
+            isLoveTime: false,
+            hasReward: itemData.hasReward || false
         });
     }
     
@@ -1306,7 +1348,8 @@ function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFr
                 remainingSeconds: timeResult.loveTime,
                 totalAmount: itemData.amount || 0,
                 emoji: "❤️",
-                isLoveTime: true
+                isLoveTime: true,
+                hasReward: false 
             });
         }
     }
@@ -1354,11 +1397,19 @@ async function createGroupNotifications(groups, existingNotificationIds) {
                 if (uniqueItemsMap.has(item.name)) {
                     let existing = uniqueItemsMap.get(item.name);
                     existing.totalAmount += item.totalAmount || 0;
+                    if (item.hasReward && !existing.hasReward) {
+                        existing.hasReward = true;
+                    }
+                    if (item.hasSwarm && !existing.hasSwarm) {
+                        existing.hasSwarm = true;
+                    }
                 } else {
                     uniqueItemsMap.set(item.name, {
                         name: item.name,
                         emoji: item.emoji,
-                        totalAmount: item.totalAmount || 0
+                        totalAmount: item.totalAmount || 0,
+                        hasReward: item.hasReward || false,
+                        hasSwarm: item.hasSwarm || false
                     });
                 }
             }
@@ -1391,13 +1442,23 @@ function createNotificationBody(uniqueItemsMap, group) {
         let count = group.items.length;
         let countText = count > 1 ? ` x${count}` : "";
         let totalText = item.totalAmount > 0 ? ` (${item.totalAmount.toFixed(1)})` : "";
-        return `${item.name} is ready ${item.emoji}${countText}${totalText}`;
+        
+        let specialIndicators = "";
+        if (item.hasReward) specialIndicators += " 🎁";
+        if (item.hasSwarm) specialIndicators += " 🐝";
+        
+        return `${item.name} is ready ${item.emoji}${countText}${totalText}${specialIndicators}`;
     } else {
         let itemSummaries = Array.from(uniqueItemsMap.entries()).map(([name, item]) => {
             let itemCount = group.items.filter(i => i.name === name).length;
             let countText = itemCount > 1 ? ` x${itemCount}` : "";
             let totalText = item.totalAmount > 0 ? ` (${item.totalAmount.toFixed(1)})` : "";
-            return `${name}${countText}${totalText} ${item.emoji}`;
+            
+            let specialIndicators = "";
+            if (item.hasReward) specialIndicators += " 🎁";
+            if (item.hasSwarm) specialIndicators += " 🐝";
+            
+            return `${name}${countText}${totalText} ${item.emoji}${specialIndicators}`;
         });
         return itemSummaries.join(', ');
     }

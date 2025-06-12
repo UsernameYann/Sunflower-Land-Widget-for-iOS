@@ -473,26 +473,20 @@ function calculateAnimalTimes(itemData, currentTime) {
     
     let loveTimeRemaining = null;
     
-    // Animal must be sleeping to be loved (currentTime < awakeAt)
     if (currentTime < itemData.awakeAt) {
         const sleepCycleDuration = itemData.awakeAt - itemData.asleepAt;
         const lovePeriodDuration = sleepCycleDuration / 3;
         
-        // First love period: animal must have slept for at least 1/3 of cycle
         const firstLoveAvailableAt = itemData.asleepAt + lovePeriodDuration;
         
         if (itemData.lovedAt) {
-            // If already loved, next love is available after cooldown period
             const nextLoveAvailableAt = itemData.lovedAt + lovePeriodDuration;
-            // Take the later of the two times
             const actualLoveAvailableAt = Math.max(firstLoveAvailableAt, nextLoveAvailableAt);
             loveTimeRemaining = (actualLoveAvailableAt - currentTime) / SECOND_TO_MS;
         } else {
-            // Never loved before, available after 1/3 sleep cycle
             loveTimeRemaining = (firstLoveAvailableAt - currentTime) / SECOND_TO_MS;
         }
         
-        // If love time is negative, it means love is available now
         if (loveTimeRemaining < 0) {
             loveTimeRemaining = 0;
         }
@@ -526,6 +520,10 @@ function addToAnimalGroup(groupedItems, itemName, itemData, remainingTime, isLov
             existingGroup.totalAmount += itemData.amount || 0;
             existingGroup.ids.push(idName);
             
+            if (!isLoveTime && itemData.hasReward && !existingGroup.hasReward) {
+                existingGroup.hasReward = true;
+            }
+            
             if (remainingTime < existingGroup.remainingTime) {
                 existingGroup.remainingTime = remainingTime;
             }
@@ -542,7 +540,8 @@ function addToAnimalGroup(groupedItems, itemName, itemData, remainingTime, isLov
         remainingTime: remainingTime,
         ids: [idName],
         isReady: remainingTime <= 0,
-        isLoveTime: isLoveTime
+        isLoveTime: isLoveTime,
+        hasReward: !isLoveTime && itemData.hasReward ? true : false
     };
     return false;
 }
@@ -554,7 +553,6 @@ function getTimeRemaining(itemData) {
         return calculateAnimalTimes(itemData, currentTime);
     }
     
-    // Gestion des pouvoirs
     if (itemData.category === 'power' && itemData.nextAvailableAt) {
         return (itemData.nextAvailableAt - currentTime) / 1000;
     }
@@ -695,6 +693,14 @@ function groupItemsByTime(allItems) {
                     existingGroup.totalAmount += itemData.amount || 0;
                     existingGroup.ids.push(itemName);
                     
+                    if (itemData.hasReward && !existingGroup.hasReward) {
+                        existingGroup.hasReward = true;
+                    }
+                    
+                    if (itemData.category === 'beehive' && itemData.hasSwarm && !existingGroup.hasSwarm) {
+                        existingGroup.hasSwarm = true;
+                    }
+                    
                     if (isLoveTime) {
                         existingGroup.isLoveTime = true;
                     }
@@ -717,8 +723,15 @@ function groupItemsByTime(allItems) {
         if (!foundGroup) {
             let key = `${itemType}_${Object.keys(groupedItems).length}`;
             groupedItems[key] = {
-                category: category, type: itemType, count: 1, totalAmount: itemData.amount || 0,
-                remainingTime: remaining, ids: [itemName], isReady: remaining <= 0
+                category: category, 
+                type: itemType, 
+                count: 1, 
+                totalAmount: itemData.amount || 0,
+                remainingTime: remaining, 
+                ids: [itemName], 
+                isReady: remaining <= 0, 
+                hasReward: itemData.hasReward ? true : false,
+                hasSwarm: itemData.hasSwarm || false
             };
             
             if (isLoveTime) {
@@ -762,9 +775,19 @@ function renderWidgetRows(widget, displayedGroups) {
     for (let group of displayedGroups) {
         const emoji = getItemEmoji(group.type, group.category);
         let itemName = group.type;
+        
         if (group.isLoveTime) {
             itemName = `${itemName} ❤️`;
         }
+        
+        if (group.hasReward) {
+            itemName = `${itemName} 🎁`;
+        }
+        
+        if (group.category === 'beehive' && group.hasSwarm) {
+            itemName = `${itemName} 🐝`;
+        }
+        
         const quantity = `x${group.count}`;
         const totalText = group.totalAmount > 0 ? ` (${group.totalAmount.toFixed(1)})` : "";
         
@@ -899,8 +922,12 @@ function parseResources(apiData, allItems) {
                 
                 let resourceName = `${config.name} ${resourceId}`;
                 allItems[resourceName] = {
-                    plantedAt: resource[config.timestamp], type: config.name,
-                    name: config.name, category: 'resource', amount: resource.amount || 0
+                    plantedAt: resource[config.timestamp], 
+                    type: config.name,
+                    name: config.name, 
+                    category: 'resource', 
+                    amount: resource.amount || 0,
+                    hasReward: resource.reward ? true : false
                 };
             }
         }
@@ -913,8 +940,12 @@ function parseCrops(apiData, allItems) {
             if (cropInfo.crop && cropInfo.crop.plantedAt && cropInfo.crop.name) {
                 let cropName = `${cropInfo.crop.name} ${cropId}`;
                 allItems[cropName] = {
-                    plantedAt: cropInfo.crop.plantedAt, type: cropInfo.crop.name,
-                    name: cropInfo.crop.name, category: 'crop', amount: parseFloat(cropInfo.crop.amount) || 0
+                    plantedAt: cropInfo.crop.plantedAt, 
+                    type: cropInfo.crop.name,
+                    name: cropInfo.crop.name, 
+                    category: 'crop', 
+                    amount: parseFloat(cropInfo.crop.amount) || 0,
+                    hasReward: cropInfo.crop.reward ? true : false
                 };
             }
         }
@@ -936,7 +967,8 @@ function parseFruits(apiData, allItems) {
                     allItems[fruitName] = {
                         plantedAt: timestampToUse, type: fruit.name,
                         name: fruit.name, category: 'fruit', 
-                        amount: parseFloat(fruit.amount) || 0
+                        amount: parseFloat(fruit.amount) || 0,
+                        hasReward: fruit.reward ? true : false  
                     };
                 }
             }
@@ -957,7 +989,8 @@ function parseAnimals(apiData, allItems) {
                     name: animalInfo.type, 
                     category: 'animal', 
                     amount: 0, 
-                    state: animalInfo.state || "unknown"
+                    state: animalInfo.state || "unknown",
+                    hasReward: animalInfo.reward ? true : false
                 };
             }
         }
@@ -975,7 +1008,8 @@ function parseAnimals(apiData, allItems) {
                     name: animalInfo.type, 
                     category: 'animal', 
                     amount: 0, 
-                    state: animalInfo.state || "unknown"
+                    state: animalInfo.state || "unknown",
+                    hasReward: animalInfo.reward ? true : false
                 };
             }
         }
@@ -988,8 +1022,12 @@ function parseFlowers(apiData, allItems) {
             if (bedInfo.flower && bedInfo.flower.plantedAt && bedInfo.flower.name) {
                 let flowerName = `${bedInfo.flower.name} ${bedId}`;
                 allItems[flowerName] = {
-                    plantedAt: bedInfo.flower.plantedAt, type: bedInfo.flower.name,
-                    name: bedInfo.flower.name, category: 'flower', amount: parseFloat(bedInfo.flower.amount) || 0
+                    plantedAt: bedInfo.flower.plantedAt, 
+                    type: bedInfo.flower.name,
+                    name: bedInfo.flower.name, 
+                    category: 'flower', 
+                    amount: parseFloat(bedInfo.flower.amount) || 0,
+                    hasReward: bedInfo.flower.reward ? true : false
                 };
             }
         }
@@ -1006,8 +1044,12 @@ function parseBeehives(apiData, allItems) {
                 
                 let hiveName = `Beehive ${hiveId}`;
                 allItems[hiveName] = {
-                    attachedUntil: latestFlower.attachedUntil, type: 'Beehive',
-                    name: 'Beehive', category: 'beehive', amount: 0
+                    attachedUntil: latestFlower.attachedUntil, 
+                    type: 'Beehive',
+                    name: 'Beehive', 
+                    category: 'beehive', 
+                    amount: 0,
+                    hasSwarm: hiveInfo.swarm || false
                 };
             }
         }
@@ -1119,7 +1161,7 @@ function parsePowers(apiData, allItems) {
         for (let [powerName, lastUsedAt] of Object.entries(powers)) {
             if (POWER_COOLDOWN_TIMES[powerName]) {
                 const cooldownSeconds = POWER_COOLDOWN_TIMES[powerName];
-                const nextAvailableAt = lastUsedAt + (cooldownSeconds * 1000); // Convertir en millisecondes
+                const nextAvailableAt = lastUsedAt + (cooldownSeconds * 1000); 
                 
                 allItems[powerName] = {
                     usedAt: lastUsedAt,
@@ -1160,6 +1202,7 @@ async function loadFromAPI() {
         
         if (!cacheExpired && lastApiCallTime) {
             let timeSinceLastCall = (currentTime - parseInt(lastApiCallTime)) / 1000;
+            
             
             if (timeSinceLastCall < API_RATE_LIMIT_SECONDS) {
                 console.log(`⏱️ Rate limit: ${Math.round(API_RATE_LIMIT_SECONDS - timeSinceLastCall)}s remaining. Using cached data.`);
@@ -1231,6 +1274,26 @@ async function loadFromAPI() {
     }
 }
 
+// ====== MAIN SCRIPT ======
+
+async function main() {
+    console.log("🌻 Starting Sunflower Land widget...");
+    
+    await loadFromAPI();
+    
+    let widget = await createWidget();
+    
+    if (config.runsInWidget) {
+        Script.setWidget(widget);
+    } else {
+        widget.presentMedium();
+    }
+    
+    console.log("✅ Widget created successfully!");
+}
+
+await main();
+Script.complete();
 // ====== MAIN SCRIPT ======
 
 async function main() {
