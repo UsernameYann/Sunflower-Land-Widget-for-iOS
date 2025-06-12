@@ -279,6 +279,16 @@ const COMPOSTER_PRODUCTION_TIME = {
     "Special Compost": 48 * 60 * 60,
 };
 
+const POWER_COOLDOWN_TIMES = {
+    "Instant Growth": 72 * 60 * 60, 
+    "Tree Blitz": 24 * 60 * 60,         
+    "Barnyard Rouse": 120 * 60 * 60,    
+    "Greenhouse Guru": 96 * 60 * 60,  
+    "Instant Gratification": 96 * 60 * 60,
+    "Petal Blessed": 96 * 60 * 60,   
+    "Grease Lightning": 96 * 60 * 60, 
+};
+
 // ====== APP CONSTANTS ======
 
 const SECOND_TO_MS = 1000;
@@ -544,6 +554,11 @@ function getTimeRemaining(itemData) {
         return calculateAnimalTimes(itemData, currentTime);
     }
     
+    // Gestion des pouvoirs
+    if (itemData.category === 'power' && itemData.nextAvailableAt) {
+        return (itemData.nextAvailableAt - currentTime) / 1000;
+    }
+    
     if (itemData.category === 'beehive' && itemData.attachedUntil) {
         return (itemData.attachedUntil - currentTime) / 1000;
     }
@@ -625,6 +640,7 @@ function getItemEmoji(itemType, category) {
     if (category === 'crafting') return "🔨";
     if (category === 'cooking') return "🍳";
     if (category === 'composter') return "♻️";
+    if (category === 'power') return "⚡"; 
     
     return emojis[itemType] || "🌱";
 }
@@ -1096,6 +1112,30 @@ function parseComposters(apiData, allItems) {
     }
 }
 
+function parsePowers(apiData, allItems) {
+    if (apiData.farm && apiData.farm.bumpkin && apiData.farm.bumpkin.previousPowerUseAt) {
+        const powers = apiData.farm.bumpkin.previousPowerUseAt;
+        
+        for (let [powerName, lastUsedAt] of Object.entries(powers)) {
+            if (POWER_COOLDOWN_TIMES[powerName]) {
+                const cooldownSeconds = POWER_COOLDOWN_TIMES[powerName];
+                const nextAvailableAt = lastUsedAt + (cooldownSeconds * 1000); // Convertir en millisecondes
+                
+                allItems[powerName] = {
+                    usedAt: lastUsedAt,
+                    nextAvailableAt: nextAvailableAt,
+                    type: powerName,
+                    name: powerName,
+                    category: 'power',
+                    amount: 1
+                };
+                
+                console.log(`⚡ Found power: ${powerName}, next available in ${Math.round((nextAvailableAt - Date.now()) / 1000 / 3600)}h`);
+            }
+        }
+    }
+}
+
 async function loadFromAPI() {
     const API_RATE_LIMIT_SECONDS = 15;
     const CACHE_EXPIRATION_MINUTES = 600;
@@ -1159,6 +1199,7 @@ async function loadFromAPI() {
         parseCrafting(apiData, allItems);
         parseCooking(apiData, allItems);
         parseComposters(apiData, allItems);
+        parsePowers(apiData, allItems);
         
         saveResources(allItems);
         console.log(`✅ ${Object.keys(allItems).length} items loaded from API`);
