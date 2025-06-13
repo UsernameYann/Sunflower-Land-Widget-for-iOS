@@ -308,7 +308,7 @@ const LAST_API_CALL_KEY = 'sunflower_last_api_call';
 const WIDGET_LIMITS = {
     small: 9,
     medium: 9,
-    large: 19
+    large: 22
 };
 
 const FONT_SIZES = {
@@ -1315,26 +1315,6 @@ async function loadFromAPI() {
     }
 }
 
-// ====== MAIN SCRIPT ======
-
-async function main() {
-    console.log("🌻 Starting Sunflower Land widget...");
-    
-    await loadFromAPI();
-    
-    let widget = await createWidget();
-    
-    if (config.runsInWidget) {
-        Script.setWidget(widget);
-    } else {
-        widget.presentMedium();
-    }
-    
-    console.log("✅ Widget created successfully!");
-}
-
-await main();
-Script.complete();
 // ====== MAIN SCRIPT ======
 
 async function main() {
