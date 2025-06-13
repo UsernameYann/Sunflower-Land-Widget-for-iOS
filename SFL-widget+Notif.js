@@ -309,27 +309,27 @@ const CACHE_TIMESTAMP_KEY = 'sunflower_cache_timestamp';
 const LAST_API_CALL_KEY = 'sunflower_last_api_call';
 
 const WIDGET_LIMITS = {
-    small: 8,
-    medium: 8,
-    large: 19
+    small: 9,
+    medium: 9,
+    large: 22
 };
 
 const FONT_SIZES = {
-    main: 11,
-    small: 8,
+    small: 10,
     medium: 10,
-    large: 10
+    large: 11
 };
 
 const COLUMN_WIDTHS = {
     item: 130,
-    quantity: 80
+    quantity: 80,
+    small: 88     
 };
 
 const ROW_SPACING = {
     small: 1,
-    medium: 2,
-    large: 3
+    medium: 1,
+    large: 1
 };
 
 // ====== UTILITY FUNCTIONS ======
@@ -763,8 +763,49 @@ function sortAndFilterGroups(groupedItems) {
     
     let filteredGroups = sortedGroups;
     
-    if (config.widgetFamily === 'small' || config.widgetFamily === 'medium') {
-        filteredGroups = sortedGroups.filter(group => {
+    filteredGroups = sortedGroups.filter(group => {
+        if (group.remainingTime <= 0) {
+            let readyForSeconds = Math.abs(group.remainingTime);
+            let readyForDays = readyForSeconds / SECONDS_PER_DAY;
+            return readyForDays < 7; 
+        }
+        return true;
+    });
+    
+    if (config.widgetFamily === 'large') {
+        const overdueItems = filteredGroups.filter(group => {
+            if (group.remainingTime <= 0) {
+                let readyForSeconds = Math.abs(group.remainingTime);
+                let readyForDays = readyForSeconds / SECONDS_PER_DAY;
+                return readyForDays >= 1; 
+            }
+            return false;
+        });
+        
+        const nonOverdueItems = filteredGroups.filter(group => {
+            if (group.remainingTime <= 0) {
+                let readyForSeconds = Math.abs(group.remainingTime);
+                let readyForDays = readyForSeconds / SECONDS_PER_DAY;
+                return readyForDays < 1; 
+            }
+            return group.remainingTime > 0; 
+        });
+        
+        const sortedOverdueItems = overdueItems.sort((a, b) => {
+            return Math.abs(a.remainingTime) - Math.abs(b.remainingTime);
+        });
+        
+        const limitedOverdueItems = sortedOverdueItems.slice(0, 2);
+        
+        filteredGroups = [...limitedOverdueItems, ...nonOverdueItems];
+        
+        filteredGroups.sort((a, b) => {
+            if (a.isReady && !b.isReady) return -1;
+            if (!a.isReady && b.isReady) return 1;
+            return a.remainingTime - b.remainingTime;
+        });
+    } else if (config.widgetFamily === 'small' || config.widgetFamily === 'medium') {
+        filteredGroups = filteredGroups.filter(group => {
             if (group.remainingTime <= 0) {
                 let readyForSeconds = Math.abs(group.remainingTime);
                 let readyForDays = readyForSeconds / SECONDS_PER_DAY;
@@ -800,7 +841,7 @@ function renderWidgetRows(widget, displayedGroups) {
         
         let timeStatus = formatTime(group.remainingTime, config.widgetFamily);
         
-        let fontSize = FONT_SIZES.main;
+        let fontSize = FONT_SIZES[config.widgetFamily] || FONT_SIZES.medium;
         
         let rowStack = widget.addStack();
         rowStack.layoutHorizontally();
@@ -808,7 +849,7 @@ function renderWidgetRows(widget, displayedGroups) {
         
         let col1Stack = rowStack.addStack();
         if (config.widgetFamily === 'small') {
-            col1Stack.size = new Size(COLUMN_WIDTHS.quantity, 0);
+            col1Stack.size = new Size(COLUMN_WIDTHS.small, 0);  
         } else {
             col1Stack.size = new Size(COLUMN_WIDTHS.item, 0);
         }
