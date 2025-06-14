@@ -6,6 +6,9 @@
 // ⚠️ CHANGE YOUR FARM ID HERE:
 const FARM_ID = "XXXXX"; // Replace with your actual farm ID
 
+// ⚠️ NOTIFICATION SETTINGS:
+const enableNotifications = true; // Set to false to disable notifications
+
 // ====== TIME CONSTANTS ======
 
 const RESOURCE_RECOVERY_TIMES = {
@@ -824,17 +827,39 @@ function renderWidgetRows(widget, displayedGroups) {
         const emoji = getItemEmoji(group.type, group.category);
         let itemName = group.type;
         
+        let indicators = "";
         if (group.isLoveTime) {
-            itemName = `${itemName} ❤️`;
+            indicators += " ❤️";
         }
-        
         if (group.hasReward) {
-            itemName = `${itemName} 🎁`;
+            indicators += " 🎁";
+        }
+        if (group.category === 'beehive' && group.hasSwarm) {
+            indicators += " 🐝";
         }
         
-        if (group.category === 'beehive' && group.hasSwarm) {
-            itemName = `${itemName} 🐝`;
+        if (indicators.length > 0) {
+            let maxNameLength;
+            switch (config.widgetFamily) {
+                case 'small':
+                    maxNameLength = 10;
+                    break;
+                case 'medium':
+                    maxNameLength = 18;
+                    break;
+                case 'large':
+                    maxNameLength = 18;
+                    break;
+                default:
+                    maxNameLength = 18;
+            }
+            
+            if (itemName.length > maxNameLength) {
+                itemName = itemName.substring(0, maxNameLength - 2) + "..";
+            }
         }
+        
+        const finalItemName = `${itemName}${indicators}`;
         
         const quantity = `x${group.count}`;
         const totalText = group.totalAmount > 0 ? ` (${group.totalAmount.toFixed(1)})` : "";
@@ -854,7 +879,7 @@ function renderWidgetRows(widget, displayedGroups) {
             col1Stack.size = new Size(COLUMN_WIDTHS.item, 0);
         }
         col1Stack.layoutHorizontally();
-        let col1Text = col1Stack.addText(`${emoji} ${itemName}`);
+        let col1Text = col1Stack.addText(`${emoji} ${finalItemName}`);
         col1Text.font = Font.systemFont(fontSize);
         col1Text.lineLimit = 1;
         col1Stack.addSpacer();
@@ -1328,6 +1353,25 @@ async function loadFromAPI() {
 
 // ====== NOTIFICATION SYSTEM ======
 
+async function cleanupAllSFLNotifications() {
+    let pendingNotifications = await Notification.allPending();
+    let removedCount = 0;
+    
+    for (let notification of pendingNotifications) {
+        if (notification.identifier && notification.identifier.startsWith('sfl_')) {
+            try {
+                await notification.remove();
+                removedCount++;
+            } catch (error) {
+                handleNotificationError('remove', notification.identifier, error);
+            }
+        }
+    }
+    
+    console.log(`🧹 Cleaned up ${removedCount} existing SFL notifications`);
+    return removedCount;
+}
+
 function getUpcomingItems(allItems) {
     const upcomingItems = [];
     const currentTime = Date.now();
@@ -1553,24 +1597,29 @@ async function main() {
     
     await loadFromAPI();
     
-    if (!config.runsInWidget) {
-        await manageNotifications();
-    } else {
-        let lastNotificationCheck = 0;
-        const lastCheckData = safeKeychain('get', 'sfl_last_notification_check');
-        if (lastCheckData) {
-            lastNotificationCheck = parseInt(lastCheckData) || 0;
-        } else {
-            logWarning('Keychain', 'Failed to get last notification check time, using default');
-        }
-        
-        let currentTime = Date.now();
-        let timeSinceLastCheck = (currentTime - lastNotificationCheck) / 1000 / 60;
-        
-        if (timeSinceLastCheck >= NOTIFICATION_CHECK_INTERVAL_SECONDS) {
+    if (enableNotifications) {
+        if (!config.runsInWidget) {
             await manageNotifications();
-            Keychain.set('sfl_last_notification_check', currentTime.toString());
+        } else {
+            let lastNotificationCheck = 0;
+            const lastCheckData = safeKeychain('get', 'sfl_last_notification_check');
+            if (lastCheckData) {
+                lastNotificationCheck = parseInt(lastCheckData) || 0;
+            } else {
+                logWarning('Keychain', 'Failed to get last notification check time, using default');
+            }
+            
+            let currentTime = Date.now();
+            let timeSinceLastCheck = (currentTime - lastNotificationCheck) / 1000 / 60;
+            
+            if (timeSinceLastCheck >= NOTIFICATION_CHECK_INTERVAL_SECONDS) {
+                await manageNotifications();
+                Keychain.set('sfl_last_notification_check', currentTime.toString());
+            }
         }
+    } else {
+        console.log("ℹ️ Notifications disabled by user configuration");
+        await cleanupAllSFLNotifications();
     }
     
     let widget = await createWidget();
