@@ -291,6 +291,102 @@ const POWER_COOLDOWN_TIMES = {
     "Grease Lightning": 96 * 60 * 60,  
 };
 
+// ====== DAILY COLLECTIBLES FUNCTIONS ======
+
+function getNextDailyReset() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    tomorrow.setUTCHours(0, 0, 0, 0); // 00:00 UTC
+    return tomorrow.getTime();
+}
+
+function getTodayStart() {
+    const now = new Date();
+    now.setUTCHours(0, 0, 0, 0);
+    const timestamp = now.getTime();
+    console.log(`Today start UTC: ${timestamp} (${new Date(timestamp)})`);
+    return timestamp;
+}
+
+function checkDailyReset(allItems, itemName, lastCollectedAt) {
+    const todayStartUTC = getTodayStart();
+    const nextResetAt = getNextDailyReset();
+
+    if (!lastCollectedAt) {
+        console.log(`❌ ${itemName}: jamais collecté → pas affiché`);
+        return;
+    }
+
+    if (lastCollectedAt >= todayStartUTC) {
+        console.log(`✅ ${itemName}: collecté aujourd'hui → prochaine collecte demain`);
+        allItems[itemName] = {
+            nextResetAt: nextResetAt,
+            category: 'daily',
+            type: itemName,
+            name: itemName,
+            isCollected: true,
+            amount: 0
+        };
+    } else {
+        console.log(`🟢 ${itemName}: prêt à collecter → disponible maintenant`);
+        allItems[itemName] = {
+            nextResetAt: Date.now() - 1000,
+            category: 'daily',
+            type: itemName,
+            name: itemName,
+            isCollected: false,
+            amount: 0
+        };
+    }
+}
+
+function parseDailyCollectibles(apiData, allItems) {
+    console.log("=== DEBUG DAILY COLLECTIBLES ===");
+    
+    if (apiData.farm && apiData.farm.dailyRewards && apiData.farm.dailyRewards.chest && apiData.farm.dailyRewards.chest.collectedAt) {
+        console.log("Daily Rewards collectedAt:", apiData.farm.dailyRewards.chest.collectedAt);
+        checkDailyReset(allItems, "Daily Rewards", apiData.farm.dailyRewards.chest.collectedAt);
+    } else {
+        console.log("Daily Rewards: not found or no collectedAt");
+        checkDailyReset(allItems, "Daily Rewards", null);
+    }
+    
+    let manekiFound = false;
+    if (apiData.farm && apiData.farm.collectibles && apiData.farm.collectibles["Maneki Neko"]) {
+        const manekiArray = apiData.farm.collectibles["Maneki Neko"];
+        if (Array.isArray(manekiArray) && manekiArray.length > 0 && manekiArray[0].shakenAt) {
+            console.log("Maneki shakenAt (farm.collectibles):", manekiArray[0].shakenAt);
+            checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
+            manekiFound = true;
+        }
+    }
+    
+    if (!manekiFound && apiData.farm && apiData.farm.home && apiData.farm.home.collectibles && apiData.farm.home.collectibles["Maneki Neko"]) {
+        const manekiArray = apiData.farm.home.collectibles["Maneki Neko"];
+        if (Array.isArray(manekiArray) && manekiArray.length > 0 && manekiArray[0].shakenAt) {
+            console.log("Maneki shakenAt (farm.home.collectibles):", manekiArray[0].shakenAt);
+            checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
+            manekiFound = true;
+        }
+    }
+    
+    if (!manekiFound) {
+        console.log("Maneki: not found in any location");
+        checkDailyReset(allItems, "Maneki Neko", null);
+    }
+    
+    if (apiData.farm && apiData.farm.pumpkinPlaza && apiData.farm.pumpkinPlaza.pirateChest && apiData.farm.pumpkinPlaza.pirateChest.openedAt) {
+        console.log("Pirate openedAt:", apiData.farm.pumpkinPlaza.pirateChest.openedAt);
+        checkDailyReset(allItems, "Pirate Chest", apiData.farm.pumpkinPlaza.pirateChest.openedAt);
+    } else {
+        console.log("Pirate: not found in pumpkinPlaza");
+        checkDailyReset(allItems, "Pirate Chest", null);
+    }
+    
+    console.log("=== END DEBUG ===");
+}
+
 // ====== APP CONSTANTS ======
 
 const SECOND_TO_MS = 1000;
@@ -559,6 +655,13 @@ function addToAnimalGroup(groupedItems, itemName, itemData, remainingTime, isLov
 function getTimeRemaining(itemData) {
     const currentTime = Date.now();
     
+    if (itemData.category === 'daily') {
+        if (!itemData.isCollected) {
+            return -1000; 
+        }
+        return (itemData.nextResetAt - currentTime) / 1000;
+    }
+    
     if (itemData.category === 'animal' && itemData.awakeAt && itemData.asleepAt) {
         return calculateAnimalTimes(itemData, currentTime);
     }
@@ -642,6 +745,10 @@ function getItemEmoji(itemType, category) {
         "Pancakes": "🥞", "Apple Pie": "🥧", "Honey Cake": "🍰",
         "Cheese": "🧀", "Apple Juice": "🧃", "Premium Composter": "♻️",
         "Turbo Composter": "⚡", "Compost Bin": "🗂️",
+        "Maneki Neko": "🐱",
+        "Pirate Chest": "🏴‍☠️", 
+        "VIP Chest": "💎",
+        "Daily Rewards": "🎁"
     };
     
     if (category === 'flower') return "🌸";
@@ -1320,6 +1427,7 @@ async function loadFromAPI() {
         parseCooking(apiData, allItems);
         parseComposters(apiData, allItems);
         parsePowers(apiData, allItems);
+        parseDailyCollectibles(apiData, allItems);
         
         saveResources(allItems);
         console.log(`✅ ${Object.keys(allItems).length} items loaded from API`);
