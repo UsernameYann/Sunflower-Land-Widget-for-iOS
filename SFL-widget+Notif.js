@@ -6,7 +6,7 @@
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
-const FARM_ID = "6826774918530594"; // Replace with your actual farm ID
+const FARM_ID = "XXXXXXXXX"; // Replace with your actual farm ID
 
 // ⚠️ NOTIFICATION SETTINGS:
 const enableNotifications = true; // Set to false to disable notifications
