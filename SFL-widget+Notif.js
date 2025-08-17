@@ -6,7 +6,7 @@
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
-const FARM_ID = "XXXXXXXXXXX"; // Replace with your actual farm ID
+const FARM_ID = "6826774918530594"; // Replace with your actual farm ID
 
 // ⚠️ NOTIFICATION SETTINGS:
 const enableNotifications = true; // Set to false to disable notifications
@@ -682,6 +682,7 @@ function getReadySummary(allItems) {
     }
     return { totalReady };
 }
+
 // ====== PARSERS & DAILY ======
 
 function getNextDailyReset() {
@@ -877,10 +878,14 @@ function parseResources(apiData, allItems) {
 function parseLavaPits(apiData, allItems) {
     if (apiData.farm && apiData.farm.lavaPits) {
         for (let [pitId, pitInfo] of Object.entries(apiData.farm.lavaPits)) {
-            const startedAt = pitInfo.startedAt || null;
-            const removedAt = pitInfo.removedAt || null;
+                    const startedAt = pitInfo.startedAt || pitInfo.createdAt || null;
+                    const removedAt = pitInfo.removedAt || pitInfo.collectedAt || null;
 
-            const pitName = `Lava Pit ${pitId}`;
+            if (removedAt) {
+                continue;
+            }
+
+            const pitName = `Lava Pit`;
             const endAt = startedAt ? (startedAt + (LAVA_PIT_TIME_SECONDS * 1000)) : null;
             const now = Date.now();
             const remainingSeconds = endAt ? Math.round((endAt - now) / 1000) : null;
@@ -1276,8 +1281,43 @@ async function loadFromAPI() {
         console.log("🌐 Making API call to Sunflower Land...");
         
         let request = new Request(`https://api.sunflower-land.com/community/farms/${FARM_ID}`);
-        let apiData = await request.loadJSON();
-        
+        let rawResponse = await request.loadString();
+
+            try {
+                if (typeof FileManager !== 'undefined') {
+                    try {
+                        let fm;
+                        try { fm = FileManager.iCloud(); } catch (e) { fm = FileManager.local(); }
+                        const dir = fm.documentsDirectory();
+                        const filePath = fm.joinPath(dir, 'farm.json');
+                        fm.writeString(filePath, rawResponse);
+                        console.log(`Saved raw API to ${filePath}`);
+                    } catch (e) {
+                        console.log('Failed to write farm.json with FileManager:', e);
+                    }
+                } else if (typeof require !== 'undefined') {
+                try {
+                    const fs = require('fs');
+                    const path = require('path');
+                    const filePath = path.join(process.cwd(), 'farm.json');
+                    fs.writeFileSync(filePath, rawResponse, 'utf8');
+                    console.log(`Saved raw API to ${filePath}`);
+                } catch (e) {
+                    console.log('Failed to write farm.api with fs fallback:', e);
+                }
+            }
+        } catch (e) {
+            console.log('Failed to save raw API response:', e);
+        }
+
+        let apiData;
+        try {
+            apiData = JSON.parse(rawResponse);
+        } catch (e) {
+            console.log('Failed to parse API JSON from raw response, falling back to loadJSON():', e);
+            apiData = await request.loadJSON();
+        }
+
         Keychain.set(LAST_API_CALL_KEY, currentTime.toString());
         
         let allItems = {};
