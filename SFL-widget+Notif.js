@@ -1,13 +1,19 @@
 // Variables used by Scriptable.
-// These must be at the very top of the file. Do not edit.
+// These must be at the very top of the file when concatenated into a single script.
 // icon-color: orange; icon-glyph: magic;
+
+// ====== SFL WIDGET MODULE: header ======
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
-const FARM_ID = "XXXXX"; // Replace with your actual farm ID
+const FARM_ID = "XXXXXXXXXXX"; // Replace with your actual farm ID
 
 // ⚠️ NOTIFICATION SETTINGS:
 const enableNotifications = true; // Set to false to disable notifications
+
+// Expose a simple config object for convenience
+const SFL_USER_CONFIG = { FARM_ID, enableNotifications };
+globalThis.SFL_USER_CONFIG = globalThis.SFL_USER_CONFIG || SFL_USER_CONFIG;
 
 // ====== TIME CONSTANTS ======
 
@@ -121,71 +127,76 @@ const MUSHROOMS_TIMES = {
     "Magic Mushroom": 24 * 60 * 60,
 };
 
+const LAVA_PIT_TIME_SECONDS = 36 * 60 * 60; // 36 hours
+
 const CRAFTING_TIMES = {
-    "Basic Bear": 5 * 60, 
-    "Chef Bear": 10 * 60, 
-    "Construction Bear": 15 * 60,
-    "Angel Bear": 20 * 60, 
-    "Badass Bear": 25 * 60, 
-    "Bear Trap": 25 * 60,
-    "Brilliant Bear": 30 * 60, 
-    "Classy Bear": 35 * 60, 
-    "Farmer Bear": 35 * 60,
-    "Sunflower Bear": 35 * 60, 
-    "Rich Bear": 40 * 60, 
-    "Rainbow Artist Bear": 40 * 60,
-    "Devil Bear": 40 * 60,
-    "Valentine Bear": 45 * 60, 
-    "Easter Bear": 45 * 60, 
-    "Eggplant Bear": 45 * 60,
-    "Genie Bear": 45 * 60, 
-    "Vampire Bear": 45 * 60,
-    "White Tulips": 15 * 60, 
-    "Potted Sunflower": 15 * 60, 
-    "Potted Potato": 20 * 60,
-    "Potted Pumpkin": 25 * 60, 
-    "Cactus": 20 * 60, 
-    "Dirt Path": 10 * 60,
-    "Bush": 15 * 60,
-    "Shrub": 15 * 60, 
-    "Fence": 10 * 60, 
-    "Stone Fence": 15 * 60,
-    "Pine Tree": 20 * 60, 
-    "Field Maple": 25 * 60, 
+    "Dirt Path": 0,
+    "Fence": 0,
+    "Stone Fence": 0,
+    "Toadstool Seat": 0,
+    "White Tulips": 0,
+    "Potted Sunflower": 0,
+    "Potted Potato": 0,
+    "Potted Pumpkin": 0,
+    "Basic Bear": 0,
+    "Bonnie's Tombstone": 0,
+    "Grubnash's Tombstone": 0,
+    "Town Sign": 0,
+    "Basic Hair": 0,
+    "Rancher Hair": 0,
+    "Red Farmer Shirt": 0,
+    "Farmer Pants": 0,
+    "Farmer Overalls": 0,
+    "Lumberjack Overalls": 0,
+    "Cushion": 0,
+    "Timber": 0,
+    "Bee Box": 0,
+    "Crimsteel": 0,
+    "Merino Cushion": 0,
+    "Kelp Fibre": 0,
+    "Hardened Leather": 0,
+    "Synthetic Fabric": 0,
+    "Ocean's Treasure": 0,
+    "Royal Bedding": 0,
+    "Royal Ornament": 0,
+    "Basic Bed": 8 * 60 * 60,     
+    "Fisher Bed": 8 * 60 * 60,
+    "Floral Bed": 8 * 60 * 60,
+    "Sturdy Bed": 8 * 60 * 60,
+    "Desert Bed": 8 * 60 * 60,
+    "Cow Bed": 8 * 60 * 60,
+    "Pirate Bed": 8 * 60 * 60,
+    "Royal Bed": 8 * 60 * 60,
+    "Golden Maple": 0,
+    "Crimson Cap": 30 * 60,     
+    "Chestnut Fungi Stool": 30 * 60,
+    "Mahogany Cap": 30 * 60,
+    "Field Maple": 30 * 60,
     "Red Maple": 30 * 60,
-    "Golden Maple": 35 * 60,
-    "Giant Potato": 60 * 60, 
-    "Giant Pumpkin": 60 * 60, 
-    "Giant Cabbage": 60 * 60,
-    "Giant Carrot": 60 * 60,
-    "Crimson Cap": 30 * 60, 
-    "Toadstool Seat": 25 * 60, 
-    "Chestnut Fungi Stool": 35 * 60,
-    "Mahogany Cap": 40 * 60,
-    "Christmas Stocking": 30 * 60, 
-    "Golden Christmas Stocking": 45 * 60,
-    "Cozy Fireplace": 40 * 60, 
-    "Christmas Rug": 35 * 60, 
-    "Christmas Candle": 25 * 60,
-    "Festive Tree": 45 * 60, 
-    "Santa Penguin": 30 * 60, 
-    "Penguin Pool": 40 * 60,
-    "Snowman": 25 * 60, 
-    "Festive Toy Train": 45 * 60,
-    "Goldcrest Mosaic Rug": 45 * 60, 
-    "Sandy Mosaic Rug": 45 * 60, 
-    "Twilight Rug": 45 * 60,
-    "Orchard Rug": 45 * 60, 
-    "Carrot Rug": 45 * 60, 
-    "Beetroot Rug": 45 * 60,
-    "Harlequin Rug": 45 * 60, 
-    "Large Rug": 45 * 60,
-    "Golden Fence": 60 * 60, 
-    "Golden Stone Fence": 60 * 60, 
-    "Golden Pine Tree": 60 * 60,
-    "Golden Tree": 60 * 60, 
-    "Golden Bush": 60 * 60, 
-    "Golden Cow": 90 * 60,
+    "Doll": 8 * 60 * 60,
+    "Buzz Doll": 8 * 60 * 60,
+    "Lunar Doll": 8 * 60 * 60,
+    "Juicy Doll": 8 * 60 * 60,
+    "Crude Doll": 8 * 60 * 60,
+    "Cluck Doll": 8 * 60 * 60,
+    "Wooly Doll": 8 * 60 * 60,
+    "Moo Doll": 8 * 60 * 60,
+    "Bloom Doll": 8 * 60 * 60,
+    "Shadow Doll": 8 * 60 * 60,
+    "Ember Doll": 8 * 60 * 60,
+    "Gilded Doll": 8 * 60 * 60,
+    "Lumber Doll": 8 * 60 * 60,
+    "Harvest Doll": 8 * 60 * 60,
+    "Sizzle Doll": 8 * 60 * 60,
+    "Angler Doll": 8 * 60 * 60,
+    "Dune Doll": 8 * 60 * 60,
+    "Mouse Doll": 8 * 60 * 60,
+    "Grubby Doll": 8 * 60 * 60,
+    "Nefari Doll": 8 * 60 * 60,
+    "Frosty Doll": 8 * 60 * 60,
+    "Cosmo Doll": 8 * 60 * 60,
+    "Bigfin Doll": 8 * 60 * 60,
+    "Solar Doll": 8 * 60 * 60
 };
 
 const COOKING_TIMES = {
@@ -291,102 +302,6 @@ const POWER_COOLDOWN_TIMES = {
     "Grease Lightning": 96 * 60 * 60,  
 };
 
-// ====== DAILY COLLECTIBLES FUNCTIONS ======
-
-function getNextDailyReset() {
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-    tomorrow.setUTCHours(0, 0, 0, 0); // 00:00 UTC
-    return tomorrow.getTime();
-}
-
-function getTodayStart() {
-    const now = new Date();
-    now.setUTCHours(0, 0, 0, 0);
-    const timestamp = now.getTime();
-    console.log(`Today start UTC: ${timestamp} (${new Date(timestamp)})`);
-    return timestamp;
-}
-
-function checkDailyReset(allItems, itemName, lastCollectedAt) {
-    const todayStartUTC = getTodayStart();
-    const nextResetAt = getNextDailyReset();
-
-    if (!lastCollectedAt) {
-        console.log(`❌ ${itemName}: jamais collecté → pas affiché`);
-        return;
-    }
-
-    if (lastCollectedAt >= todayStartUTC) {
-        console.log(`✅ ${itemName}: collecté aujourd'hui → prochaine collecte demain`);
-        allItems[itemName] = {
-            nextResetAt: nextResetAt,
-            category: 'daily',
-            type: itemName,
-            name: itemName,
-            isCollected: true,
-            amount: 0
-        };
-    } else {
-        console.log(`🟢 ${itemName}: prêt à collecter → disponible maintenant`);
-        allItems[itemName] = {
-            nextResetAt: Date.now() - 1000,
-            category: 'daily',
-            type: itemName,
-            name: itemName,
-            isCollected: false,
-            amount: 0
-        };
-    }
-}
-
-function parseDailyCollectibles(apiData, allItems) {
-    console.log("=== DEBUG DAILY COLLECTIBLES ===");
-    
-    if (apiData.farm && apiData.farm.dailyRewards && apiData.farm.dailyRewards.chest && apiData.farm.dailyRewards.chest.collectedAt) {
-        console.log("Daily Rewards collectedAt:", apiData.farm.dailyRewards.chest.collectedAt);
-        checkDailyReset(allItems, "Daily Rewards", apiData.farm.dailyRewards.chest.collectedAt);
-    } else {
-        console.log("Daily Rewards: not found or no collectedAt");
-        checkDailyReset(allItems, "Daily Rewards", null);
-    }
-    
-    let manekiFound = false;
-    if (apiData.farm && apiData.farm.collectibles && apiData.farm.collectibles["Maneki Neko"]) {
-        const manekiArray = apiData.farm.collectibles["Maneki Neko"];
-        if (Array.isArray(manekiArray) && manekiArray.length > 0 && manekiArray[0].shakenAt) {
-            console.log("Maneki shakenAt (farm.collectibles):", manekiArray[0].shakenAt);
-            checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
-            manekiFound = true;
-        }
-    }
-    
-    if (!manekiFound && apiData.farm && apiData.farm.home && apiData.farm.home.collectibles && apiData.farm.home.collectibles["Maneki Neko"]) {
-        const manekiArray = apiData.farm.home.collectibles["Maneki Neko"];
-        if (Array.isArray(manekiArray) && manekiArray.length > 0 && manekiArray[0].shakenAt) {
-            console.log("Maneki shakenAt (farm.home.collectibles):", manekiArray[0].shakenAt);
-            checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
-            manekiFound = true;
-        }
-    }
-    
-    if (!manekiFound) {
-        console.log("Maneki: not found in any location");
-        checkDailyReset(allItems, "Maneki Neko", null);
-    }
-    
-    if (apiData.farm && apiData.farm.pumpkinPlaza && apiData.farm.pumpkinPlaza.pirateChest && apiData.farm.pumpkinPlaza.pirateChest.openedAt) {
-        console.log("Pirate openedAt:", apiData.farm.pumpkinPlaza.pirateChest.openedAt);
-        checkDailyReset(allItems, "Pirate Chest", apiData.farm.pumpkinPlaza.pirateChest.openedAt);
-    } else {
-        console.log("Pirate: not found in pumpkinPlaza");
-        checkDailyReset(allItems, "Pirate Chest", null);
-    }
-    
-    console.log("=== END DEBUG ===");
-}
-
 // ====== APP CONSTANTS ======
 
 const SECOND_TO_MS = 1000;
@@ -484,13 +399,6 @@ function safeKeychain(operation, key, value = null) {
     }
 }
 
-/**
- * Safely parses JSON with error handling and fallback
- * @param {string} jsonString - The JSON string to parse
- * @param {string} context - Context for error logging
- * @param {*} fallback - Value to return if parsing fails
- * @returns {*} Parsed object or fallback value
- */
 function safeJSONParse(jsonString, context = 'JSON', fallback = null) {
     try {
         return JSON.parse(jsonString);
@@ -500,20 +408,11 @@ function safeJSONParse(jsonString, context = 'JSON', fallback = null) {
     }
 }
 
-/**
- * Loads saved resources from device keychain
- * @returns {Object} Saved resources or empty object
- */
 function loadResources() {
     const data = safeKeychain('get', RESOURCES_KEY);
     return data ? safeJSONParse(data, 'Resources', {}) : {};
 }
 
-/**
- * Saves resources to device keychain with error handling
- * @param {Object} resources - Resources data to save
- * @returns {boolean} True if successful, false otherwise
- */
 function saveResources(resources) {
     return safeKeychain('set', RESOURCES_KEY, JSON.stringify(resources));
 }
@@ -568,12 +467,6 @@ function timeRemainingSeconds(plantedAt, itemName, itemType = 'resource') {
     return timeRemainingMs / 1000;
 }
 
-/**
- * Calculate animal wake and love times with simplified logic
- * @param {Object} itemData - Animal data with awakeAt, asleepAt, lovedAt
- * @param {number} currentTime - Current timestamp
- * @returns {Object} Wake and love time calculations
- */
 function calculateAnimalTimes(itemData, currentTime) {
     const wakeTimeRemaining = (itemData.awakeAt - currentTime) / SECOND_TO_MS;
     
@@ -605,15 +498,6 @@ function calculateAnimalTimes(itemData, currentTime) {
     };
 }
 
-/**
- * Helper function to add or update animal group
- * @param {Object} groupedItems - Existing groups
- * @param {string} itemName - Animal name
- * @param {Object} itemData - Animal data
- * @param {number} remainingTime - Time remaining
- * @param {boolean} isLoveTime - Whether this is love time
- * @returns {boolean} True if added to existing group, false if new group created
- */
 function addToAnimalGroup(groupedItems, itemName, itemData, remainingTime, isLoveTime) {
     const category = itemData.category || 'animal';
     const itemType = itemData.name || itemData.type;
@@ -668,6 +552,26 @@ function getTimeRemaining(itemData) {
     
     if (itemData.category === 'power' && itemData.nextAvailableAt) {
         return (itemData.nextAvailableAt - currentTime) / 1000;
+    }
+
+    if (itemData.category === 'vip_chest') {
+        const nowMs = Date.now();
+        const availableAt = itemData.availableAt || 0;
+        const availableUntil = itemData.availableUntil || (availableAt + 24 * 60 * 60 * 1000);
+        const openedAt = itemData.openedAt || 0;
+
+        if (nowMs >= availableAt && nowMs < availableUntil) {
+            if (openedAt && openedAt >= availableAt) {
+                return (itemData.nextResetAt - nowMs) / 1000;
+            }
+            return -1000; 
+        }
+
+        if (nowMs < availableAt) {
+            return (availableAt - nowMs) / 1000;
+        }
+
+        return (itemData.nextResetAt - nowMs) / 1000;
     }
     
     if (itemData.category === 'beehive' && itemData.attachedUntil) {
@@ -734,6 +638,7 @@ function getItemEmoji(itemType, category) {
         "Chicken": "🐔", "Cow": "🐄", "Sheep": "🐑",
         "Rice": "🍚", "Olive": "🫒", "Grape": "🍇",
         "Beehive": "🍯",
+        "Lava Pit": "🔥",
         "Mushroom": "🍄", "Magic Mushroom": "🍄‍🟫",
         "Basic Bear": "🐻", "Chef Bear": "👨‍🍳", "Construction Bear": "👷", 
         "Angel Bear": "😇", "Badass Bear": "😎", "Bear Trap": "🪤",
@@ -755,7 +660,10 @@ function getItemEmoji(itemType, category) {
     if (category === 'crafting') return "🔨";
     if (category === 'cooking') return "🍳";
     if (category === 'composter') return "♻️";
+    if (category === 'bud_box') return "👽";
+    if (category === 'crop_machine') return emojis[itemType] || "🚜";
     if (category === 'power') return "⚡"; 
+    if (itemType === 'Desert Dig' || itemType === 'Desert Dig:') return "🪏";
     
     return emojis[itemType] || "🌱";
 }
@@ -774,312 +682,164 @@ function getReadySummary(allItems) {
     }
     return { totalReady };
 }
+// ====== PARSERS & DAILY ======
 
-// ====== MAIN WIDGET ======
-
-function groupItemsByTime(allItems) {
-    const groupedItems = {};
-    
-    for (const [itemName, itemData] of Object.entries(allItems)) {
-        const category = itemData.category || 'resource';
-        const itemType = itemData.name || itemData.type;
-        const timeResult = getTimeRemaining(itemData);
-        
-        if (timeResult.isAnimal) {
-            const wakeRemaining = timeResult.wakeTime;
-            const loveRemaining = timeResult.loveTime;
-            
-            addToAnimalGroup(groupedItems, itemName, itemData, wakeRemaining, false);
-            
-            if (loveRemaining !== null) {
-                addToAnimalGroup(groupedItems, itemName, itemData, loveRemaining, true);
-            }
-            
-            continue;
-        }
-        
-        const remaining = timeResult;
-        const isLoveTime = false;
-        
-        let foundGroup = false;
-        for (let [existingKey, existingGroup] of Object.entries(groupedItems)) {
-            if (existingGroup.type === itemType) {
-                const timeDifference = Math.abs(remaining - existingGroup.remainingTime);
-                if (timeDifference <= GROUPING_TOLERANCE_SECONDS) {
-                    existingGroup.count++;
-                    existingGroup.totalAmount += itemData.amount || 0;
-                    existingGroup.ids.push(itemName);
-                    
-                    if (itemData.hasReward && !existingGroup.hasReward) {
-                        existingGroup.hasReward = true;
-                    }
-                    
-                    if (itemData.category === 'beehive' && itemData.hasSwarm && !existingGroup.hasSwarm) {
-                        existingGroup.hasSwarm = true;
-                    }
-                    
-                    if (isLoveTime) {
-                        existingGroup.isLoveTime = true;
-                    }
-                    
-                    if (remaining <= 0) {
-                        if (Math.abs(remaining) > Math.abs(existingGroup.remainingTime)) {
-                            existingGroup.remainingTime = remaining;
-                        }
-                    } else {
-                        if (remaining < existingGroup.remainingTime) {
-                            existingGroup.remainingTime = remaining;
-                        }
-                    }
-                    foundGroup = true;
-                    break;
-                }
-            }
-        }
-        
-        if (!foundGroup) {
-            let key = `${itemType}_${Object.keys(groupedItems).length}`;
-            groupedItems[key] = {
-                category: category, 
-                type: itemType, 
-                count: 1, 
-                totalAmount: itemData.amount || 0,
-                remainingTime: remaining, 
-                ids: [itemName], 
-                isReady: remaining <= 0, 
-                hasReward: itemData.hasReward ? true : false,
-                hasSwarm: itemData.hasSwarm || false
-            };
-            
-            if (isLoveTime) {
-                groupedItems[key].isLoveTime = true;
-            }
-        }
-    }
-    
-    return groupedItems;
+function getNextDailyReset() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    tomorrow.setUTCHours(0, 0, 0, 0); 
+    return tomorrow.getTime();
 }
 
-function sortAndFilterGroups(groupedItems) {
-    if (Object.keys(groupedItems).length === 0) {
-        return [];
-    }
-
-    const sortedGroups = Object.values(groupedItems).sort((a, b) => {
-        if (a.isReady && !b.isReady) return -1;
-        if (!a.isReady && b.isReady) return 1;
-        return a.remainingTime - b.remainingTime;
-    });
-    
-    let filteredGroups = sortedGroups;
-    
-    filteredGroups = sortedGroups.filter(group => {
-        if (group.remainingTime <= 0) {
-            let readyForSeconds = Math.abs(group.remainingTime);
-            let readyForDays = readyForSeconds / SECONDS_PER_DAY;
-            return readyForDays < 7; 
-        }
-        return true;
-    });
-    
-    if (config.widgetFamily === 'large') {
-        const overdueItems = filteredGroups.filter(group => {
-            if (group.remainingTime <= 0) {
-                let readyForSeconds = Math.abs(group.remainingTime);
-                let readyForDays = readyForSeconds / SECONDS_PER_DAY;
-                return readyForDays >= 1; 
-            }
-            return false;
-        });
-        
-        const nonOverdueItems = filteredGroups.filter(group => {
-            if (group.remainingTime <= 0) {
-                let readyForSeconds = Math.abs(group.remainingTime);
-                let readyForDays = readyForSeconds / SECONDS_PER_DAY;
-                return readyForDays < 1; 
-            }
-            return group.remainingTime > 0; 
-        });
-        
-        const sortedOverdueItems = overdueItems.sort((a, b) => {
-            return Math.abs(a.remainingTime) - Math.abs(b.remainingTime);
-        });
-        
-        const limitedOverdueItems = sortedOverdueItems.slice(0, 2);
-        
-        filteredGroups = [...limitedOverdueItems, ...nonOverdueItems];
-        
-        filteredGroups.sort((a, b) => {
-            if (a.isReady && !b.isReady) return -1;
-            if (!a.isReady && b.isReady) return 1;
-            return a.remainingTime - b.remainingTime;
-        });
-    } else if (config.widgetFamily === 'small' || config.widgetFamily === 'medium') {
-        filteredGroups = filteredGroups.filter(group => {
-            if (group.remainingTime <= 0) {
-                let readyForSeconds = Math.abs(group.remainingTime);
-                let readyForDays = readyForSeconds / SECONDS_PER_DAY;
-                return readyForDays < 1;
-            }
-            return true;
-        });
-    }
-    
-    const maxItems = WIDGET_LIMITS[config.widgetFamily] || WIDGET_LIMITS.medium;
-    return filteredGroups.slice(0, maxItems);
+function getTodayStart() {
+    const now = new Date();
+    now.setUTCHours(0, 0, 0, 0);
+    const timestamp = now.getTime();
+    console.log(`Today start UTC: ${timestamp} (${new Date(timestamp)})`);
+    return timestamp;
 }
 
-function renderWidgetRows(widget, displayedGroups) {
-    for (let group of displayedGroups) {
-        const emoji = getItemEmoji(group.type, group.category);
-        let itemName = group.type;
-        
-        let indicators = "";
-        if (group.isLoveTime) {
-            indicators += " ❤️";
-        }
-        if (group.hasReward) {
-            indicators += " 🎁";
-        }
-        if (group.category === 'beehive' && group.hasSwarm) {
-            indicators += " 🐝";
-        }
-        
-        if (indicators.length > 0) {
-            let maxNameLength;
-            switch (config.widgetFamily) {
-                case 'small':
-                    maxNameLength = 10;
-                    break;
-                case 'medium':
-                    maxNameLength = 18;
-                    break;
-                case 'large':
-                    maxNameLength = 18;
-                    break;
-                default:
-                    maxNameLength = 18;
-            }
-            
-            if (itemName.length > maxNameLength) {
-                itemName = itemName.substring(0, maxNameLength - 2) + "..";
-            }
-        }
-        
-        const finalItemName = `${itemName}${indicators}`;
-        
-        const quantity = `x${group.count}`;
-        const totalText = group.totalAmount > 0 ? ` (${group.totalAmount.toFixed(1)})` : "";
-        
-        let timeStatus = formatTime(group.remainingTime, config.widgetFamily);
-        
-        let fontSize = FONT_SIZES[config.widgetFamily] || FONT_SIZES.medium;
-        
-        let rowStack = widget.addStack();
-        rowStack.layoutHorizontally();
-        rowStack.spacing = 0;
-        
-        let col1Stack = rowStack.addStack();
-        if (config.widgetFamily === 'small') {
-            col1Stack.size = new Size(COLUMN_WIDTHS.small, 0);  
-        } else {
-            col1Stack.size = new Size(COLUMN_WIDTHS.item, 0);
-        }
-        col1Stack.layoutHorizontally();
-        let col1Text = col1Stack.addText(`${emoji} ${finalItemName}`);
-        col1Text.font = Font.systemFont(fontSize);
-        col1Text.lineLimit = 1;
-        col1Stack.addSpacer();
-        
-        let col2Text;
-        
-        if (config.widgetFamily !== 'small') {
-            rowStack.addSpacer(12);
-            
-            let col2Stack = rowStack.addStack();
-            col2Stack.size = new Size(65, 0);
-            col2Text = col2Stack.addText(`${quantity}${totalText}`);
-            col2Text.font = Font.systemFont(fontSize);
-            col2Text.centerAlignText();
-            col2Text.lineLimit = 1;
-            
-            rowStack.addSpacer(32);
-        } else {
-            rowStack.addSpacer(0);
-        }
-        
-        let col3Stack = rowStack.addStack();
-        let col3Text = col3Stack.addText(timeStatus);
-        col3Text.font = Font.systemFont(fontSize);
-        col3Text.rightAlignText();
-        col3Text.lineLimit = 1;
-        
-        col1Text.textColor = new Color("#E5E5E7");
-        
-        if (config.widgetFamily !== 'small' && col2Text) {
-            col2Text.textColor = new Color("#E5E5E7");
-        }
-        
-        if (group.remainingTime <= 0) {
-            let readyForSeconds = Math.abs(group.remainingTime);
-            let readyForDays = readyForSeconds / SECONDS_PER_DAY;
-            
-            if (readyForDays >= 1) {
-                col3Text.textColor = Color.red();
-            } else {
-                col3Text.textColor = Color.green();
-            }
-        } else {
-            let remainingHours = group.remainingTime / SECONDS_PER_HOUR;
-            
-            if (remainingHours <= 1) {
-                col3Text.textColor = Color.yellow();
-            } else {
-                col3Text.textColor = new Color("#E5E5E7");
-            }
-        }
-        
-        let spacing = ROW_SPACING[config.widgetFamily] || ROW_SPACING.medium;
-        widget.addSpacer(spacing);
-    }
+function getFirstMondayStartForTimestamp(ms) {
+    const d = new Date(ms);
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth(); 
+    const firstOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+    const day = firstOfMonth.getUTCDay(); 
+    const diff = (1 - day + 7) % 7;
+    const firstMonday = new Date(firstOfMonth.getTime() + diff * 24 * 60 * 60 * 1000);
+    return firstMonday.getTime();
 }
 
-async function createWidget() {
-    let allItems = loadResources();
-    let widget = new ListWidget();
-    
-    widget.backgroundColor = new Color("#1C1C1E");
-    
-    let groupedItems = groupItemsByTime(allItems);
-    
-    if (Object.keys(groupedItems).length === 0) {
-        let noData = widget.addText("No items tracked");
-        noData.font = Font.systemFont(12);
-        noData.textColor = new Color("#8E8E93");
-        noData.centerAlignText();
-        
-        widget.addSpacer(10);
-        
-        let infoText = widget.addText("Loading from API...");
-        infoText.font = Font.systemFont(10);
-        infoText.textColor = new Color("#007AFF");
-        infoText.centerAlignText();
+function getFirstMondayStartForNextMonth(ms) {
+    const d = new Date(ms);
+    let year = d.getUTCFullYear();
+    let month = d.getUTCMonth() + 1; 
+    if (month > 11) { month = 0; year++; }
+    const firstOfNext = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+    const day = firstOfNext.getUTCDay();
+    const diff = (1 - day + 7) % 7;
+    const firstMondayNext = new Date(firstOfNext.getTime() + diff * 24 * 60 * 60 * 1000);
+    return firstMondayNext.getTime();
+}
+
+function checkDailyReset(allItems, itemName, lastCollectedAt) {
+    const todayStartUTC = getTodayStart();
+    const nextResetAt = getNextDailyReset();
+
+    if (!lastCollectedAt) {
+        console.log(`❌ ${itemName}: jamais collecté → pas affiché`);
+        return;
+    }
+
+    if (lastCollectedAt >= todayStartUTC) {
+        console.log(`✅ ${itemName}: collecté aujourd'hui → prochaine collecte demain`);
+        allItems[itemName] = {
+            nextResetAt: nextResetAt,
+            category: 'daily',
+            type: itemName,
+            name: itemName,
+            isCollected: true,
+            amount: 0
+        };
     } else {
-        let displayedGroups = sortAndFilterGroups(groupedItems);
-        
-        renderWidgetRows(widget, displayedGroups);
+        console.log(`🟢 ${itemName}: prêt à collecter → disponible maintenant`);
+        allItems[itemName] = {
+            nextResetAt: Date.now() - 1000,
+            category: 'daily',
+            type: itemName,
+            name: itemName,
+            isCollected: false,
+            amount: 0
+        };
     }
-    
-    widget.addSpacer();
-    let updateTime = widget.addText(`Updated: ${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}`);
-    updateTime.font = Font.systemFont(8);
-    updateTime.textColor = new Color("#E5E5E7"); 
-    updateTime.centerAlignText();
-    
-    return widget;
 }
 
-// ====== SUNFLOWER LAND API ======
+function parseDailyCollectibles(apiData, allItems) {
+    console.log("=== DEBUG DAILY COLLECTIBLES ===");
+    
+    if (apiData.farm && apiData.farm.dailyRewards && apiData.farm.dailyRewards.chest && apiData.farm.dailyRewards.chest.collectedAt) {
+        console.log("Daily Rewards collectedAt:", apiData.farm.dailyRewards.chest.collectedAt);
+        checkDailyReset(allItems, "Daily Rewards", apiData.farm.dailyRewards.chest.collectedAt);
+    } else {
+        console.log("Daily Rewards: not found or no collectedAt");
+        checkDailyReset(allItems, "Daily Rewards", null);
+    }
+    
+    let manekiFound = false;
+    if (apiData.farm && apiData.farm.collectibles && apiData.farm.collectibles["Maneki Neko"]) {
+        const manekiArray = apiData.farm.collectibles["Maneki Neko"];
+        if (Array.isArray(manekiArray) && manekiArray.length > 0 && manekiArray[0].shakenAt) {
+            console.log("Maneki shakenAt (farm.collectibles):", manekiArray[0].shakenAt);
+            checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
+            manekiFound = true;
+        }
+    }
+    
+    if (!manekiFound && apiData.farm && apiData.farm.home && apiData.farm.home.collectibles && apiData.farm.home.collectibles["Maneki Neko"]) {
+        const manekiArray = apiData.farm.home.collectibles["Maneki Neko"];
+        if (Array.isArray(manekiArray) && manekiArray.length > 0 && manekiArray[0].shakenAt) {
+            console.log("Maneki shakenAt (farm.home.collectibles):", manekiArray[0].shakenAt);
+            checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
+            manekiFound = true;
+        }
+    }
+    
+    if (!manekiFound) {
+        console.log("Maneki: not found in any location");
+        checkDailyReset(allItems, "Maneki Neko", null);
+    }
+    
+    if (apiData.farm && apiData.farm.pumpkinPlaza && apiData.farm.pumpkinPlaza.pirateChest && apiData.farm.pumpkinPlaza.pirateChest.openedAt) {
+        console.log("Pirate openedAt:", apiData.farm.pumpkinPlaza.pirateChest.openedAt);
+        checkDailyReset(allItems, "Pirate Chest", apiData.farm.pumpkinPlaza.pirateChest.openedAt);
+    } else {
+        console.log("Pirate: not found in pumpkinPlaza");
+        checkDailyReset(allItems, "Pirate Chest", null);
+    }
+
+    if (apiData.farm && apiData.farm.pumpkinPlaza && apiData.farm.pumpkinPlaza.vipChest) {
+        const vip = apiData.farm.pumpkinPlaza.vipChest;
+        const openedAt = vip.openedAt || null;
+        const now = Date.now();
+
+        const firstMondayStart = getFirstMondayStartForTimestamp(now);
+        const firstMondayEnd = firstMondayStart + (24 * 60 * 60 * 1000);
+        const nextFirstMondayStart = getFirstMondayStartForNextMonth(now);
+
+        allItems["VIP Chest"] = {
+            availableAt: firstMondayStart,         
+            availableUntil: firstMondayEnd,       
+            nextResetAt: nextFirstMondayStart,      
+            openedAt: openedAt,                    
+            type: 'VIP Chest',
+            name: 'VIP Chest',
+            category: 'vip_chest',
+            amount: 0
+        };
+
+        if (now >= firstMondayStart && now < firstMondayEnd) {
+            if (openedAt && openedAt >= firstMondayStart) {
+                console.log(`VIP Chest: opened this period at ${openedAt}`);
+            } else {
+                console.log('VIP Chest: available now and not yet opened');
+            }
+        } else if (now < firstMondayStart) {
+            console.log(`VIP Chest: next available at ${new Date(firstMondayStart).toUTCString()}`);
+        } else {
+            console.log('VIP Chest: waiting for next month');
+        }
+    }
+
+    if (apiData.farm && apiData.farm.desert && apiData.farm.desert.digging) {
+        const digging = apiData.farm.desert.digging;
+        const collectedAt = (digging.streak && digging.streak.collectedAt) ? digging.streak.collectedAt : (digging.collectedAt || null);
+        if (collectedAt) console.log('Desert digging collectedAt:', collectedAt);
+        checkDailyReset(allItems, "Desert Dig", collectedAt ? collectedAt : null);
+    }
+    
+    console.log("=== END DEBUG ===");
+}
 
 function parseResources(apiData, allItems) {
     const resourceTypes = {
@@ -1110,6 +870,35 @@ function parseResources(apiData, allItems) {
                     hasReward: resource.reward ? true : false
                 };
             }
+        }
+    }
+}
+
+function parseLavaPits(apiData, allItems) {
+    if (apiData.farm && apiData.farm.lavaPits) {
+        for (let [pitId, pitInfo] of Object.entries(apiData.farm.lavaPits)) {
+            const startedAt = pitInfo.startedAt || null;
+            const removedAt = pitInfo.removedAt || null;
+
+            const pitName = `Lava Pit ${pitId}`;
+            const endAt = startedAt ? (startedAt + (LAVA_PIT_TIME_SECONDS * 1000)) : null;
+            const now = Date.now();
+            const remainingSeconds = endAt ? Math.round((endAt - now) / 1000) : null;
+            const isRunning = !!startedAt && (!removedAt);
+            const canCollect = endAt ? (now >= endAt && !removedAt) : false;
+
+            allItems[pitName] = {
+                startedAt: startedAt,
+                removedAt: removedAt,
+                endAt: endAt,
+                remainingSeconds: remainingSeconds,
+                isRunning: isRunning,
+                canCollect: canCollect,
+                type: 'Lava Pit',
+                name: 'Lava Pit',
+                category: 'lava_pit',
+                amount: 0
+            };
         }
     }
 }
@@ -1363,6 +1152,84 @@ function parsePowers(apiData, allItems) {
     }
 }
 
+function parseCropMachine(apiData, allItems) {
+    if (apiData.farm && apiData.farm.buildings && apiData.farm.buildings["Crop Machine"]) {
+        for (let machine of apiData.farm.buildings["Crop Machine"]) {
+            if (machine.queue && Array.isArray(machine.queue)) {
+                for (let i = 0; i < machine.queue.length; i++) {
+                    const entry = machine.queue[i];
+                    if (entry && entry.readyAt && entry.crop) {
+                        const name = `${entry.crop} (Crop Machine ${machine.id || ''} #${i+1})`.trim();
+                        allItems[name] = {
+                            readyAt: entry.readyAt,
+                            type: entry.crop,
+                            name: entry.crop,
+                            category: 'crop_machine',
+                            amount: entry.seeds || entry.amount || 1
+                        };
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ====== BUDS & BUD BOX ======
+
+const BUD_ORDER = [
+  "Plaza",
+  "Woodlands",
+  "Cave",
+  "Sea",
+  "Castle",
+  "Port",
+  "Retreat",
+  "Saphiro",
+  "Snow",
+  "Beach",
+];
+
+function getDailyBudBoxType(ms) {
+    const daysSinceEpoch = Math.floor(ms / (1000 * 60 * 60 * 24)) + 2; 
+    const index = daysSinceEpoch % BUD_ORDER.length;
+    return BUD_ORDER[index];
+}
+
+function parseBuds(apiData, allItems) {
+    if (apiData.farm && apiData.farm.buds) {
+        const playerBudTypes = [];
+        for (let [budId, budInfo] of Object.entries(apiData.farm.buds)) {
+            if (budInfo && budInfo.type) {
+                playerBudTypes.push(budInfo.type);
+            }
+        }
+        allItems.__playerBudTypes = playerBudTypes;
+        console.log(`🌱 Found player buds: ${playerBudTypes.join(', ')}`);
+    }
+}
+
+function parseBudBox(apiData, allItems) {
+    if (!(apiData.farm && apiData.farm.pumpkinPlaza)) return;
+
+    const openedAt = apiData.farm.pumpkinPlaza.budBox && apiData.farm.pumpkinPlaza.budBox.openedAt ? apiData.farm.pumpkinPlaza.budBox.openedAt : 0;
+    const todayType = getDailyBudBoxType(Date.now());
+    const playerBudTypes = allItems.__playerBudTypes || [];
+
+    if (!playerBudTypes.includes(todayType)) {
+        console.log(`Bud Box today is ${todayType} but player has no such bud → skipping display`);
+        return; 
+    }
+
+    const itemName = `Bud Box: ${todayType}`;
+    checkDailyReset(allItems, itemName, openedAt ? openedAt : null);
+
+    if (allItems[itemName]) {
+        allItems[itemName].type = todayType;
+        allItems[itemName].category = 'bud_box';
+        allItems[itemName].hasBud = true;
+    }
+}
+
 async function loadFromAPI() {
     const API_RATE_LIMIT_SECONDS = 15;
     const CACHE_EXPIRATION_MINUTES = 600;
@@ -1419,6 +1286,7 @@ async function loadFromAPI() {
         parseCrops(apiData, allItems);
         parseFruits(apiData, allItems);
         parseAnimals(apiData, allItems);
+        parseLavaPits(apiData, allItems);
         parseFlowers(apiData, allItems);
         parseBeehives(apiData, allItems);
         parseGreenhouse(apiData, allItems);
@@ -1427,6 +1295,9 @@ async function loadFromAPI() {
         parseCooking(apiData, allItems);
         parseComposters(apiData, allItems);
         parsePowers(apiData, allItems);
+        parseCropMachine(apiData, allItems);
+        parseBuds(apiData, allItems);
+        parseBudBox(apiData, allItems);
         parseDailyCollectibles(apiData, allItems);
         
         saveResources(allItems);
@@ -1486,16 +1357,49 @@ function getUpcomingItems(allItems) {
     const oneHourFromNow = currentTime + (NOTIFICATION_LOOKAHEAD_HOURS * HOUR_TO_MS);
     
     for (const [itemName, itemData] of Object.entries(allItems)) {
+    if (itemName.startsWith('__')) continue;
+        if (itemData.category === 'lava_pit') {
+            const remainingSeconds = itemData.remainingSeconds != null ? itemData.remainingSeconds : null;
+            const readyTime = remainingSeconds != null ? (currentTime + (remainingSeconds * SECOND_TO_MS)) : null;
+
+            if (itemData.canCollect) {
+                if (currentTime <= oneHourFromNow) {
+                    upcomingItems.push({
+                        name: itemData.name || itemData.type,
+                        category: itemData.category,
+                        readyTime: currentTime,
+                        remainingSeconds: 0,
+                        totalAmount: itemData.amount || 0,
+                        emoji: getItemEmoji(itemData.name || itemData.type, itemData.category),
+                        hasReward: false,
+                        hasSwarm: false
+                    });
+                }
+            } else if (remainingSeconds != null && remainingSeconds > 0 && readyTime <= oneHourFromNow) {
+                upcomingItems.push({
+                    name: itemData.name || itemData.type,
+                    category: itemData.category,
+                    readyTime: readyTime,
+                    remainingSeconds: remainingSeconds,
+                    totalAmount: itemData.amount || 0,
+                    emoji: getItemEmoji(itemData.name || itemData.type, itemData.category),
+                    hasReward: false,
+                    hasSwarm: false
+                });
+            }
+            continue;
+        }
+
         const timeResult = getTimeRemaining(itemData);
-        
+
         if (timeResult.isAnimal) {
             processAnimalNotifications(itemData, timeResult, currentTime, oneHourFromNow, upcomingItems);
             continue;
         }
-        
+
         const remainingSeconds = timeResult;
         const readyTime = currentTime + (remainingSeconds * SECOND_TO_MS);
-        
+
         if (remainingSeconds > 0 && readyTime <= oneHourFromNow) {
             upcomingItems.push({
                 name: itemData.name || itemData.type,
@@ -1634,7 +1538,7 @@ function createNotificationBody(uniqueItemsMap, group) {
         let item = Array.from(uniqueItemsMap.values())[0];
         let count = group.items.length;
         let countText = count > 1 ? ` x${count}` : "";
-        let totalText = item.totalAmount > 0 ? ` (${item.totalAmount.toFixed(1)})` : "";
+    let totalText = "";
         
         let specialIndicators = "";
         if (item.hasReward) specialIndicators += " 🎁";
@@ -1645,7 +1549,7 @@ function createNotificationBody(uniqueItemsMap, group) {
         let itemSummaries = Array.from(uniqueItemsMap.entries()).map(([name, item]) => {
             let itemCount = group.items.filter(i => i.name === name).length;
             let countText = itemCount > 1 ? ` x${itemCount}` : "";
-            let totalText = item.totalAmount > 0 ? ` (${item.totalAmount.toFixed(1)})` : "";
+            let totalText = "";
             
             let specialIndicators = "";
             if (item.hasReward) specialIndicators += " 🎁";
@@ -1698,6 +1602,317 @@ async function manageNotifications() {
     };
 }
 
+// ====== WIDGET RENDERING ======
+
+function groupItemsByTime(allItems) {
+    const groupedItems = {};
+    
+    for (const [itemName, itemData] of Object.entries(allItems)) {
+    if (itemName.startsWith('__')) continue;
+    if (!itemData || (!itemData.name && !itemData.type && !itemData.category)) continue;
+    const category = itemData.category || 'resource';
+        const itemType = itemData.name || itemData.type;
+        let timeResult;
+        if (itemData.category === 'lava_pit' && itemData.remainingSeconds != null) {
+            timeResult = itemData.remainingSeconds;
+        } else {
+            timeResult = getTimeRemaining(itemData);
+        }
+        
+        if (timeResult.isAnimal) {
+            const wakeRemaining = timeResult.wakeTime;
+            const loveRemaining = timeResult.loveTime;
+            
+            addToAnimalGroup(groupedItems, itemName, itemData, wakeRemaining, false);
+            
+            if (loveRemaining !== null) {
+                addToAnimalGroup(groupedItems, itemName, itemData, loveRemaining, true);
+            }
+            
+            continue;
+        }
+        
+    const remaining = timeResult;
+        const isLoveTime = false;
+        
+        let foundGroup = false;
+        for (let [existingKey, existingGroup] of Object.entries(groupedItems)) {
+            if (existingGroup.type === itemType) {
+                const timeDifference = Math.abs(remaining - existingGroup.remainingTime);
+                if (timeDifference <= GROUPING_TOLERANCE_SECONDS) {
+                    existingGroup.count++;
+                    existingGroup.totalAmount += itemData.amount || 0;
+                    existingGroup.ids.push(itemName);
+                    
+                    if (itemData.hasReward && !existingGroup.hasReward) {
+                        existingGroup.hasReward = true;
+                    }
+                    
+                    if (itemData.category === 'beehive' && itemData.hasSwarm && !existingGroup.hasSwarm) {
+                        existingGroup.hasSwarm = true;
+                    }
+                    
+                    if (isLoveTime) {
+                        existingGroup.isLoveTime = true;
+                    }
+                    
+                    if (remaining <= 0) {
+                        if (Math.abs(remaining) > Math.abs(existingGroup.remainingTime)) {
+                            existingGroup.remainingTime = remaining;
+                        }
+                    } else {
+                        if (remaining < existingGroup.remainingTime) {
+                            existingGroup.remainingTime = remaining;
+                        }
+                    }
+                    foundGroup = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!foundGroup) {
+            let key = `${itemType}_${Object.keys(groupedItems).length}`;
+            groupedItems[key] = {
+                category: category, 
+                type: itemType, 
+                count: 1, 
+                totalAmount: itemData.amount || 0,
+                remainingTime: remaining, 
+                ids: [itemName], 
+                isReady: remaining <= 0, 
+                hasReward: itemData.hasReward ? true : false,
+                hasSwarm: itemData.hasSwarm || false
+            };
+            
+            if (isLoveTime) {
+                groupedItems[key].isLoveTime = true;
+            }
+        }
+    }
+    
+    return groupedItems;
+}
+
+function sortAndFilterGroups(groupedItems) {
+    if (Object.keys(groupedItems).length === 0) {
+        return [];
+    }
+
+    const sortedGroups = Object.values(groupedItems).sort((a, b) => {
+        if (a.isReady && !b.isReady) return -1;
+        if (!a.isReady && b.isReady) return 1;
+        return a.remainingTime - b.remainingTime;
+    });
+    
+    let filteredGroups = sortedGroups;
+    
+    filteredGroups = sortedGroups.filter(group => {
+        if (group.remainingTime <= 0) {
+            let readyForSeconds = Math.abs(group.remainingTime);
+            let readyForDays = readyForSeconds / SECONDS_PER_DAY;
+            return readyForDays < 7; 
+        }
+        return true;
+    });
+    
+    if (config.widgetFamily === 'large') {
+        const overdueItems = filteredGroups.filter(group => {
+            if (group.remainingTime <= 0) {
+                let readyForSeconds = Math.abs(group.remainingTime);
+                let readyForDays = readyForSeconds / SECONDS_PER_DAY;
+                return readyForDays >= 1; 
+            }
+            return false;
+        });
+        
+        const nonOverdueItems = filteredGroups.filter(group => {
+            if (group.remainingTime <= 0) {
+                let readyForSeconds = Math.abs(group.remainingTime);
+                let readyForDays = readyForSeconds / SECONDS_PER_DAY;
+                return readyForDays < 1; 
+            }
+            return group.remainingTime > 0; 
+        });
+        
+        const sortedOverdueItems = overdueItems.sort((a, b) => {
+            return Math.abs(a.remainingTime) - Math.abs(b.remainingTime);
+        });
+        
+        const limitedOverdueItems = sortedOverdueItems.slice(0, 2);
+        
+        filteredGroups = [...limitedOverdueItems, ...nonOverdueItems];
+        
+        filteredGroups.sort((a, b) => {
+            if (a.isReady && !b.isReady) return -1;
+            if (!a.isReady && b.isReady) return 1;
+            return a.remainingTime - b.remainingTime;
+        });
+    } else if (config.widgetFamily === 'small' || config.widgetFamily === 'medium') {
+        filteredGroups = filteredGroups.filter(group => {
+            if (group.remainingTime <= 0) {
+                let readyForSeconds = Math.abs(group.remainingTime);
+                let readyForDays = readyForSeconds / SECONDS_PER_DAY;
+                return readyForDays < 1;
+            }
+            return true;
+        });
+    }
+    
+    const maxItems = WIDGET_LIMITS[config.widgetFamily] || WIDGET_LIMITS.medium;
+    return filteredGroups.slice(0, maxItems);
+}
+
+function renderWidgetRows(widget, displayedGroups) {
+    for (let group of displayedGroups) {
+        const emoji = getItemEmoji(group.type, group.category);
+        let itemName = group.type;
+        
+        let indicators = "";
+        if (group.isLoveTime) {
+            indicators += " ❤️";
+        }
+        if (group.hasReward) {
+            indicators += " 🎁";
+        }
+        if (group.category === 'beehive' && group.hasSwarm) {
+            indicators += " 🐝";
+        }
+        
+        if (indicators.length > 0) {
+            let maxNameLength;
+            switch (config.widgetFamily) {
+                case 'small':
+                    maxNameLength = 10;
+                    break;
+                case 'medium':
+                    maxNameLength = 18;
+                    break;
+                case 'large':
+                    maxNameLength = 18;
+                    break;
+                default:
+                    maxNameLength = 18;
+            }
+            
+            if (itemName.length > maxNameLength) {
+                itemName = itemName.substring(0, maxNameLength - 2) + "..";
+            }
+        }
+        
+        const finalItemName = `${itemName}${indicators}`;
+        
+    const quantity = `x${group.count}`;
+    const totalText = "";
+        
+        let timeStatus = formatTime(group.remainingTime, config.widgetFamily);
+        
+        let fontSize = FONT_SIZES[config.widgetFamily] || FONT_SIZES.medium;
+        
+        let rowStack = widget.addStack();
+        rowStack.layoutHorizontally();
+        rowStack.spacing = 0;
+        
+        let col1Stack = rowStack.addStack();
+        if (config.widgetFamily === 'small') {
+            col1Stack.size = new Size(COLUMN_WIDTHS.small, 0);  
+        } else {
+            col1Stack.size = new Size(COLUMN_WIDTHS.item, 0);
+        }
+        col1Stack.layoutHorizontally();
+        let col1Text = col1Stack.addText(`${emoji} ${finalItemName}`);
+        col1Text.font = Font.systemFont(fontSize);
+        col1Text.lineLimit = 1;
+        col1Stack.addSpacer();
+        
+        let col2Text;
+        
+        if (config.widgetFamily !== 'small') {
+            rowStack.addSpacer(12);
+            
+            let col2Stack = rowStack.addStack();
+            col2Stack.size = new Size(65, 0);
+            col2Text = col2Stack.addText(`${quantity}${totalText}`);
+            col2Text.font = Font.systemFont(fontSize);
+            col2Text.centerAlignText();
+            col2Text.lineLimit = 1;
+            
+            rowStack.addSpacer(32);
+        } else {
+            rowStack.addSpacer(0);
+        }
+        
+        let col3Stack = rowStack.addStack();
+        let col3Text = col3Stack.addText(timeStatus);
+        col3Text.font = Font.systemFont(fontSize);
+        col3Text.rightAlignText();
+        col3Text.lineLimit = 1;
+        
+        col1Text.textColor = new Color("#E5E5E7");
+        
+        if (config.widgetFamily !== 'small' && col2Text) {
+            col2Text.textColor = new Color("#E5E5E7");
+        }
+        
+        if (group.remainingTime <= 0) {
+            let readyForSeconds = Math.abs(group.remainingTime);
+            let readyForDays = readyForSeconds / SECONDS_PER_DAY;
+            
+            if (readyForDays >= 1) {
+                col3Text.textColor = Color.red();
+            } else {
+                col3Text.textColor = Color.green();
+            }
+        } else {
+            let remainingHours = group.remainingTime / SECONDS_PER_HOUR;
+            
+            if (remainingHours <= 1) {
+                col3Text.textColor = Color.yellow();
+            } else {
+                col3Text.textColor = new Color("#E5E5E7");
+            }
+        }
+        
+        let spacing = ROW_SPACING[config.widgetFamily] || ROW_SPACING.medium;
+        widget.addSpacer(spacing);
+    }
+}
+
+async function createWidget() {
+    let allItems = loadResources();
+    let widget = new ListWidget();
+    
+    widget.backgroundColor = new Color("#1C1C1E");
+    
+    let groupedItems = groupItemsByTime(allItems);
+    
+    if (Object.keys(groupedItems).length === 0) {
+        let noData = widget.addText("No items tracked");
+        noData.font = Font.systemFont(12);
+        noData.textColor = new Color("#8E8E93");
+        noData.centerAlignText();
+        
+        widget.addSpacer(10);
+        
+        let infoText = widget.addText("Loading from API...");
+        infoText.font = Font.systemFont(10);
+        infoText.textColor = new Color("#007AFF");
+        infoText.centerAlignText();
+    } else {
+        let displayedGroups = sortAndFilterGroups(groupedItems);
+        
+        renderWidgetRows(widget, displayedGroups);
+    }
+    
+    widget.addSpacer();
+    let updateTime = widget.addText(`Updated: ${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}`);
+    updateTime.font = Font.systemFont(8);
+    updateTime.textColor = new Color("#E5E5E7"); 
+    updateTime.centerAlignText();
+    
+    return widget;
+}
+
 // ====== MAIN SCRIPT ======
 
 async function main() {
@@ -1743,3 +1958,5 @@ async function main() {
 
 await main();
 Script.complete();
+
+
