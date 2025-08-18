@@ -1,0 +1,1 @@
+Safari.open("https://usernameyann.github.io/Sunflower-Land-Widget-for-iOS/guide.html");
