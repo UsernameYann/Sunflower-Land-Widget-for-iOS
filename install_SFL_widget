@@ -29,7 +29,7 @@ async function promptYesNo(title, defaultValue = null) {
 }
 function replacePlaceholders(code, farmId, enableNotifications) {
   code = code.replace(/const FARM_ID = "__FARM_ID__";/, `const FARM_ID = "${farmId}";`);
-  code = code.replace(/const ENABLE_NOTIFICATIONS = __ENABLE_NOTIFICATIONS__;/, `const ENABLE_NOTIFICATIONS = ${enableNotifications};`);
+  code = code.replace(/const enableNotifications = __ENABLE_NOTIFICATIONS__;/, `const enableNotifications = ${enableNotifications};`);
   return code;
 }
 async function saveScript(code, name) {

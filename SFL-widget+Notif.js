@@ -4,18 +4,16 @@
 
 // ====== SFL WIDGET MODULE: header ======
 
-
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
 const FARM_ID = "__FARM_ID__";
 
 // ⚠️ NOTIFICATION SETTINGS:
-const ENABLE_NOTIFICATIONS = __ENABLE_NOTIFICATIONS__;
+const enableNotifications = __ENABLE_NOTIFICATIONS__;
 
 // Expose a simple config object for convenience
-const SFL_USER_CONFIG = { FARM_ID, enableNotifications: ENABLE_NOTIFICATIONS };
+const SFL_USER_CONFIG = { FARM_ID, enableNotifications };
 globalThis.SFL_USER_CONFIG = globalThis.SFL_USER_CONFIG || SFL_USER_CONFIG;
-
 
 // ====== TIME CONSTANTS ======
 
