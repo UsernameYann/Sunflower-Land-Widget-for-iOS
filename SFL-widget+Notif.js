@@ -408,6 +408,13 @@ function safeJSONParse(jsonString, context = 'JSON', fallback = null) {
     }
 }
 
+// Normalize timestamps: API may return seconds (Unix) or milliseconds. Return null unchanged.
+function normalizeTs(ts) {
+    if (ts === null || ts === undefined) return null;
+    if (typeof ts === 'number') return ts < 1e12 ? ts * 1000 : ts;
+    return ts;
+}
+
 function loadResources() {
     const data = safeKeychain('get', RESOURCES_KEY);
     return data ? safeJSONParse(data, 'Resources', {}) : {};
@@ -461,31 +468,35 @@ function timeRemainingSeconds(plantedAt, itemName, itemType = 'resource') {
     if (!harvestSeconds) return 0;
     
     const currentTime = Date.now();
-    const harvestTime = plantedAt + (harvestSeconds * 1000);
+    const plantedAtMs = normalizeTs(plantedAt);
+    const harvestTime = (plantedAtMs || 0) + (harvestSeconds * 1000);
     const timeRemainingMs = harvestTime - currentTime;
     
     return timeRemainingMs / 1000;
 }
 
 function calculateAnimalTimes(itemData, currentTime) {
-    const wakeTimeRemaining = (itemData.awakeAt - currentTime) / SECOND_TO_MS;
-    
+    const awakeAtMs = normalizeTs(itemData.awakeAt);
+    const asleepAtMs = normalizeTs(itemData.asleepAt);
+    const lovedAtMs = normalizeTs(itemData.lovedAt);
+
+    const wakeTimeRemaining = (awakeAtMs - currentTime) / SECOND_TO_MS;
     let loveTimeRemaining = null;
-    
-    if (currentTime < itemData.awakeAt) {
-        const sleepCycleDuration = itemData.awakeAt - itemData.asleepAt;
+
+    if (currentTime < awakeAtMs) {
+        const sleepCycleDuration = awakeAtMs - asleepAtMs;
         const lovePeriodDuration = sleepCycleDuration / 3;
-        
-        const firstLoveAvailableAt = itemData.asleepAt + lovePeriodDuration;
-        
-        if (itemData.lovedAt) {
-            const nextLoveAvailableAt = itemData.lovedAt + lovePeriodDuration;
+
+        const firstLoveAvailableAt = asleepAtMs + lovePeriodDuration;
+
+        if (lovedAtMs) {
+            const nextLoveAvailableAt = lovedAtMs + lovePeriodDuration;
             const actualLoveAvailableAt = Math.max(firstLoveAvailableAt, nextLoveAvailableAt);
             loveTimeRemaining = (actualLoveAvailableAt - currentTime) / SECOND_TO_MS;
         } else {
             loveTimeRemaining = (firstLoveAvailableAt - currentTime) / SECOND_TO_MS;
         }
-        
+
         if (loveTimeRemaining < 0) {
             loveTimeRemaining = 0;
         }
@@ -543,7 +554,8 @@ function getTimeRemaining(itemData) {
         if (!itemData.isCollected) {
             return -1000; 
         }
-        return (itemData.nextResetAt - currentTime) / 1000;
+    const nextResetAtMs = normalizeTs(itemData.nextResetAt);
+    return (nextResetAtMs - currentTime) / 1000;
     }
     
     if (itemData.category === 'animal' && itemData.awakeAt && itemData.asleepAt) {
@@ -551,47 +563,54 @@ function getTimeRemaining(itemData) {
     }
     
     if (itemData.category === 'power' && itemData.nextAvailableAt) {
-        return (itemData.nextAvailableAt - currentTime) / 1000;
+    const nextAvailableAtMs = normalizeTs(itemData.nextAvailableAt);
+    return (nextAvailableAtMs - currentTime) / 1000;
     }
 
     if (itemData.category === 'vip_chest') {
-        const nowMs = Date.now();
-        const availableAt = itemData.availableAt || 0;
-        const availableUntil = itemData.availableUntil || (availableAt + 24 * 60 * 60 * 1000);
-        const openedAt = itemData.openedAt || 0;
+    const nowMs = Date.now();
+    const availableAtMs = normalizeTs(itemData.availableAt) || 0;
+    const availableUntilMs = normalizeTs(itemData.availableUntil) || (availableAtMs + 24 * 60 * 60 * 1000);
+    const openedAtMs = normalizeTs(itemData.openedAt) || 0;
+    const nextResetAtMs = normalizeTs(itemData.nextResetAt) || 0;
 
-        if (nowMs >= availableAt && nowMs < availableUntil) {
-            if (openedAt && openedAt >= availableAt) {
-                return (itemData.nextResetAt - nowMs) / 1000;
+        if (nowMs >= availableAtMs && nowMs < availableUntilMs) {
+            if (openedAtMs && openedAtMs >= availableAtMs) {
+                return (nextResetAtMs - nowMs) / 1000;
             }
             return -1000; 
         }
 
-        if (nowMs < availableAt) {
-            return (availableAt - nowMs) / 1000;
+        if (nowMs < availableAtMs) {
+            return (availableAtMs - nowMs) / 1000;
         }
 
-        return (itemData.nextResetAt - nowMs) / 1000;
+        return (nextResetAtMs - nowMs) / 1000;
     }
     
     if (itemData.category === 'beehive' && itemData.attachedUntil) {
-        return (itemData.attachedUntil - currentTime) / 1000;
+    const attachedUntilMs = normalizeTs(itemData.attachedUntil);
+    return (attachedUntilMs - currentTime) / 1000;
     }
     
     if (itemData.category === 'crafting' && itemData.readyAt) {
-        return (itemData.readyAt - currentTime) / 1000;
+    const readyAtMs = normalizeTs(itemData.readyAt);
+    return (readyAtMs - currentTime) / 1000;
     }
     
     if (itemData.category === 'cooking' && itemData.readyAt) {
-        return (itemData.readyAt - currentTime) / 1000;
+    const readyAtMs = normalizeTs(itemData.readyAt);
+    return (readyAtMs - currentTime) / 1000;
     }
     
     if (itemData.category === 'composter' && itemData.readyAt) {
-        return (itemData.readyAt - currentTime) / 1000;
+    const readyAtMs = normalizeTs(itemData.readyAt);
+    return (readyAtMs - currentTime) / 1000;
     }
 
     if (itemData.category === 'crop_machine' && itemData.readyAt) {
-        return (itemData.readyAt - currentTime) / 1000;
+    const readyAtMs = normalizeTs(itemData.readyAt);
+    return (readyAtMs - currentTime) / 1000;
     }
     
     return timeRemainingSeconds(itemData.plantedAt || itemData.choppedAt, itemData.name || itemData.type, itemData.category || 'resource');
@@ -1167,10 +1186,15 @@ function parseCropMachine(apiData, allItems) {
             if (machine.queue && Array.isArray(machine.queue)) {
                 for (let i = 0; i < machine.queue.length; i++) {
                     const entry = machine.queue[i];
-                    if (entry && entry.readyAt && entry.crop) {
+                    if (entry && entry.crop) {
+                        let readyAtMs = null;
+                        if (entry.readyAt) {
+                            readyAtMs = (typeof entry.readyAt === 'number' && entry.readyAt < 1e12) ? entry.readyAt * 1000 : entry.readyAt;
+                        }
+
                         const name = `${entry.crop} (Crop Machine ${machine.id || ''} #${i+1})`.trim();
                         allItems[name] = {
-                            readyAt: entry.readyAt,
+                            readyAt: readyAtMs,
                             type: entry.crop,
                             name: entry.crop,
                             category: 'crop_machine',
