@@ -1,56 +1,165 @@
+
+
+
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Guide d'installation du widget Sunflower Land pour iOS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add SFL Widget to your iPhone Home Screen</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2em; background: #f9f9f9; color: #222; }
-    h1 { color: #f7b731; }
-    h2 { color: #4b7bec; }
-    ol, ul { margin-left: 1.5em; }
-    .step { margin-bottom: 2em; }
-    .important { color: #eb3b5a; font-weight: bold; }
-    .screenshot { max-width: 300px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; margin: 1em 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      background: #f9f9f9;
+      color: #222;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 420px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2em 1em 1em 1em;
+      box-sizing: border-box;
+    }
+    h1 {
+      color: #e2b007;
+      font-size: 2em;
+      font-weight: 700;
+      margin-bottom: 0.5em;
+      text-align: center;
+    }
+    .subtitle {
+      color: #6ab04c;
+      font-size: 1.08em;
+      margin-bottom: 1.5em;
+      text-align: center;
+    }
+    .steps {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px #e2b00722;
+      padding: 2em 1.2em 1.2em 1.2em;
+      margin-bottom: 2em;
+    }
+    .step-title {
+      font-size: 1.15em;
+      font-weight: 600;
+      margin-bottom: 0.7em;
+      color: #222;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+    .step-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1em 0;
+    }
+    .step-list li {
+      margin-bottom: 1.2em;
+      font-size: 1.07em;
+      display: flex;
+      align-items: center;
+      gap: 0.7em;
+    }
+    .step-list .emoji {
+      font-size: 1.2em;
+      width: 1.5em;
+      text-align: center;
+    }
+    .important {
+      color: #a0522d;
+      background: #f7f1e3;
+      border-radius: 8px;
+      padding: 0.7em 1em;
+      font-weight: 500;
+      margin-top: 1em;
+      font-size: 1em;
+      box-shadow: 0 1px 4px #e2b00711;
+      text-align: center;
+    }
+    .gif {
+      width: 100%;
+      max-width: 340px;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #a0522d22;
+      margin: 2em auto 1em auto;
+      display: block;
+    }
+    .btn {
+      display: inline-block;
+      background: #6ab04c;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.08em;
+      border: none;
+      border-radius: 12px;
+      padding: 0.7em 2em;
+      margin-top: 1.2em;
+      box-shadow: 0 2px 8px #6ab04c22;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: #218c3c;
+    }
+    .footer {
+      font-size: 0.97em;
+      color: #888;
+      margin-top: 2em;
+      text-align: center;
+      padding-bottom: 1em;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 1em 0.2em; }
+      h1 { font-size: 1.3em; }
+      .steps { padding: 1.2em 0.5em; }
+    }
   </style>
 </head>
 <body>
-  <h1>Guide d'installation du widget Sunflower Land sur iPhone</h1>
+    <div class="container">
+      <h1>Add SFL Widget</h1>
 
-  <div class="step">
-    <h2>1. Installer le widget avec Scriptable</h2>
-    <ol>
-      <li>Téléchargez l'application <a href="https://apps.apple.com/fr/app/scriptable/id1405459188" target="_blank">Scriptable</a> depuis l’App Store.</li>
-      <li>Ouvrez Scriptable sur votre iPhone.</li>
-      <li>Créez un nouveau script et copiez-collez le contenu du fichier <code>install_SFL_widget</code> (disponible sur ce dépôt GitHub).</li>
-      <li>Exécutez le script : il vous demandera votre numéro de ferme et si vous souhaitez activer les notifications.</li>
-      <li>Le script crée automatiquement le widget <strong>MonWidget (ne pas éditer)</strong> dans Scriptable.</li>
-    </ol>
-  </div>
+      <section style="background:#fff; border-radius:18px; box-shadow:0 2px 8px #e2b00722; padding:1.5em 1em; margin-bottom:2em;">
+        <h2 style="font-size:1.15em; font-weight:600; margin-bottom:1em; color:#222; text-align:left;">How to add the widget</h2>
+        <ul style="list-style:none; padding-left:0; margin:0 0 1.5em 0;">
+          <li style="margin-bottom:1.2em;">🏠 Go to your iPhone Home Screen.</li>
+          <li style="margin-bottom:1.2em;">➕ Long press and tap the <b>➕</b> button (top left).</li>
+          <li style="margin-bottom:1.2em;">🔍 Search for <b>Scriptable</b> in the widget list.</li>
+          <li style="margin-bottom:1.2em;">✅ Add the Scriptable widget, then select <b>SFL_widget</b> in the widget settings.</li>
+        </ul>
+        <img src="guid_widget.gif" alt="How to add the widget" class="gif">
+        <div class="important" style="margin-top:2em;">If the widget does not appear, open the Scriptable app to sync your scripts.</div>
+      </section>
 
-  <div class="step">
-    <h2>2. Ajouter le widget sur l'écran d'accueil</h2>
-    <ol>
-      <li>Sur l’écran d’accueil, faites un appui long puis appuyez sur le bouton <strong>+</strong> en haut à gauche.</li>
-      <li>Recherchez <strong>Scriptable</strong> dans la liste des widgets.</li>
-      <li>Ajoutez le widget Scriptable à votre écran.</li>
-      <li>Dans les options du widget, sélectionnez <strong>MonWidget (ne pas éditer)</strong>.</li>
-    </ol>
-    <p class="important">⚠️ Si le widget n’apparaît pas, ouvrez Scriptable pour vérifier que le script a bien été créé.</p>
-    <img src="IMG_9819.jpg" alt="Ajout du widget Scriptable" class="screenshot">
-    <img src="IMG_9820.jpg" alt="Sélection du script MonWidget" class="screenshot">
-  </div>
 
-  <div class="step">
-    <h2>3. Fonctionnement du widget</h2>
-    <ul>
-      <li>Le widget affiche les infos de votre ferme Sunflower Land en temps réel.</li>
-      <li>Si les notifications sont activées, vous recevrez des alertes pour les événements importants.</li>
-      <li>Pour modifier le numéro de ferme ou les notifications, relancez simplement le script d’installation.</li>
-    </ul>
-    <img src="IMG_9836.jpg" alt="Aperçu du widget Sunflower Land" class="screenshot">
-  </div>
+      <section style="background:#f6f8e7; border-radius:18px; box-shadow:0 2px 8px #e2b00722; padding:1.2em 1em; margin-bottom:2em; text-align:center;">
+        <div style="font-size:1.09em; color:#222;">
+          <span style="font-weight:600; color:#e2b007; font-size:1.08em;">🛠 Widget update</span><br>
+          <span style="display:block; margin-top:0.7em;">A new version is out? Just run <b>install_SFL_widget</b> in Scriptable.<br>Your farm settings will be kept. Stay up to date and keep farming!</span>
+        </div>
+      </section>
 
-  <hr>
-  <p>Pour toute question, consultez la <a href="https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS" target="_blank">page GitHub du projet</a>.</p>
+      <section style="background:#fff; border-radius:18px; box-shadow:0 2px 8px #e2b00722; padding:1.2em 1em; margin-bottom:2em; text-align:center;">
+        <p style="margin:0; font-size:1.09em; color:#222;">
+          <span style="font-weight:600; color:#6ab04c;">Sunflower Land Widget ready!</span><br>
+          Your farm stats, always at your fingertips.<br><br>
+          <a href="https://sunflower-land.com/play/#/visit/6826774918530594" target="_blank" style="color:#218c3c; font-weight:600; text-decoration:underline;">Visit my farm</a>
+        </p>
+      </section>
+
+      <div class="footer">
+        <a href="https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS" target="_blank" class="btn" style="margin:0 auto; display:block;">GitHub Project Page</a>
+        <br><br>
+        <span style="font-size:0.95em;">Made for iOS & Scriptable • Sunflower Land Widget</span>
+      </div>
+    </div>
 </body>
 </html>
