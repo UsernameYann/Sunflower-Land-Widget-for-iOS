@@ -4,13 +4,12 @@
 
 // ====== SFL WIDGET MODULE: header ======
 
-
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
-const FARM_ID = "XXXXXXXXXX"; // Replace with your actual farm ID
+const FARM_ID = "__FARM_ID__";
 
 // ⚠️ NOTIFICATION SETTINGS:
-const enableNotifications = true; // Set to false to disable notifications
+const ENABLE_NOTIFICATIONS = __ENABLE_NOTIFICATIONS__;
 
 // Expose a simple config object for convenience
 const SFL_USER_CONFIG = { FARM_ID, enableNotifications };
@@ -588,6 +587,10 @@ function getTimeRemaining(itemData) {
     }
     
     if (itemData.category === 'composter' && itemData.readyAt) {
+        return (itemData.readyAt - currentTime) / 1000;
+    }
+
+    if (itemData.category === 'crop_machine' && itemData.readyAt) {
         return (itemData.readyAt - currentTime) / 1000;
     }
     
@@ -1335,7 +1338,6 @@ async function loadFromAPI() {
         return loadResources();
     }
 }
-
 
 // ====== NOTIFICATION SYSTEM ======
 
