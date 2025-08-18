@@ -4,9 +4,10 @@
 
 // ====== SFL WIDGET MODULE: header ======
 
+
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
-const FARM_ID = "XXXXXXXXX"; // Replace with your actual farm ID
+const FARM_ID = "XXXXXXXXXX"; // Replace with your actual farm ID
 
 // ⚠️ NOTIFICATION SETTINGS:
 const enableNotifications = true; // Set to false to disable notifications
@@ -1281,42 +1282,7 @@ async function loadFromAPI() {
         console.log("🌐 Making API call to Sunflower Land...");
         
         let request = new Request(`https://api.sunflower-land.com/community/farms/${FARM_ID}`);
-        let rawResponse = await request.loadString();
-
-            try {
-                if (typeof FileManager !== 'undefined') {
-                    try {
-                        let fm;
-                        try { fm = FileManager.iCloud(); } catch (e) { fm = FileManager.local(); }
-                        const dir = fm.documentsDirectory();
-                        const filePath = fm.joinPath(dir, 'farm.json');
-                        fm.writeString(filePath, rawResponse);
-                        console.log(`Saved raw API to ${filePath}`);
-                    } catch (e) {
-                        console.log('Failed to write farm.json with FileManager:', e);
-                    }
-                } else if (typeof require !== 'undefined') {
-                try {
-                    const fs = require('fs');
-                    const path = require('path');
-                    const filePath = path.join(process.cwd(), 'farm.json');
-                    fs.writeFileSync(filePath, rawResponse, 'utf8');
-                    console.log(`Saved raw API to ${filePath}`);
-                } catch (e) {
-                    console.log('Failed to write farm.api with fs fallback:', e);
-                }
-            }
-        } catch (e) {
-            console.log('Failed to save raw API response:', e);
-        }
-
-        let apiData;
-        try {
-            apiData = JSON.parse(rawResponse);
-        } catch (e) {
-            console.log('Failed to parse API JSON from raw response, falling back to loadJSON():', e);
-            apiData = await request.loadJSON();
-        }
+        let apiData = await request.loadJSON();
 
         Keychain.set(LAST_API_CALL_KEY, currentTime.toString());
         
@@ -1369,6 +1335,7 @@ async function loadFromAPI() {
         return loadResources();
     }
 }
+
 
 // ====== NOTIFICATION SYSTEM ======
 
