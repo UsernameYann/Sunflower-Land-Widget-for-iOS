@@ -9,6 +9,9 @@
 const FARM_ID = "__FARM_ID__";
 
 // ⚠️ NOTIFICATION SETTINGS:
+// To enable notifications, set to true. To disable, set to false.
+// Example: const enableNotifications = true;
+// If you use Scriptable on iOS, notifications will only be scheduled if this parameter is true.
 const enableNotifications = __ENABLE_NOTIFICATIONS__;
 
 // Expose a simple config object for convenience
@@ -408,7 +411,6 @@ function safeJSONParse(jsonString, context = 'JSON', fallback = null) {
     }
 }
 
-// Normalize timestamps: API may return seconds (Unix) or milliseconds. Return null unchanged.
 function normalizeTs(ts) {
     if (ts === null || ts === undefined) return null;
     if (typeof ts === 'number') return ts < 1e12 ? ts * 1000 : ts;
@@ -1256,10 +1258,12 @@ function parseBudBox(apiData, allItems) {
     const itemName = `Bud Box: ${todayType}`;
     checkDailyReset(allItems, itemName, openedAt ? openedAt : null);
 
-    if (allItems[itemName]) {
+    if (allItems[itemName] && allItems[itemName].isCollected === false) {
         allItems[itemName].type = todayType;
         allItems[itemName].category = 'bud_box';
         allItems[itemName].hasBud = true;
+    } else {
+        delete allItems[itemName];
     }
 }
 

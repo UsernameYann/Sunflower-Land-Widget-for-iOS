@@ -88,8 +88,19 @@ To manually set your Farm ID and notification settings, edit these lines in the 
 const FARM_ID = "__FARM_ID__";
 
 // ⚠️ NOTIFICATION SETTINGS:
-const enableNotifications = __ENABLE_NOTIFICATIONS__;
+const enableNotifications = __ENABLE_NOTIFICATIONS__; // true = enabled, false = disabled
 ```
+
+🌻 **How to personalize notifications?**
+
+- If you want to receive harvest notifications, set:
+  ```js
+  const enableNotifications = true; // Notifications ON
+  ```
+- If you do NOT want notifications, set:
+  ```js
+  const enableNotifications = false; // Notifications OFF
+  ```
 
 🌻 **Example / Exemple :**
 
