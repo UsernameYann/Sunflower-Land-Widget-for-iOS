@@ -1,8 +1,9 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file when concatenated into a single script.
-// icon-color: orange; icon-glyph: magic;
+// icon-color: orange; icon-glyph: magic; V0.0001
 
 // ====== SFL WIDGET MODULE: header ======
+
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
@@ -130,7 +131,18 @@ const MUSHROOMS_TIMES = {
     "Magic Mushroom": 24 * 60 * 60,
 };
 
-const LAVA_PIT_TIME_SECONDS = 36 * 60 * 60; // 36 hours
+
+function getLavaPitTimeSeconds(farm) {
+    let time = 72 * 60 * 60;
+    if (
+        farm &&
+        farm.boostsUsedAt &&
+        farm.boostsUsedAt["Obsidian Necklace"]
+    ) {
+        time = time / 2;
+    }
+    return time;
+}
 
 const CRAFTING_TIMES = {
     "Dirt Path": 0,
@@ -910,7 +922,7 @@ function parseLavaPits(apiData, allItems) {
                 continue;
             }
 
-            const pitName = `Lava Pit`;
+            const pitName = `Lava Pit ${pitId}`;
             const endAt = startedAt ? (startedAt + (LAVA_PIT_TIME_SECONDS * 1000)) : null;
             const now = Date.now();
             const remainingSeconds = endAt ? Math.round((endAt - now) / 1000) : null;
@@ -1312,10 +1324,12 @@ async function loadFromAPI() {
         
         console.log("🌐 Making API call to Sunflower Land...");
         
-        let request = new Request(`https://api.sunflower-land.com/community/farms/${FARM_ID}`);
-        let apiData = await request.loadJSON();
+    let request = new Request(`https://api.sunflower-land.com/community/farms/${FARM_ID}`);
+    let apiData = await request.loadJSON();
 
-        Keychain.set(LAST_API_CALL_KEY, currentTime.toString());
+    Keychain.set('RAW_API_CACHE_KEY', JSON.stringify(apiData, null, 2));
+
+    Keychain.set(LAST_API_CALL_KEY, currentTime.toString());
         
         let allItems = {};
         
@@ -1995,5 +2009,4 @@ async function main() {
 
 await main();
 Script.complete();
-
 
