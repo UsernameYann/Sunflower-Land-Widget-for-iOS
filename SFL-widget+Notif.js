@@ -1,9 +1,8 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file when concatenated into a single script.
-// icon-color: orange; icon-glyph: magic; V0.0001
+// icon-color: orange; icon-glyph: magic; V0.0002
 
 // ====== SFL WIDGET MODULE: header ======
-
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
@@ -131,7 +130,6 @@ const MUSHROOMS_TIMES = {
     "Magic Mushroom": 24 * 60 * 60,
 };
 
-
 function getLavaPitTimeSeconds(farm) {
     let time = 72 * 60 * 60;
     if (
@@ -188,7 +186,7 @@ const CRAFTING_TIMES = {
     "Mahogany Cap": 30 * 60,
     "Field Maple": 30 * 60,
     "Red Maple": 30 * 60,
-    "Doll": 8 * 60 * 60,
+    "Doll": 2 * 60 * 60,
     "Buzz Doll": 8 * 60 * 60,
     "Lunar Doll": 8 * 60 * 60,
     "Juicy Doll": 8 * 60 * 60,
