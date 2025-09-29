@@ -1,6 +1,6 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file when concatenated into a single script.
-// icon-color: orange; icon-glyph: magic; V0.0002
+// icon-color: orange; icon-glyph: magic; V0.0003
 
 // ====== SFL WIDGET MODULE: header ======
 
@@ -129,6 +129,8 @@ const MUSHROOMS_TIMES = {
     "Mushroom": 16 * 60 * 60, 
     "Magic Mushroom": 24 * 60 * 60,
 };
+
+const LAVA_PIT_TIME_SECONDS = 72 * 60 * 60;
 
 function getLavaPitTimeSeconds(farm) {
     let time = 72 * 60 * 60;
@@ -624,6 +626,16 @@ function getTimeRemaining(itemData) {
     const readyAtMs = normalizeTs(itemData.readyAt);
     return (readyAtMs - currentTime) / 1000;
     }
+
+    if (itemData.category === 'floating_island' && itemData.startAt && itemData.endAt) {
+        if (currentTime >= itemData.startAt && currentTime <= itemData.endAt) {
+            return (itemData.endAt - currentTime) / 1000;
+        } else if (currentTime < itemData.startAt) {
+            return (itemData.startAt - currentTime) / 1000;
+        } else {
+            return (itemData.endAt - currentTime) / 1000;
+        }
+    }
     
     return timeRemainingSeconds(itemData.plantedAt || itemData.choppedAt, itemData.name || itemData.type, itemData.category || 'resource');
 }
@@ -698,6 +710,7 @@ function getItemEmoji(itemType, category) {
     if (category === 'bud_box') return "👽";
     if (category === 'crop_machine') return emojis[itemType] || "🚜";
     if (category === 'power') return "⚡"; 
+    if (category === 'floating_island') return "🏝️";
     if (itemType === 'Desert Dig' || itemType === 'Desert Dig:') return "🪏";
     
     return emojis[itemType] || "🌱";
@@ -716,6 +729,30 @@ function getReadySummary(allItems) {
         }
     }
     return { totalReady };
+}
+
+function getSeasonEmoji(season) {
+    const seasonEmojis = {
+        winter: '❄️',
+        spring: '🌸',
+        summer: '☀️',
+        autumn: '🍂'
+    };
+    return seasonEmojis[season] || '🌍';
+}
+
+function getEventEmoji(event) {
+    const eventEmojis = {
+        greatFreeze: '❄️',
+        fishFrenzy: '🐟',
+        sunshower: '🌦️',
+        doubleDelivery: '📦',
+        fullMoon: '🌕',
+        tsunami: '🌊',
+        insectPlague: '🐞',
+        bountifulHarvest: '🌾'
+    };
+    return eventEmojis[event] || '';
 }
 
 // ====== PARSERS & DAILY ======
@@ -921,7 +958,8 @@ function parseLavaPits(apiData, allItems) {
             }
 
             const pitName = `Lava Pit ${pitId}`;
-            const endAt = startedAt ? (startedAt + (LAVA_PIT_TIME_SECONDS * 1000)) : null;
+            const durationSeconds = getLavaPitTimeSeconds(apiData.farm);
+            const endAt = startedAt ? (startedAt + (durationSeconds * 1000)) : null;
             const now = Date.now();
             const remainingSeconds = endAt ? Math.round((endAt - now) / 1000) : null;
             const isRunning = !!startedAt && (!removedAt);
@@ -1219,6 +1257,73 @@ function parseCropMachine(apiData, allItems) {
     }
 }
 
+function parseFloatingIsland(apiData, allItems) {
+    console.log('=== DEBUG parseFloatingIsland ===');
+    if (apiData.farm && apiData.farm.floatingIsland) {
+        const floatingIsland = apiData.farm.floatingIsland;
+        const petalPuzzleSolvedAt = floatingIsland.petalPuzzleSolvedAt;
+        const todayStart = getTodayStart();
+        
+        console.log('petalPuzzleSolvedAt:', petalPuzzleSolvedAt, 'todayStart:', todayStart, 'solved today?', petalPuzzleSolvedAt >= todayStart);
+        
+        if (petalPuzzleSolvedAt && petalPuzzleSolvedAt >= todayStart) {
+            console.log('Puzzle solved today, skipping');
+            return;
+        }
+        
+        const schedule = floatingIsland.schedule || [];
+        const now = Date.now();
+        
+        console.log('Schedule length:', schedule.length, 'now:', now);
+        
+        schedule.forEach((period, index) => {
+            const startAt = period.startAt;
+            const endAt = period.endAt;
+            
+            console.log(`Period ${index+1}: startAt=${startAt}, endAt=${endAt}, now < endAt? ${now < endAt}`);
+            
+            if (now < endAt) {  
+                const isActive = now >= startAt && now <= endAt;
+                const remainingSeconds = isActive ? Math.round((endAt - now) / 1000) : Math.round((startAt - now) / 1000);
+                
+                console.log(`  isActive: ${isActive}, remainingSeconds: ${remainingSeconds}, >0? ${remainingSeconds > 0}`);
+                
+                if (remainingSeconds > 0) {  
+                    const key = `Floating Island ${index + 1}`;
+                    allItems[key] = {
+                        startAt: startAt,
+                        endAt: endAt,
+                        remainingSeconds: remainingSeconds,
+                        isActive: isActive,
+                        type: 'Floating Island',
+                        name: 'Floating Island',
+                        category: 'floating_island'
+                    };
+                    console.log(`  Added: ${key}`);
+                }
+            }
+        });
+    } else {
+        console.log('No floatingIsland in apiData');
+    }
+    console.log('=== END DEBUG ===');
+}
+
+function parseSeasonAndEvents(apiData, allItems) {
+    if (apiData.farm && apiData.farm.season) {
+        allItems['__season'] = { season: apiData.farm.season.season };
+    }
+    if (apiData.farm && apiData.farm.calendar && apiData.farm.calendar.dates) {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        for (const dateObj of apiData.farm.calendar.dates) {
+            if (dateObj.date === today) {
+                allItems['__event'] = { event: dateObj.name };
+                break;
+            }
+        }
+    }
+}
+
 // ====== BUDS & BUD BOX ======
 
 const BUD_ORDER = [
@@ -1345,9 +1450,11 @@ async function loadFromAPI() {
         parseComposters(apiData, allItems);
         parsePowers(apiData, allItems);
         parseCropMachine(apiData, allItems);
+        parseFloatingIsland(apiData, allItems);
         parseBuds(apiData, allItems);
         parseBudBox(apiData, allItems);
         parseDailyCollectibles(apiData, allItems);
+        parseSeasonAndEvents(apiData, allItems);
         
         saveResources(allItems);
         console.log(`✅ ${Object.keys(allItems).length} items loaded from API`);
@@ -1378,6 +1485,7 @@ async function loadFromAPI() {
         return loadResources();
     }
 }
+
 
 // ====== NOTIFICATION SYSTEM ======
 
@@ -1650,6 +1758,7 @@ async function manageNotifications() {
         upcoming: groups.length
     };
 }
+
 
 // ====== WIDGET RENDERING ======
 
@@ -1929,6 +2038,10 @@ function renderWidgetRows(widget, displayedGroups) {
 
 async function createWidget() {
     let allItems = loadResources();
+    
+    let season = allItems['__season'] ? allItems['__season'].season : null;
+    let event = allItems['__event'] ? allItems['__event'].event : null;
+    
     let widget = new ListWidget();
     
     widget.backgroundColor = new Color("#1C1C1E");
@@ -1954,13 +2067,55 @@ async function createWidget() {
     }
     
     widget.addSpacer();
-    let updateTime = widget.addText(`Updated: ${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}`);
-    updateTime.font = Font.systemFont(8);
-    updateTime.textColor = new Color("#E5E5E7"); 
-    updateTime.centerAlignText();
+
+let showPowerIcon = false;
+const twelveHoursMs = 12 * 60 * 60 * 1000;
+const now = Date.now();
+
+for (const [itemName, itemData] of Object.entries(allItems)) {
+    if (itemData.category === 'power' && itemData.nextAvailableAt) {
+        const timeRemainingMs = itemData.nextAvailableAt - now;
+        if (timeRemainingMs > 0 && timeRemainingMs < twelveHoursMs) {
+            showPowerIcon = true;
+            break;
+        }
+    }
+}
+
+let bottomStack = widget.addStack();
+bottomStack.layoutHorizontally();
+
+if (season) {
+    let seasonText = bottomStack.addText(getSeasonEmoji(season));
+    seasonText.font = Font.systemFont(8);
+    seasonText.textColor = new Color("#FFFFFF");
+}
+
+if (event) {
+    let eventText = bottomStack.addText(getEventEmoji(event));
+    eventText.font = Font.systemFont(8);
+    eventText.textColor = new Color("#FFFFFF");
+}
+
+bottomStack.addSpacer();
+
+let updateText = bottomStack.addText(`Updated: ${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}`);
+updateText.font = Font.systemFont(8);
+updateText.textColor = new Color("#E5E5E7");
+updateText.centerAlignText();
+
+bottomStack.addSpacer();
+
+if (showPowerIcon) {
+    let powerIcon = bottomStack.addText("⚡");
+    powerIcon.font = Font.systemFont(8);
+    powerIcon.textColor = new Color("#FFD700");
+    powerIcon.rightAlignText();
+}
     
     return widget;
 }
+
 
 // ====== MAIN SCRIPT ======
 
@@ -2007,4 +2162,5 @@ async function main() {
 
 await main();
 Script.complete();
+
 
