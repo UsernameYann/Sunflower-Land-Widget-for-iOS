@@ -36,13 +36,13 @@
             background: white; 
             border-radius: 15px; 
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            border-left: 5px solid #667eea;
+            border-left: 5px solid #6c757d;
             transition: transform 0.2s ease;
         }
         .step:hover { transform: translateY(-2px); }
         
         .step h3 { 
-            color: #667eea; 
+            color: #495057; 
             margin-bottom: 15px;
             font-size: 1.3em;
         }
@@ -73,8 +73,8 @@
         }
         input[type="text"]:focus, input[type="password"]:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #6c757d;
+            box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.1);
         }
         
         small { 
@@ -133,11 +133,11 @@
             font-size: 16px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
         }
         button:hover { 
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
         }
         
         textarea { 
@@ -188,7 +188,7 @@
         }
         
         a {
-            color: #667eea;
+            color: #495057;
             text-decoration: none;
             font-weight: 500;
         }
@@ -208,7 +208,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🌻 Sunflower Land Widget</h1>
+        <h1>Sunflower Land Widget</h1>
         <div class="subtitle">Create your personalized iOS widget in just a few clicks!</div>
 
         <div class="step">
@@ -260,9 +260,6 @@
 
         <h3>3️⃣ Open Scriptable</h3>
         <p>Open the Scriptable app on your iPhone. Tap the <strong>+</strong> button to create a new script.</p>
-
-        <h3>4️⃣ Paste and save</h3>
-        <p>Paste the generated code, name it "SFL_widget.js", and save. Add the widget to your home screen!</p>
     </div>
 
     <div id="result" class="hidden step">
@@ -273,6 +270,11 @@
             <button id="copyBtn">📋 Copy Code</button>
             <button id="downloadBtn">💾 Download File</button>
         </div>
+    </div>
+
+    <div class="step">
+        <h3>4️⃣ Paste and save</h3>
+        <p>Paste the generated code, name it "SFL_widget.js", and save. Add the widget to your home screen!</p>
     </div>
 
     <div class="step">
@@ -305,7 +307,7 @@
         </ul>
     </div>
 
-    <div class="step">
+    <div class="step" style="text-align: center;">
         <h3>🌻 Bonus & Support</h3>
         <p>👋 Visit my farm: <a href="https://sunflower-land.com/play/#/visit/6826774918530594" target="_blank">Click here to visit my Sunflower Land farm</a></p>
         <p>💝 Donations (ETH/Polygon): <code>0x450240d67aE2Def43DF8bF15ADC8c51a35918B5A</code></p>
