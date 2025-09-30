@@ -1,165 +1,164 @@
-
-
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add SFL Widget to your iPhone Home Screen</title>
-  <style>
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-      background: #f9f9f9;
-      color: #222;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .container {
-      max-width: 420px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 2em 1em 1em 1em;
-      box-sizing: border-box;
-    }
-    h1 {
-      color: #e2b007;
-      font-size: 2em;
-      font-weight: 700;
-      margin-bottom: 0.5em;
-      text-align: center;
-    }
-    .subtitle {
-      color: #6ab04c;
-      font-size: 1.08em;
-      margin-bottom: 1.5em;
-      text-align: center;
-    }
-    .steps {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 2px 8px #e2b00722;
-      padding: 2em 1.2em 1.2em 1.2em;
-      margin-bottom: 2em;
-    }
-    .step-title {
-      font-size: 1.15em;
-      font-weight: 600;
-      margin-bottom: 0.7em;
-      color: #222;
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
-    }
-    .step-list {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 1em 0;
-    }
-    .step-list li {
-      margin-bottom: 1.2em;
-      font-size: 1.07em;
-      display: flex;
-      align-items: center;
-      gap: 0.7em;
-    }
-    .step-list .emoji {
-      font-size: 1.2em;
-      width: 1.5em;
-      text-align: center;
-    }
-    .important {
-      color: #a0522d;
-      background: #f7f1e3;
-      border-radius: 8px;
-      padding: 0.7em 1em;
-      font-weight: 500;
-      margin-top: 1em;
-      font-size: 1em;
-      box-shadow: 0 1px 4px #e2b00711;
-      text-align: center;
-    }
-    .gif {
-      width: 100%;
-      max-width: 340px;
-      border-radius: 14px;
-      box-shadow: 0 2px 12px #a0522d22;
-      margin: 2em auto 1em auto;
-      display: block;
-    }
-    .btn {
-      display: inline-block;
-      background: #6ab04c;
-      color: #fff;
-      font-weight: 600;
-      font-size: 1.08em;
-      border: none;
-      border-radius: 12px;
-      padding: 0.7em 2em;
-      margin-top: 1.2em;
-      box-shadow: 0 2px 8px #6ab04c22;
-      cursor: pointer;
-      transition: background 0.2s;
-      text-decoration: none;
-    }
-    .btn:hover {
-      background: #218c3c;
-    }
-    .footer {
-      font-size: 0.97em;
-      color: #888;
-      margin-top: 2em;
-      text-align: center;
-      padding-bottom: 1em;
-    }
-    @media (max-width: 600px) {
-      .container { padding: 1em 0.2em; }
-      h1 { font-size: 1.3em; }
-      .steps { padding: 1.2em 0.5em; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunflower Land Widget Installer</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }
+        h1 { color: #333; text-align: center; }
+        form { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .radio-group { display: flex; gap: 20px; margin-bottom: 10px; }
+        .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .checkbox-item { display: flex; align-items: center; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #45a049; }
+        textarea { width: 100%; height: 300px; margin-top: 20px; display: none; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
-    <div class="container">
-      <h1>Add SFL Widget</h1>
+    <h1>Sunflower Land Widget Installer</h1>
+    <form id="configForm">
+        <label for="farmId">Farm ID (e.g.: 1234)</label>
+        <input type="text" id="farmId" required>
 
-      <section style="background:#fff; border-radius:18px; box-shadow:0 2px 8px #e2b00722; padding:1.5em 1em; margin-bottom:2em;">
-        <h2 style="font-size:1.15em; font-weight:600; margin-bottom:1em; color:#222; text-align:left;">How to add the widget</h2>
-        <ul style="list-style:none; padding-left:0; margin:0 0 1.5em 0;">
-          <li style="margin-bottom:1.2em;">🏠 Go to your iPhone Home Screen.</li>
-          <li style="margin-bottom:1.2em;">➕ Long press and tap the <b>➕</b> button (top left).</li>
-          <li style="margin-bottom:1.2em;">🔍 Search for <b>Scriptable</b> in the widget list.</li>
-          <li style="margin-bottom:1.2em;">✅ Add the Scriptable widget, then select <b>SFL_widget</b> in the widget settings.</li>
-        </ul>
-  <img src="guide_widget.gif" alt="How to add the widget" class="gif">
-        <div class="important" style="margin-top:2em;">If the widget does not appear, open the Scriptable app to sync your scripts.</div>
-      </section>
+        <label for="apiKey">API Key (Get from Game -> Settings -> General -> API Key)</label>
+        <input type="password" id="apiKey" required>
 
-
-      <section style="background:#f6f8e7; border-radius:18px; box-shadow:0 2px 8px #e2b00722; padding:1.2em 1em; margin-bottom:2em; text-align:center;">
-        <div style="font-size:1.09em; color:#222;">
-          <span style="font-weight:600; color:#e2b007; font-size:1.08em;">🛠 Widget update</span><br>
-          <span style="display:block; margin-top:0.7em;">A new version is out? Just run <b>install_SFL_widget</b> in Scriptable.<br>Your farm settings will be kept. Stay up to date and keep farming!</span>
+        <label>Enable notifications?</label>
+        <div class="radio-group">
+            <label><input type="radio" name="notifications" value="true" checked> Yes</label>
+            <label><input type="radio" name="notifications" value="false"> No</label>
         </div>
-      </section>
 
-      <section style="background:#fff; border-radius:18px; box-shadow:0 2px 8px #e2b00722; padding:1.2em 1em; margin-bottom:2em; text-align:center;">
-        <p style="margin:0; font-size:1.09em; color:#222;">
-          <span style="font-weight:600; color:#6ab04c;">Sunflower Land Widget ready!</span><br>
-          Your farm stats, always at your fingertips.<br><br>
-          <a href="https://sunflower-land.com/play/#/visit/6826774918530594" target="_blank" style="color:#218c3c; font-weight:600; text-decoration:underline;">Visit my farm</a>
+        <label>Filters to display (check what you want to see)</label>
+        <div class="checkbox-group">
+            <div class="checkbox-item"><input type="checkbox" id="animal" checked> <label for="animal">Animals</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="resource" checked> <label for="resource">Resources</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="crop" checked> <label for="crop">Crops</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="fruit" checked> <label for="fruit">Fruits</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="flower" checked> <label for="flower">Flowers</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="beehive" checked> <label for="beehive">Beehives</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="greenhouse" checked> <label for="greenhouse">Greenhouse</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="mushroom" checked> <label for="mushroom">Mushrooms</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="crafting" checked> <label for="crafting">Crafting</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="cooking" checked> <label for="cooking">Cooking</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="composter" checked> <label for="composter">Composters</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="power" checked> <label for="power">Powers</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="crop_machine" checked> <label for="crop_machine">Crop Machine</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="floating_island" checked> <label for="floating_island">Floating Island</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="lava_pit" checked> <label for="lava_pit">Lava Pits</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="daily" checked> <label for="daily">Daily Collectibles</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="vip_chest" checked> <label for="vip_chest">VIP Chest</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="bud_box" checked> <label for="bud_box">Bud Box</label></div>
+        </div>
+
+        <button type="button" id="generateBtn">Generate Widget Code</button>
+    </form>
+
+    <div id="result" class="hidden">
+        <h2>Generated Code</h2>
+        <p>Copy the code below and paste it into a new Scriptable script named "SFL_widget.js".</p>
+        <textarea id="codeOutput" readonly></textarea>
+        <button id="copyBtn">Copy Code</button>
+        <button id="downloadBtn">Download File</button>
+
+        <h3 style="margin-top: 2em; color: #333;">How to Add the Widget to Your Home Screen</h3>
+        <ol style="text-align: left; margin: 1em 0; padding-left: 1.5em;">
+            <li>Go to your iPhone Home Screen.</li>
+            <li>Long press and tap the <strong>+</strong> button (top left).</li>
+            <li>Search for <strong>Scriptable</strong> in the widget list.</li>
+            <li>Add the Scriptable widget, then select <strong>SFL_widget</strong> in the widget settings.</li>
+        </ol>
+        <img src="guide_widget.gif" alt="How to add the widget" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
+        <div style="background: #f7f1e3; border-radius: 8px; padding: 0.7em 1em; font-weight: 500; margin-top: 1em; color: #a0522d; text-align: center;">
+            If the widget does not appear, open the Scriptable app to sync your scripts.
+        </div>
+
+        <h3 style="margin-top: 2em; color: #333;">Widget Updates</h3>
+        <p style="margin: 0.5em 0;">A new version is out? Go back to this website, regenerate your code with the same settings, and replace the script in Scriptable. Your farm settings will be kept.</p>
+
+        <p style="margin-top: 1em; text-align: center;">
+            <a href="https://sunflower-land.com/play/#/visit/6826774918530594" target="_blank" style="color: #218c3c; font-weight: 600; text-decoration: underline;">Visit my farm</a>
         </p>
-      </section>
-
-      <div class="footer">
-        <a href="https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS" target="_blank" class="btn" style="margin:0 auto; display:block;">GitHub Project Page</a>
-        <br><br>
-        <span style="font-size:0.95em;">Made for iOS & Scriptable • Sunflower Land Widget</span>
-      </div>
     </div>
+
+    <script>
+        const widgetUrl = 'https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/SFL-widget%2BNotif.js';
+
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const farmId = document.getElementById('farmId').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const enableNotifications = document.querySelector('input[name="notifications"]:checked').value === 'true';
+
+            if (!farmId || !apiKey) {
+                alert('Please fill in Farm ID and API Key.');
+                return;
+            }
+
+            try {
+                const response = await fetch(widgetUrl);
+                if (!response.ok) throw new Error('Erreur de téléchargement');
+                let code = await response.text();
+
+                // Remplacer les placeholders
+                code = code.replace(/const FARM_ID = "__FARM_ID__";/, `const FARM_ID = "${farmId}";`);
+                code = code.replace(/const API_KEY = "__API_KEY__";/, `const API_KEY = "${apiKey}";`);
+                code = code.replace(/const enableNotifications = __ENABLE_NOTIFICATIONS__;/, `const enableNotifications = ${enableNotifications};`);
+
+                // Générer categoryFilters
+                const filters = ['animal', 'resource', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box'];
+                let categoryFilters = '{\n';
+                filters.forEach(filter => {
+                    const checked = document.getElementById(filter).checked;
+                    categoryFilters += `    ${filter}: ${checked},\n`;
+                });
+                categoryFilters = categoryFilters.slice(0, -2) + '\n}';
+
+                code = code.replace(/const categoryFilters = \{[\s\S]*?\};/, `const categoryFilters = ${categoryFilters};`);
+
+                // Afficher le résultat
+                document.getElementById('codeOutput').value = code;
+                document.getElementById('result').classList.remove('hidden');
+            } catch (error) {
+                alert('Error during generation: ' + error.message);
+            }
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', async () => {
+            const code = document.getElementById('codeOutput').value;
+            if (!code) {
+                alert('Generate the code first.');
+                return;
+            }
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(code);
+                    alert('Code copied to clipboard!');
+                } else {
+                    const textarea = document.getElementById('codeOutput');
+                    textarea.select();
+                    document.execCommand('copy');
+                    alert('Code copied!');
+                }
+            } catch (error) {
+                alert('Error copying: ' + error.message);
+            }
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const code = document.getElementById('codeOutput').value;
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'SFL_widget.js';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
 </body>
 </html>

@@ -6,7 +6,6 @@
 
 - [🌻 Quick Start (EN)](#quick-start-en)
 - [🌻 Démarrage rapide (FR)](#demarrage-rapide-fr)
-- [🛠️ Manual Configuration / Configuration manuelle](#manual-configuration--configuration-manuelle)
 - [💡 Tips & FAQ / Astuces & FAQ](#tips--faq--astuces--faq)
 
 ---
@@ -32,23 +31,37 @@
 
 Download Scriptable from the App Store: [Scriptable on App Store](https://apps.apple.com/app/scriptable/id1405459188)
 
-### 2️⃣ Copy the installer script
+### 2️⃣ Generate your custom widget code
 
-Open [install_SFL_widget.js](install_SFL_widget.js), select all the code and copy it.
+Go to the [Sunflower Land Widget Generator](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html) website.
 
-> 📱 Tip: On iPhone, tap and hold to select all, then tap “Copy”.
+- Fill in your Farm ID and API Key.
+- Choose notification settings and select the filters you want to display.
+- Click "Generate Widget Code".
+- Copy the generated code.
+
+> 📱 Tip: Use the "Copy Code" button for easy copying.
 
 ### 3️⃣ Open Scriptable
 
 Open the Scriptable app on your iPhone. Tap the **+** button to create a new script.
 
-### 4️⃣ Paste and run
+### 4️⃣ Paste and save
 
-Paste the code, save, and run the script. Follow the instructions to set up your Farm ID and notifications.
+Paste the code, name it "SFL_widget.js", and save. Add the widget to your home screen!
 
-### 🌻 Direct widget script
+#### How to Add the Widget to Your Home Screen
+1. Go to your iPhone Home Screen.
+2. Long press and tap the **+** button (top left).
+3. Search for **Scriptable** in the widget list.
+4. Add the Scriptable widget, then select **SFL_widget** in the widget settings.
 
-You can also copy [SFL-widget+Notif.js](SFL-widget+Notif.js) and paste it directly in Scriptable for the all-in-one widget.
+![How to add the widget](guide_widget.gif)
+
+> **Important**: If the widget does not appear, open the Scriptable app to sync your scripts.
+
+#### Widget Updates
+A new version is out? Go back to the [widget generator website](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html), regenerate your code with the same settings, and replace the script in Scriptable. Your farm settings will be kept.
 
 ---
 
@@ -58,70 +71,47 @@ You can also copy [SFL-widget+Notif.js](SFL-widget+Notif.js) and paste it direct
 
 Téléchargez Scriptable sur l’App Store : [Scriptable sur l’App Store](https://apps.apple.com/app/scriptable/id1405459188)
 
-### 2️⃣ Copier le script d’installation
+### 2️⃣ Générer votre code de widget personnalisé
 
-Ouvrez [install_SFL_widget.js](install_SFL_widget.js), sélectionnez tout le code et copiez-le.
+Allez sur le site [Générateur de Widget Sunflower Land](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html).
 
-> 📱 Astuce : Sur iPhone, appuyez longtemps pour tout sélectionner, puis “Copier”.
+- Remplissez votre Farm ID et API Key.
+- Choisissez les paramètres de notifications et sélectionnez les filtres à afficher.
+- Cliquez sur "Generate Widget Code".
+- Copiez le code généré.
+
+> 📱 Astuce : Utilisez le bouton "Copy Code" pour une copie facile.
 
 ### 3️⃣ Ouvrir Scriptable
 
 Ouvrez l’application Scriptable sur votre iPhone. Appuyez sur le bouton **+** pour créer un nouveau script.
 
-### 4️⃣ Coller et lancer
+### 4️⃣ Coller et enregistrer
 
-Collez le code, enregistrez, puis lancez le script. Suivez les instructions pour configurer votre Farm ID et les notifications.
+Collez le code, nommez-le "SFL_widget.js", et enregistrez. Ajoutez le widget à votre écran d’accueil !
 
-### 🌻 Script widget direct
+#### Comment ajouter le widget à votre écran d'accueil
+1. Allez sur votre écran d'accueil iPhone.
+2. Appuyez longuement et tapez le bouton **+** (en haut à gauche).
+3. Recherchez **Scriptable** dans la liste des widgets.
+4. Ajoutez le widget Scriptable, puis sélectionnez **SFL_widget** dans les paramètres du widget.
 
-Vous pouvez aussi copier [SFL-widget+Notif.js](SFL-widget+Notif.js) et le coller directement dans Scriptable pour le widget tout-en-un.
+![Comment ajouter le widget](guide_widget.gif)
 
----
+> **Important** : Si le widget n’apparaît pas, ouvrez l’app Scriptable pour synchroniser vos scripts.
 
-## 🛠️ Manual Configuration / Configuration manuelle
-
-To manually set your Farm ID and notification settings, edit these lines in the script:
-
-```js
-// ====== CONFIGURATION ======
-// ⚠️ CHANGE YOUR FARM ID HERE:
-const FARM_ID = "__FARM_ID__";
-
-// ⚠️ NOTIFICATION SETTINGS:
-const enableNotifications = __ENABLE_NOTIFICATIONS__; // true = enabled, false = disabled
-```
-
-🌻 **How to personalize notifications?**
-
-- If you want to receive harvest notifications, set:
-  ```js
-  const enableNotifications = true; // Notifications ON
-  ```
-- If you do NOT want notifications, set:
-  ```js
-  const enableNotifications = false; // Notifications OFF
-  ```
-
-🌻 **Example / Exemple :**
-
-```js
-// ====== CONFIGURATION ======
-// ⚠️ CHANGE YOUR FARM ID HERE:
-const FARM_ID = "6826774918530594"; // Replace with your actual farm ID
-
-// ⚠️ NOTIFICATION SETTINGS:
-const enableNotifications = true; // Set to false to disable notifications
-```
+#### Mises à jour du widget
+Une nouvelle version est sortie ? Retournez sur le [site générateur de widget](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html), régénérez votre code avec les mêmes paramètres, et remplacez le script dans Scriptable. Vos paramètres de ferme seront conservés.
 
 ---
 
 ## 💡 Tips & FAQ / Astuces & FAQ
 
-- 🌻 If import links don’t work, use copy-paste (most reliable)
-- 🛠️ You can always edit the script to change your Farm ID or notification settings
+- 🌻 Use the [widget generator website](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html) for easy setup – no manual editing needed!
 - 🔔 Notifications require Scriptable to be allowed in iOS settings
 - 📲 Open Scriptable regularly to keep notifications working
 - 🔄 Tap the widget to refresh manually
+- 📱 If copy-paste doesn't work, use the "Download File" button on the website and import the .js file into Scriptable
 
 ---
 
