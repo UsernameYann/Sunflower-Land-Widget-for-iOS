@@ -32,23 +32,22 @@
 
         <div class="step">
         <h3>1️⃣ Install Scriptable</h3>
-        <p style="text-align: center;">Download Scriptable from the App Store: <a href="https://apps.apple.com/app/scriptable/id1405459188" target="_blank">Scriptable on App Store</a></p>
+        <p>Download Scriptable from the App Store: <a href="https://apps.apple.com/app/scriptable/id1405459188" target="_blank">Scriptable on App Store</a></p>
     </div>
 
     <div class="step">
-        <h2>Quick Start</h2>
         <h3>2️⃣ Generate your custom widget code</h3>
-        <p style="text-align: center;">Fill in the form below to generate your custom widget code.</p>
+        <p>Fill in the form below to generate your custom widget code.</p>
     <form id="configForm">
         <label for="farmId">Farm ID (e.g.: 1234)</label>
         <input type="text" id="farmId" required>
-        <small style="text-align: center; display: block;">Get your Farm ID from the game: Settings > General > Farm ID</small>
+        <small>Get your Farm ID from the game: Settings > General > Farm ID</small>
 
         <label for="apiKey">API Key (Get from Game -> Settings -> General -> API Key)</label>
         <input type="password" id="apiKey" required>
 
         <label>Enable notifications?</label>
-        <div class="radio-group" style="justify-content: center;">
+        <div class="radio-group">
             <label><input type="radio" name="notifications" value="true" checked> Yes</label>
             <label><input type="radio" name="notifications" value="false"> No</label>
         </div>
@@ -75,26 +74,22 @@
             <div class="checkbox-item"><input type="checkbox" id="bud_box" checked> <label for="bud_box">Bud Box</label></div>
         </div>
 
-        <div style="text-align: center;">
-            <button type="button" id="generateBtn">Generate Widget Code</button>
-        </div>
+        <button type="button" id="generateBtn">Generate Widget Code</button>
     </form>
 
         <h3>3️⃣ Open Scriptable</h3>
-        <p style="text-align: center;">Open the Scriptable app on your iPhone. Tap the <strong>+</strong> button to create a new script.</p>
+        <p>Open the Scriptable app on your iPhone. Tap the <strong>+</strong> button to create a new script.</p>
 
         <h3>4️⃣ Paste and save</h3>
-        <p style="text-align: center;">Paste the generated code, name it "SFL_widget.js", and save. Add the widget to your home screen!</p>
+        <p>Paste the generated code, name it "SFL_widget.js", and save. Add the widget to your home screen!</p>
     </div>
 
     <div id="result" class="hidden step">
         <h3>Generated Code</h3>
-        <p style="text-align: center;">Copy the code below and paste it into a new Scriptable script named "SFL_widget.js".</p>
+        <p>Copy the code below and paste it into a new Scriptable script named "SFL_widget.js".</p>
         <textarea id="codeOutput" readonly></textarea>
-        <div style="text-align: center;">
-            <button id="copyBtn">Copy Code</button>
-            <button id="downloadBtn">Download File</button>
-        </div>
+        <button id="copyBtn">Copy Code</button>
+        <button id="downloadBtn">Download File</button>
     </div>
 
     <div class="step">
@@ -113,12 +108,12 @@
 
     <div class="step">
         <h3>Widget Updates</h3>
-        <p style="text-align: center;">A new version is out? Go back to this website, regenerate your code with the same settings, and replace the script in Scriptable. Your farm settings will be kept.</p>
+        <p>A new version is out? Go back to this website, regenerate your code with the same settings, and replace the script in Scriptable. Your farm settings will be kept.</p>
     </div>
 
     <div class="step">
         <h3>💡 Tips & FAQ</h3>
-        <ul style="text-align: center;">
+        <ul>
             <li>🌻 Use this generator for easy setup – no manual editing needed!</li>
             <li>🔔 Notifications require Scriptable to be allowed in iOS settings.</li>
             <li>📲 Open Scriptable regularly to keep notifications working.</li>
@@ -129,9 +124,9 @@
 
     <div class="step">
         <h3>🌻 Bonus & Support</h3>
-        <p style="text-align: center;">👋 Visit my farm: <a href="https://sunflower-land.com/play/#/visit/6826774918530594" target="_blank">Click here to visit my Sunflower Land farm</a></p>
-        <p style="text-align: center;">Donations (ETH/Polygon): 0x450240d67aE2Def43DF8bF15ADC8c51a35918B5A</p>
-        <p style="text-align: center;">🎉 Enjoy your Sunflower Land widget with notifications!</p>
+        <p>👋 Visit my farm: <a href="https://sunflower-land.com/play/#/visit/6826774918530594" target="_blank">Click here to visit my Sunflower Land farm</a></p>
+        <p>Donations (ETH/Polygon): 0x450240d67aE2Def43DF8bF15ADC8c51a35918B5A</p>
+        <p>🎉 Enjoy your Sunflower Land widget with notifications!</p>
     </div>
 
     <script>
