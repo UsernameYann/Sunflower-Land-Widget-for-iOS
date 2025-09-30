@@ -33,7 +33,7 @@ Download Scriptable from the App Store: [Scriptable on App Store](https://apps.a
 
 ### 2️⃣ Generate your custom widget code
 
-Go to the [Sunflower Land Widget Generator](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html) website.
+Go to the [Sunflower Land Widget Generator](https://usernameyann.github.io/Sunflower-Land-Widget-for-iOS/guide.html) website.
 
 - Fill in your Farm ID and API Key.
 - Choose notification settings and select the filters you want to display.
@@ -61,7 +61,7 @@ Paste the code, name it "SFL_widget.js", and save. Add the widget to your home s
 > **Important**: If the widget does not appear, open the Scriptable app to sync your scripts.
 
 #### Widget Updates
-A new version is out? Go back to the [widget generator website](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html), regenerate your code with the same settings, and replace the script in Scriptable. Your farm settings will be kept.
+A new version is out? Go back to the [widget generator website](https://usernameyann.github.io/Sunflower-Land-Widget-for-iOS/guide.html), regenerate your code with the same settings, and replace the script in Scriptable. Your farm settings will be kept.
 
 ---
 
@@ -73,7 +73,7 @@ Téléchargez Scriptable sur l’App Store : [Scriptable sur l’App Store](http
 
 ### 2️⃣ Générer votre code de widget personnalisé
 
-Allez sur le site [Générateur de Widget Sunflower Land](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html).
+Allez sur le site [Générateur de Widget Sunflower Land](https://usernameyann.github.io/Sunflower-Land-Widget-for-iOS/guide.html).
 
 - Remplissez votre Farm ID et API Key.
 - Choisissez les paramètres de notifications et sélectionnez les filtres à afficher.
@@ -101,13 +101,13 @@ Collez le code, nommez-le "SFL_widget.js", et enregistrez. Ajoutez le widget à 
 > **Important** : Si le widget n’apparaît pas, ouvrez l’app Scriptable pour synchroniser vos scripts.
 
 #### Mises à jour du widget
-Une nouvelle version est sortie ? Retournez sur le [site générateur de widget](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html), régénérez votre code avec les mêmes paramètres, et remplacez le script dans Scriptable. Vos paramètres de ferme seront conservés.
+Une nouvelle version est sortie ? Retournez sur le [site générateur de widget](https://usernameyann.github.io/Sunflower-Land-Widget-for-iOS/guide.html), régénérez votre code avec les mêmes paramètres, et remplacez le script dans Scriptable. Vos paramètres de ferme seront conservés.
 
 ---
 
 ## 💡 Tips & FAQ / Astuces & FAQ
 
-- 🌻 Use the [widget generator website](https://github.com/UsernameYann/Sunflower-Land-Widget-for-iOS/blob/main/guide.html) for easy setup – no manual editing needed!
+- 🌻 Use the [widget generator website](https://usernameyann.github.io/Sunflower-Land-Widget-for-iOS/guide.html) for easy setup – no manual editing needed!
 - 🔔 Notifications require Scriptable to be allowed in iOS settings
 - 📲 Open Scriptable regularly to keep notifications working
 - 🔄 Tap the widget to refresh manually
