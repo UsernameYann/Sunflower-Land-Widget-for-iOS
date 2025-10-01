@@ -332,23 +332,31 @@
 
     <div id="result" class="hidden step">
         <h3>✨ Your Widget Code is Ready!</h3>
-        <p>Copy the code below and paste it into a new Scriptable script named "SFL_widget.js".</p>
+        <p>Choose one of the options below to add your widget to Scriptable:</p>
+        <ul>
+            <li><strong>📋 Copy Code:</strong> Copy and paste manually into Scriptable</li>
+            <li><strong>💾 Download .scriptable File:</strong> Download and import in Scriptable</li>
+            <li><strong>🚀 Add Directly to Scriptable:</strong> Open Scriptable automatically with your code (iOS only)</li>
+        </ul>
         <textarea id="codeOutput" readonly></textarea>
         <div class="button-group">
             <button id="copyBtn">📋 Copy Code</button>
-            <button id="downloadBtn">💾 Download File</button>
+            <button id="downloadBtn">💾 Download .scriptable File</button>
+            <button id="addToScriptableBtn">🚀 Add Directly to Scriptable</button>
         </div>
     </div>
 
     <div class="step">
-        <h3>3️⃣ Open Scriptable</h3>
-        <p>Open the Scriptable app on your iPhone. Tap the <strong>+</strong> button to create a new script.</p>
+        <h3>3️⃣ Add to Scriptable</h3>
+        <p><strong>Option A - Direct import (Recommended):</strong> Use the "🚀 Add Directly to Scriptable" button above to automatically open Scriptable with your code.</p>
+        <p><strong>Option B - Manual import:</strong> Open Scriptable, tap <strong>+</strong>, paste the code, and name it "SFL_widget".</p>
+        <p><strong>Option C - File import:</strong> Download the .scriptable file and import it via the Scriptable app.</p>
+        <img src="scriptable.gif" alt="How to paste and save in Scriptable" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
     </div>
 
     <div class="step">
-        <h3>4️⃣ Paste and save</h3>
-        <p>Paste the generated code, name it "SFL_widget.js", and save. Add the widget to your home screen!</p>
-        <img src="scriptable.gif" alt="How to paste and save in Scriptable" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
+        <h3>4️⃣ Save and add to home screen</h3>
+        <p>Save your script in Scriptable, then add the widget to your home screen!</p>
     </div>
 
     <div class="step">
@@ -373,11 +381,12 @@
     <div class="step">
         <h3>💡 Tips & FAQ</h3>
         <ul>
-            <li>🌻 Use this generator for easy setup</li>
+            <li>🚀 Try the "Add Directly to Scriptable" button for the easiest setup!</li>
+            <li>💾 The .scriptable file format is perfect for easy importing</li>
             <li>🔔 Notifications require Scriptable to be allowed in iOS settings.</li>
             <li>📲 Open Scriptable regularly to keep notifications working.</li>
             <li>🔄 Tap the widget to refresh manually.</li>
-            <li>📱 If copy-paste doesn't work, use the "Download File" button on the website and import the SFL_widget.js file into Scriptable.</li>
+            <li>📱 If the direct button doesn't work, try the download options instead.</li>
         </ul>
     </div>
 
@@ -456,12 +465,44 @@
 
         document.getElementById('downloadBtn').addEventListener('click', () => {
             const code = document.getElementById('codeOutput').value;
-            const blob = new Blob([code], { type: 'text/javascript' });
+            
+            // Créer le format .scriptable (JSON)
+            const scriptableData = {
+                "always-run-in-app": false,
+                "icon": {
+                    "color": "yellow",
+                    "glyph": "sun"
+                },
+                "name": "SFL_widget",
+                "script": code,
+                "share-sheet-inputs": []
+            };
+            
+            const jsonString = JSON.stringify(scriptableData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'SFL_widget.js';
+            a.download = 'SFL_widget.scriptable';
             a.click();
             URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('addToScriptableBtn').addEventListener('click', () => {
+            const code = document.getElementById('codeOutput').value;
+            if (!code) {
+                alert('Generate the code first.');
+                return;
+            }
+
+            // Encoder le code pour l'URL
+            const encodedCode = encodeURIComponent(code);
+            const scriptableName = encodeURIComponent('SFL_widget');
+            
+            // Créer l'URL scheme pour ajouter directement à Scriptable
+            const scriptableURL = `scriptable:///add?name=${scriptableName}&code=${encodedCode}`;
+            
+            // Rediriger vers Scriptable
+            window.location.href = scriptableURL;
         });
     </script>
