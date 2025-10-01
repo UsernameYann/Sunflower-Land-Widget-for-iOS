@@ -665,12 +665,12 @@ function getTimeRemaining(itemData) {
     }
 
     if (itemData.category === 'floating_island' && itemData.startAt && itemData.endAt) {
-        if (currentTime >= itemData.startAt && currentTime <= itemData.endAt) {
-            return (itemData.endAt - currentTime) / 1000;
-        } else if (currentTime < itemData.startAt) {
+        if (currentTime < itemData.startAt) {
+            // Notification uniquement pour le début (startAt)
             return (itemData.startAt - currentTime) / 1000;
         } else {
-            return (itemData.endAt - currentTime) / 1000;
+            // Île active ou terminée → pas de notification
+            return -1;
         }
     }
     
