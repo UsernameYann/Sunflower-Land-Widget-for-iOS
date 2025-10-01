@@ -21,35 +21,35 @@ const enableNotifications = __ENABLE_NOTIFICATIONS__;
 
 // ⚠️ FILTER SETTINGS: Set to true to show, false to hide categories
 const categoryFilters = {
-    animal: __FILTER_ANIMAL__,        // Animaux (poules, vaches, moutons)
+    animal: __FILTER_ANIMAL__,        
     
-    resource: __FILTER_RESOURCE__,      // GÉNÉRAL: Toutes les ressources (si false, utilise les filtres individuels)
+    resource: __FILTER_RESOURCE__,      
     
     // Ressources individuelles (utilisées uniquement si resource: false)
-    tree: __FILTER_TREE__,          // Arbres (2h)
-    stone: __FILTER_STONE__,         // Pierres (4h)
-    iron: __FILTER_IRON__,          // Fer (8h)
-    gold: __FILTER_GOLD__,          // Or (24h)
-    crimstone: __FILTER_CRIMSTONE__,     // Crimstone (24h)
-    sunstone: __FILTER_SUNSTONE__,      // Sunstone (72h)
-    oil: __FILTER_OIL__,           // Pétrole (20h)
-    
-    crop: __FILTER_CROP__,          // Cultures (blé, carottes, etc.)
-    fruit: __FILTER_FRUIT__,         // Fruits (pommes, bananes, etc.)
-    flower: __FILTER_FLOWER__,        // Fleurs
-    beehive: __FILTER_BEEHIVE__,       // Ruches
-    greenhouse: __FILTER_GREENHOUSE__,    // Serre
-    mushroom: __FILTER_MUSHROOM__,      // Champignons
-    crafting: __FILTER_CRAFTING__,      // Artisanat
-    cooking: __FILTER_COOKING__,       // Cuisine
-    composter: __FILTER_COMPOSTER__,     // Composteurs
-    power: __FILTER_POWER__,         // Pouvoirs
-    crop_machine: __FILTER_CROP_MACHINE__,  // Machine à récoltes
-    floating_island: __FILTER_FLOATING_ISLAND__, // Île flottante
-    lava_pit: __FILTER_LAVA_PIT__,      // Fosses de lave
-    daily: __FILTER_DAILY__,         // Collectibles quotidiens (récompenses, coffres, etc.)
-    vip_chest: __FILTER_VIP_CHEST__,     // Coffre VIP
-    bud_box: __FILTER_BUD_BOX__        // Boîte à buds
+    tree: __FILTER_TREE__,          
+    stone: __FILTER_STONE__,
+    iron: __FILTER_IRON__,
+    gold: __FILTER_GOLD__,
+    crimstone: __FILTER_CRIMSTONE__,
+    sunstone: __FILTER_SUNSTONE__,
+    oil: __FILTER_OIL__,
+
+    crop: __FILTER_CROP__,
+    fruit: __FILTER_FRUIT__,
+    flower: __FILTER_FLOWER__,
+    beehive: __FILTER_BEEHIVE__,
+    greenhouse: __FILTER_GREENHOUSE__,
+    mushroom: __FILTER_MUSHROOM__,
+    crafting: __FILTER_CRAFTING__,
+    cooking: __FILTER_COOKING__,
+    composter: __FILTER_COMPOSTER__,
+    power: __FILTER_POWER__,
+    crop_machine: __FILTER_CROP_MACHINE__,
+    floating_island: __FILTER_FLOATING_ISLAND__, 
+    lava_pit: __FILTER_LAVA_PIT__,
+    daily: __FILTER_DAILY__,
+    vip_chest: __FILTER_VIP_CHEST__,
+    bud_box: __FILTER_BUD_BOX__
 };
 
 const SFL_USER_CONFIG = { FARM_ID, API_KEY, enableNotifications, categoryFilters };
@@ -666,10 +666,8 @@ function getTimeRemaining(itemData) {
 
     if (itemData.category === 'floating_island' && itemData.startAt && itemData.endAt) {
         if (currentTime < itemData.startAt) {
-            // Notification uniquement pour le début (startAt)
             return (itemData.startAt - currentTime) / 1000;
         } else {
-            // Île active ou terminée → pas de notification
             return -1;
         }
     }
@@ -966,7 +964,6 @@ function parseResources(apiData, allItems) {
     };
     
     for (let [resourceType, config] of Object.entries(resourceTypes)) {
-        // Logique hiérarchique: resource général OR filtre individuel
         const showResource = SFL_USER_CONFIG.categoryFilters.resource || 
                            SFL_USER_CONFIG.categoryFilters[config.filter];
         if (!showResource) continue;
@@ -1487,12 +1484,12 @@ async function loadFromAPI() {
         
         console.log("🌐 Making API call to Sunflower Land...");
         
-        // Vérification de la clé API
         if (!SFL_USER_CONFIG.API_KEY || SFL_USER_CONFIG.API_KEY === "__API_KEY__") {
             throw new Error("API Key not configured. Please set your API Key in the configuration. Get it from: Game -> Settings -> General -> API Key");
         }
         
     let request = new Request(`https://api.sunflower-land.com/community/farms/${FARM_ID}`);
+    request.timeoutInterval = 10;
     request.headers = {
         "x-api-key": SFL_USER_CONFIG.API_KEY
     };
