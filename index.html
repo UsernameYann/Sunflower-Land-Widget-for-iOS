@@ -36,10 +36,7 @@
             background: white; 
             border-radius: 15px; 
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            border-left: 5px solid #6c757d;
-            transition: transform 0.2s ease;
         }
-        .step:hover { transform: translateY(-2px); }
         
         .step h3 { 
             color: #495057; 
@@ -102,17 +99,34 @@
             margin-right: 8px;
         }
         
+        .filter-section { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px;
+        }
+        .filter-section h4 { 
+            margin: 0 0 10px 0; 
+            color: #495057; 
+            font-size: 1.1em;
+        }
+        .filter-note { 
+            font-size: 0.9em; 
+            color: #6c757d; 
+            margin: 10px 0; 
+            font-style: italic;
+        }
         .checkbox-group { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-            gap: 15px; 
-            margin: 20px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 8px; 
+            margin: 10px 0;
         }
         .checkbox-item { 
             display: flex; 
             align-items: center;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 6px 8px;
+            border-radius: 4px;
             transition: background-color 0.2s ease;
         }
         .checkbox-item:hover { background-color: #f1f3f4; }
@@ -188,7 +202,7 @@
         }
         
         a {
-            color: #495057;
+            color: #007bff;
             text-decoration: none;
             font-weight: 500;
         }
@@ -222,11 +236,14 @@
     <form id="configForm">
         <label for="farmId">Farm ID</label>
         <input type="text" id="farmId" required>
-        <small>Get your Farm ID from the game: Settings > General > Farm ID</small>
+        <small>Get your Farm ID from the game: Settings > Farm ID</small>
 
         <label for="apiKey">API Key</label>
-        <input type="password" id="apiKey" required>
+        <input type="text" id="apiKey" required>
         <small>Get your API Key from the game: Settings > General > API Key</small>
+        <div class="tip">
+            <strong>Important</strong>: Never share your API key! It's personal to your account and should be kept secure.
+        </div>
 
         <label>Enable notifications?</label>
         <div class="radio-group">
@@ -234,30 +251,83 @@
             <label><input type="radio" name="notifications" value="false"> No</label>
         </div>
 
-        <label>Filters to display (check what you want to see)</label>
-        <div class="checkbox-group">
-            <div class="checkbox-item"><input type="checkbox" id="animal" checked> <label for="animal">Animals</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="resource" checked> <label for="resource">Resources</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="crop" checked> <label for="crop">Crops</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="fruit" checked> <label for="fruit">Fruits</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="flower" checked> <label for="flower">Flowers</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="beehive" checked> <label for="beehive">Beehives</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="greenhouse" checked> <label for="greenhouse">Greenhouse</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="mushroom" checked> <label for="mushroom">Mushrooms</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="crafting" checked> <label for="crafting">Crafting</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="cooking" checked> <label for="cooking">Cooking</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="composter" checked> <label for="composter">Composters</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="power" checked> <label for="power">Powers</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="crop_machine" checked> <label for="crop_machine">Crop Machine</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="floating_island" checked> <label for="floating_island">Floating Island</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="lava_pit" checked> <label for="lava_pit">Lava Pits</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="daily" checked> <label for="daily">Daily Collectibles</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="vip_chest" checked> <label for="vip_chest">VIP Chest</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="bud_box" checked> <label for="bud_box">Bud Box</label></div>
+        <label>🌟 Filters to display (check what you want to see)</label>
+        
+        <!-- Animals Section -->
+        <div class="filter-section">
+            <h4>🐄 Animals</h4>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="animal" checked> <label for="animal">Animals (Chickens, Cows, Sheep)</label></div>
+            </div>
         </div>
 
-        <button type="button" id="generateBtn">🚀 Generate My Widget Code</button>
+        <!-- Resources Section -->
+        <div class="filter-section">
+            <h4>⛏️ Resources</h4>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="resource" checked> <label for="resource"><strong>All Resources</strong></label></div>
+            </div>
+            <p class="filter-note">💡 <em>Uncheck "All Resources" above if you want to select individual resources below:</em></p>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="tree" checked> <label for="tree">🌳 Trees</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="stone" checked> <label for="stone">🪨 Stones</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="iron" checked> <label for="iron">⚙️ Iron</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="gold" checked> <label for="gold">🏆 Gold</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="crimstone" checked> <label for="crimstone">🔴 Crimstone</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="sunstone" checked> <label for="sunstone">☀️ Sunstone</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="oil" checked> <label for="oil">🛢️ Oil</label></div>
+            </div>
+        </div>
+
+        <!-- Farming Section -->
+        <div class="filter-section">
+            <h4>🌾 Farming</h4>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="crop" checked> <label for="crop">🌱 Crops</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="fruit" checked> <label for="fruit">🍎 Fruits</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="flower" checked> <label for="flower">🌸 Flowers</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="beehive" checked> <label for="beehive">🍯 Beehives</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="greenhouse" checked> <label for="greenhouse">🏠 Greenhouse</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="mushroom" checked> <label for="mushroom">🍄 Mushrooms</label></div>
+            </div>
+        </div>
+
+        <!-- Crafting & Cooking Section -->
+        <div class="filter-section">
+            <h4>🔨 Crafting & Cooking</h4>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="crafting" checked> <label for="crafting">🔧 Crafting</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="cooking" checked> <label for="cooking">👩‍🍳 Cooking</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="composter" checked> <label for="composter">♻️ Composters</label></div>
+            </div>
+        </div>
+
+        <!-- Special Areas Section -->
+        <div class="filter-section">
+            <h4>🏝️ Special Areas</h4>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="power" checked> <label for="power">⚡ Powers</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="crop_machine" checked> <label for="crop_machine">🚜 Crop Machine</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="floating_island" checked> <label for="floating_island">☁️ Floating Island</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="lava_pit" checked> <label for="lava_pit">🌋 Lava Pits</label></div>
+            </div>
+        </div>
+
+        <!-- Collectibles Section -->
+        <div class="filter-section">
+            <h4>🎁 Collectibles & Rewards</h4>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="daily" checked> <label for="daily">📅 Daily Collectibles</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="vip_chest" checked> <label for="vip_chest">💎 VIP Chest</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="bud_box" checked> <label for="bud_box">📦 Bud Box</label></div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button type="button" id="generateBtn">🚀 Generate My Widget Code</button>
+        </div>
     </form>
+        <img src="web.gif" alt="How to generate widget code" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
     </div>
 
     <div id="result" class="hidden step">
@@ -278,6 +348,7 @@
     <div class="step">
         <h3>4️⃣ Paste and save</h3>
         <p>Paste the generated code, name it "SFL_widget.js", and save. Add the widget to your home screen!</p>
+        <img src="scriptable.gif" alt="How to paste and save in Scriptable" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
     </div>
 
     <div class="step">
@@ -306,7 +377,7 @@
             <li>🔔 Notifications require Scriptable to be allowed in iOS settings.</li>
             <li>📲 Open Scriptable regularly to keep notifications working.</li>
             <li>🔄 Tap the widget to refresh manually.</li>
-            <li>📱 If copy-paste doesn't work, use the "Download File" button on the website and import the .js file into Scriptable.</li>
+            <li>📱 If copy-paste doesn't work, use the "Download File" button on the website and import the SFL_widget.js file into Scriptable.</li>
         </ul>
     </div>
 
@@ -339,21 +410,20 @@
                 if (!response.ok) throw new Error('Erreur de téléchargement');
                 let code = await response.text();
 
-                // Remplacer les placeholders
+                // Remplacer les placeholders de base
                 code = code.replace(/const FARM_ID = "__FARM_ID__";/, `const FARM_ID = "${farmId}";`);
                 code = code.replace(/const API_KEY = "__API_KEY__";/, `const API_KEY = "${apiKey}";`);
                 code = code.replace(/const enableNotifications = __ENABLE_NOTIFICATIONS__;/, `const enableNotifications = ${enableNotifications};`);
 
-                // Générer categoryFilters
-                const filters = ['animal', 'resource', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box'];
-                let categoryFilters = '{\n';
+                // Remplacer tous les placeholders de filtres individuellement
+                const filters = ['animal', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box'];
+                
                 filters.forEach(filter => {
                     const checked = document.getElementById(filter).checked;
-                    categoryFilters += `    ${filter}: ${checked},\n`;
+                    const placeholder = `__FILTER_${filter.toUpperCase()}__`;
+                    const regex = new RegExp(placeholder, 'g');
+                    code = code.replace(regex, checked);
                 });
-                categoryFilters = categoryFilters.slice(0, -2) + '\n}';
-
-                code = code.replace(/const categoryFilters = \{[\s\S]*?\};/, `const categoryFilters = ${categoryFilters};`);
 
                 // Afficher le résultat
                 document.getElementById('codeOutput').value = code;
