@@ -1,6 +1,6 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file when concatenated into a single script.
-// icon-color: orange; icon-glyph: magic; V0.0003
+// icon-color: orange; icon-glyph: magic; V0.0002
 
 // ====== SFL WIDGET MODULE: header ======
 
@@ -8,15 +8,53 @@
 // ⚠️ CHANGE YOUR FARM ID HERE:
 const FARM_ID = "__FARM_ID__";
 
+// ⚠️ API KEY (Required as of October 25th, 2025)
+// Get your API Key from: Game -> Settings -> General -> API Key
+// 🔒 NEVER SHARE YOUR API KEY
+const API_KEY = "__API_KEY__";
+
 // ⚠️ NOTIFICATION SETTINGS:
 // To enable notifications, set to true. To disable, set to false.
 // Example: const enableNotifications = true;
 // If you use Scriptable on iOS, notifications will only be scheduled if this parameter is true.
 const enableNotifications = __ENABLE_NOTIFICATIONS__;
 
-// Expose a simple config object for convenience
-const SFL_USER_CONFIG = { FARM_ID, enableNotifications };
+// ⚠️ FILTER SETTINGS: Set to true to show, false to hide categories
+const categoryFilters = {
+    animal: __FILTER_ANIMAL__,        // Animaux (poules, vaches, moutons)
+    
+    resource: __FILTER_RESOURCE__,      // GÉNÉRAL: Toutes les ressources (si false, utilise les filtres individuels)
+    
+    // Ressources individuelles (utilisées uniquement si resource: false)
+    tree: __FILTER_TREE__,          // Arbres (2h)
+    stone: __FILTER_STONE__,         // Pierres (4h)
+    iron: __FILTER_IRON__,          // Fer (8h)
+    gold: __FILTER_GOLD__,          // Or (24h)
+    crimstone: __FILTER_CRIMSTONE__,     // Crimstone (24h)
+    sunstone: __FILTER_SUNSTONE__,      // Sunstone (72h)
+    oil: __FILTER_OIL__,           // Pétrole (20h)
+    
+    crop: __FILTER_CROP__,          // Cultures (blé, carottes, etc.)
+    fruit: __FILTER_FRUIT__,         // Fruits (pommes, bananes, etc.)
+    flower: __FILTER_FLOWER__,        // Fleurs
+    beehive: __FILTER_BEEHIVE__,       // Ruches
+    greenhouse: __FILTER_GREENHOUSE__,    // Serre
+    mushroom: __FILTER_MUSHROOM__,      // Champignons
+    crafting: __FILTER_CRAFTING__,      // Artisanat
+    cooking: __FILTER_COOKING__,       // Cuisine
+    composter: __FILTER_COMPOSTER__,     // Composteurs
+    power: __FILTER_POWER__,         // Pouvoirs
+    crop_machine: __FILTER_CROP_MACHINE__,  // Machine à récoltes
+    floating_island: __FILTER_FLOATING_ISLAND__, // Île flottante
+    lava_pit: __FILTER_LAVA_PIT__,      // Fosses de lave
+    daily: __FILTER_DAILY__,         // Collectibles quotidiens (récompenses, coffres, etc.)
+    vip_chest: __FILTER_VIP_CHEST__,     // Coffre VIP
+    bud_box: __FILTER_BUD_BOX__        // Boîte à buds
+};
+
+const SFL_USER_CONFIG = { FARM_ID, API_KEY, enableNotifications, categoryFilters };
 globalThis.SFL_USER_CONFIG = globalThis.SFL_USER_CONFIG || SFL_USER_CONFIG;
+
 
 // ====== TIME CONSTANTS ======
 
@@ -129,8 +167,6 @@ const MUSHROOMS_TIMES = {
     "Mushroom": 16 * 60 * 60, 
     "Magic Mushroom": 24 * 60 * 60,
 };
-
-const LAVA_PIT_TIME_SECONDS = 72 * 60 * 60;
 
 function getLavaPitTimeSeconds(farm) {
     let time = 72 * 60 * 60;
@@ -360,6 +396,7 @@ const ROW_SPACING = {
     medium: 1,
     large: 1
 };
+
 
 // ====== UTILITY FUNCTIONS ======
 
@@ -755,6 +792,7 @@ function getEventEmoji(event) {
     return eventEmojis[event] || '';
 }
 
+
 // ====== PARSERS & DAILY ======
 
 function getNextDailyReset() {
@@ -829,6 +867,7 @@ function checkDailyReset(allItems, itemName, lastCollectedAt) {
 }
 
 function parseDailyCollectibles(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.daily) return;
     console.log("=== DEBUG DAILY COLLECTIBLES ===");
     
     if (apiData.farm && apiData.farm.dailyRewards && apiData.farm.dailyRewards.chest && apiData.farm.dailyRewards.chest.collectedAt) {
@@ -872,6 +911,7 @@ function parseDailyCollectibles(apiData, allItems) {
     }
 
     if (apiData.farm && apiData.farm.pumpkinPlaza && apiData.farm.pumpkinPlaza.vipChest) {
+        if (!SFL_USER_CONFIG.categoryFilters.vip_chest) return;  
         const vip = apiData.farm.pumpkinPlaza.vipChest;
         const openedAt = vip.openedAt || null;
         const now = Date.now();
@@ -916,16 +956,21 @@ function parseDailyCollectibles(apiData, allItems) {
 
 function parseResources(apiData, allItems) {
     const resourceTypes = {
-        "trees": { name: "Tree", key: "wood", timestamp: "choppedAt" },
-        "stones": { name: "Stone", key: "stone", timestamp: "minedAt" },
-        "iron": { name: "Iron", key: "stone", timestamp: "minedAt" },
-        "gold": { name: "Gold", key: "stone", timestamp: "minedAt" },
-        "crimstones": { name: "Crimstone", key: "stone", timestamp: "minedAt" },
-        "sunstones": { name: "Sunstone", key: "stone", timestamp: "minedAt" },
-        "oilReserves": { name: "Oil", key: "oil", timestamp: "drilledAt" }
+        "trees": { name: "Tree", key: "wood", timestamp: "choppedAt", filter: "tree" },
+        "stones": { name: "Stone", key: "stone", timestamp: "minedAt", filter: "stone" },
+        "iron": { name: "Iron", key: "stone", timestamp: "minedAt", filter: "iron" },
+        "gold": { name: "Gold", key: "stone", timestamp: "minedAt", filter: "gold" },
+        "crimstones": { name: "Crimstone", key: "stone", timestamp: "minedAt", filter: "crimstone" },
+        "sunstones": { name: "Sunstone", key: "stone", timestamp: "minedAt", filter: "sunstone" },
+        "oilReserves": { name: "Oil", key: "oil", timestamp: "drilledAt", filter: "oil" }
     };
     
     for (let [resourceType, config] of Object.entries(resourceTypes)) {
+        // Logique hiérarchique: resource général OR filtre individuel
+        const showResource = SFL_USER_CONFIG.categoryFilters.resource || 
+                           SFL_USER_CONFIG.categoryFilters[config.filter];
+        if (!showResource) continue;
+        
         if (apiData.farm && apiData.farm[resourceType]) {
             for (let [resourceId, resourceInfo] of Object.entries(apiData.farm[resourceType])) {
                 if (!resourceInfo[config.key]) continue;
@@ -948,6 +993,7 @@ function parseResources(apiData, allItems) {
 }
 
 function parseLavaPits(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.lava_pit) return;
     if (apiData.farm && apiData.farm.lavaPits) {
         for (let [pitId, pitInfo] of Object.entries(apiData.farm.lavaPits)) {
                     const startedAt = pitInfo.startedAt || pitInfo.createdAt || null;
@@ -982,6 +1028,7 @@ function parseLavaPits(apiData, allItems) {
 }
 
 function parseCrops(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.crop) return;
     if (apiData.farm && apiData.farm.crops) {
         for (let [cropId, cropInfo] of Object.entries(apiData.farm.crops)) {
             if (cropInfo.crop && cropInfo.crop.plantedAt && cropInfo.crop.name) {
@@ -1000,6 +1047,7 @@ function parseCrops(apiData, allItems) {
 }
 
 function parseFruits(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.fruit) return;
     if (apiData.farm && apiData.farm.fruitPatches) {
         for (let [patchId, patchInfo] of Object.entries(apiData.farm.fruitPatches)) {
             if (patchInfo.fruit && patchInfo.fruit.name) {
@@ -1024,6 +1072,7 @@ function parseFruits(apiData, allItems) {
 }
 
 function parseAnimals(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.animal) return;
     if (apiData.farm && apiData.farm.henHouse && apiData.farm.henHouse.animals) {
         for (let [animalId, animalInfo] of Object.entries(apiData.farm.henHouse.animals)) {
             if (animalInfo.type === "Chicken" && animalInfo.awakeAt && animalInfo.asleepAt) {
@@ -1064,6 +1113,7 @@ function parseAnimals(apiData, allItems) {
 }
 
 function parseFlowers(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.flower) return;
     if (apiData.farm && apiData.farm.flowers && apiData.farm.flowers.flowerBeds) {
         for (let [bedId, bedInfo] of Object.entries(apiData.farm.flowers.flowerBeds)) {
             if (bedInfo.flower && bedInfo.flower.plantedAt && bedInfo.flower.name) {
@@ -1082,6 +1132,7 @@ function parseFlowers(apiData, allItems) {
 }
 
 function parseBeehives(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.beehive) return;
     if (apiData.farm && apiData.farm.beehives) {
         for (let [hiveId, hiveInfo] of Object.entries(apiData.farm.beehives)) {
             if (hiveInfo.flowers && hiveInfo.flowers.length > 0) {
@@ -1104,6 +1155,7 @@ function parseBeehives(apiData, allItems) {
 }
 
 function parseGreenhouse(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.greenhouse) return;
 
     if (apiData.farm && apiData.farm.greenhouse && apiData.farm.greenhouse.pots) {
         for (let [potId, potInfo] of Object.entries(apiData.farm.greenhouse.pots)) {
@@ -1119,6 +1171,7 @@ function parseGreenhouse(apiData, allItems) {
 }
 
 function parseMushrooms(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.mushroom) return;
 
     if (apiData.farm && apiData.farm.mushrooms) {
         let mushrooms = apiData.farm.mushrooms;
@@ -1139,6 +1192,7 @@ function parseMushrooms(apiData, allItems) {
 }
 
 function parseCrafting(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.crafting) return;
 
     if (apiData.farm && apiData.farm.craftingBox) {
         let craftingBox = apiData.farm.craftingBox;
@@ -1154,6 +1208,7 @@ function parseCrafting(apiData, allItems) {
 }
 
 function parseCooking(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.cooking) return;
 
     if (apiData.farm && apiData.farm.buildings) {
         const cookingBuildings = ["Fire Pit", "Kitchen", "Bakery", "Deli", "Smoothie Shack"];
@@ -1180,6 +1235,7 @@ function parseCooking(apiData, allItems) {
 }
 
 function parseComposters(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.composter) return;
 
     if (apiData.farm && apiData.farm.buildings) {
         const composterTypes = ["Premium Composter", "Turbo Composter", "Compost Bin"];
@@ -1207,6 +1263,7 @@ function parseComposters(apiData, allItems) {
 }
 
 function parsePowers(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.power) return;
     if (apiData.farm && apiData.farm.bumpkin && apiData.farm.bumpkin.previousPowerUseAt) {
         const powers = apiData.farm.bumpkin.previousPowerUseAt;
         
@@ -1231,6 +1288,7 @@ function parsePowers(apiData, allItems) {
 }
 
 function parseCropMachine(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.crop_machine) return;
     if (apiData.farm && apiData.farm.buildings && apiData.farm.buildings["Crop Machine"]) {
         for (let machine of apiData.farm.buildings["Crop Machine"]) {
             if (machine.queue && Array.isArray(machine.queue)) {
@@ -1258,6 +1316,7 @@ function parseCropMachine(apiData, allItems) {
 }
 
 function parseFloatingIsland(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.floating_island) return;
     console.log('=== DEBUG parseFloatingIsland ===');
     if (apiData.farm && apiData.farm.floatingIsland) {
         const floatingIsland = apiData.farm.floatingIsland;
@@ -1359,6 +1418,7 @@ function parseBuds(apiData, allItems) {
 }
 
 function parseBudBox(apiData, allItems) {
+    if (!SFL_USER_CONFIG.categoryFilters.bud_box) return;
     if (!(apiData.farm && apiData.farm.pumpkinPlaza)) return;
 
     const openedAt = apiData.farm.pumpkinPlaza.budBox && apiData.farm.pumpkinPlaza.budBox.openedAt ? apiData.farm.pumpkinPlaza.budBox.openedAt : 0;
@@ -1427,9 +1487,18 @@ async function loadFromAPI() {
         
         console.log("🌐 Making API call to Sunflower Land...");
         
+        // Vérification de la clé API
+        if (!SFL_USER_CONFIG.API_KEY || SFL_USER_CONFIG.API_KEY === "__API_KEY__") {
+            throw new Error("API Key not configured. Please set your API Key in the configuration. Get it from: Game -> Settings -> General -> API Key");
+        }
+        
     let request = new Request(`https://api.sunflower-land.com/community/farms/${FARM_ID}`);
+    request.headers = {
+        "x-api-key": SFL_USER_CONFIG.API_KEY
+    };
     let apiData = await request.loadJSON();
 
+    // Sauvegarde du cache API brut, formaté lisiblement
     Keychain.set('RAW_API_CACHE_KEY', JSON.stringify(apiData, null, 2));
 
     Keychain.set(LAST_API_CALL_KEY, currentTime.toString());
@@ -1514,7 +1583,8 @@ function getUpcomingItems(allItems) {
     const oneHourFromNow = currentTime + (NOTIFICATION_LOOKAHEAD_HOURS * HOUR_TO_MS);
     
     for (const [itemName, itemData] of Object.entries(allItems)) {
-    if (itemName.startsWith('__')) continue;
+        if (itemName.startsWith('__')) continue;
+        if (!SFL_USER_CONFIG.categoryFilters[itemData.category]) continue;
         if (itemData.category === 'lava_pit') {
             const remainingSeconds = itemData.remainingSeconds != null ? itemData.remainingSeconds : null;
             const readyTime = remainingSeconds != null ? (currentTime + (remainingSeconds * SECOND_TO_MS)) : null;
@@ -2073,7 +2143,7 @@ const twelveHoursMs = 12 * 60 * 60 * 1000;
 const now = Date.now();
 
 for (const [itemName, itemData] of Object.entries(allItems)) {
-    if (itemData.category === 'power' && itemData.nextAvailableAt) {
+    if (itemData.category === 'power' && itemData.nextAvailableAt && itemName !== 'Tree Blitz') {
         const timeRemainingMs = itemData.nextAvailableAt - now;
         if (timeRemainingMs > 0 && timeRemainingMs < twelveHoursMs) {
             showPowerIcon = true;
