@@ -1082,7 +1082,7 @@ function parseAnimals(apiData, allItems) {
     if (apiData.farm && apiData.farm.henHouse && apiData.farm.henHouse.animals) {
         for (let [animalId, animalInfo] of Object.entries(apiData.farm.henHouse.animals)) {
             if (animalInfo.type === "Chicken" && animalInfo.awakeAt && animalInfo.asleepAt) {
-                if (!categoryFilters.animal && !categoryFilters.chicken) continue;
+                if (!categoryFilters.animal && !categoryFilters.chicken && !categoryFilters.chickenLove) continue;
                 let animalName = `${animalInfo.type} ${animalId}`;
                 allItems[animalName] = {
                     awakeAt: animalInfo.awakeAt, 
@@ -1103,7 +1103,7 @@ function parseAnimals(apiData, allItems) {
         for (let [animalId, animalInfo] of Object.entries(apiData.farm.barn.animals)) {
             if ((animalInfo.type === "Cow" || animalInfo.type === "Sheep") && animalInfo.awakeAt && animalInfo.asleepAt) {
                 const typeLower = animalInfo.type.toLowerCase();
-                if (!categoryFilters.animal && !categoryFilters[typeLower]) continue;
+                if (!categoryFilters.animal && !categoryFilters[typeLower] && !categoryFilters[typeLower + 'Love']) continue;
                 let animalName = `${animalInfo.type} ${animalId}`;
                 allItems[animalName] = {
                     awakeAt: animalInfo.awakeAt, 
@@ -1593,7 +1593,10 @@ function getUpcomingItems(allItems) {
     
     for (const [itemName, itemData] of Object.entries(allItems)) {
         if (itemName.startsWith('__')) continue;
-        if (!SFL_USER_CONFIG.categoryFilters[itemData.category]) continue;
+        const categoryFilters = SFL_USER_CONFIG.categoryFilters;
+        if (!categoryFilters[itemData.category]) {
+            if (itemData.category !== 'animal' || (!categoryFilters.animal && !categoryFilters[itemData.type.toLowerCase()])) continue;
+        }
         if (itemData.category === 'lava_pit') {
             const remainingSeconds = itemData.remainingSeconds != null ? itemData.remainingSeconds : null;
             const readyTime = remainingSeconds != null ? (currentTime + (remainingSeconds * SECOND_TO_MS)) : null;
