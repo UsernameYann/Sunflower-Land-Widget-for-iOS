@@ -1662,10 +1662,15 @@ function getUpcomingItems(allItems) {
 }
 
 function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFromNow, upcomingItems) {
+    const categoryFilters = SFL_USER_CONFIG.categoryFilters;
+    const typeLower = itemData.type.toLowerCase();
+    const wakeFilter = categoryFilters.animal || categoryFilters[typeLower];
+    const loveFilter = categoryFilters.animal || categoryFilters[typeLower + 'Love'];
+    
     const wakeRemaining = timeResult.wakeTime;
     const wakeReadyTime = currentTime + (wakeRemaining * SECOND_TO_MS);
     
-    if (wakeRemaining > 0 && wakeReadyTime <= oneHourFromNow) {
+    if (wakeRemaining > 0 && wakeFilter && wakeReadyTime <= oneHourFromNow) {
         upcomingItems.push({
             name: itemData.name || itemData.type,
             category: itemData.category,
@@ -1678,7 +1683,7 @@ function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFr
         });
     }
     
-    if (timeResult.loveTime !== null && timeResult.loveTime > 0) {
+    if (timeResult.loveTime !== null && timeResult.loveTime > 0 && loveFilter) {
         const loveReadyTime = currentTime + (timeResult.loveTime * SECOND_TO_MS);
         
         if (loveReadyTime <= oneHourFromNow) {
