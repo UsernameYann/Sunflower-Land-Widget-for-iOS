@@ -268,7 +268,16 @@
         <div class="filter-section">
             <h4>🐄 Animals</h4>
             <div class="checkbox-group">
-                <div class="checkbox-item"><input type="checkbox" id="animal" checked> <label for="animal">Animals (Chickens, Cows, Sheep)</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="animal" checked> <label for="animal"><strong>All Animals</strong></label></div>
+            </div>
+            <p class="filter-note">💡 <em>Uncheck "All Animals" above if you want to select individual animals below:</em></p>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="chicken" checked> <label for="chicken">🐔 Chickens</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="chickenLove" checked> <label for="chickenLove">❤️ Chicken Love</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="cow" checked> <label for="cow">🐄 Cows</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="cowLove" checked> <label for="cowLove">❤️ Cow Love</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="sheep" checked> <label for="sheep">🐑 Sheep</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="sheepLove" checked> <label for="sheepLove">❤️ Sheep Love</label></div>
             </div>
         </div>
 
@@ -427,7 +436,7 @@
                 code = code.replace(/const enableNotifications = __ENABLE_NOTIFICATIONS__;/, `const enableNotifications = ${enableNotifications};`);
 
                 // Remplacer tous les placeholders de filtres individuellement
-                const filters = ['animal', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box'];
+                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box'];
                 
                 filters.forEach(filter => {
                     const checked = document.getElementById(filter).checked;

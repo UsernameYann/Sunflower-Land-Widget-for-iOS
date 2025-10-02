@@ -49,7 +49,15 @@ const categoryFilters = {
     lava_pit: __FILTER_LAVA_PIT__,
     daily: __FILTER_DAILY__,
     vip_chest: __FILTER_VIP_CHEST__,
-    bud_box: __FILTER_BUD_BOX__
+    bud_box: __FILTER_BUD_BOX__,
+
+    // Animaux individuels (utilisés si animal: false)
+    chicken: __FILTER_CHICKEN__,      // Poules
+    chickenLove: __FILTER_CHICKEN_LOVE__,  // Afficher les ❤️ pour poules
+    cow: __FILTER_COW__,            // Vaches
+    cowLove: __FILTER_COW_LOVE__,      // Afficher les ❤️ pour vaches
+    sheep: __FILTER_SHEEP__,          // Moutons
+    sheepLove: __FILTER_SHEEP_LOVE__,    // Afficher les ❤️ pour moutons
 };
 
 const SFL_USER_CONFIG = { FARM_ID, API_KEY, enableNotifications, categoryFilters };
@@ -785,7 +793,8 @@ function getEventEmoji(event) {
         fullMoon: '🌕',
         tsunami: '🌊',
         insectPlague: '🐞',
-        bountifulHarvest: '🌾'
+        bountifulHarvest: '🌾',
+        tornado: '🌪️'
     };
     return eventEmojis[event] || '';
 }
@@ -1069,10 +1078,11 @@ function parseFruits(apiData, allItems) {
 }
 
 function parseAnimals(apiData, allItems) {
-    if (!SFL_USER_CONFIG.categoryFilters.animal) return;
+    const categoryFilters = SFL_USER_CONFIG.categoryFilters;
     if (apiData.farm && apiData.farm.henHouse && apiData.farm.henHouse.animals) {
         for (let [animalId, animalInfo] of Object.entries(apiData.farm.henHouse.animals)) {
             if (animalInfo.type === "Chicken" && animalInfo.awakeAt && animalInfo.asleepAt) {
+                if (!categoryFilters.animal && !categoryFilters.chicken) continue;
                 let animalName = `${animalInfo.type} ${animalId}`;
                 allItems[animalName] = {
                     awakeAt: animalInfo.awakeAt, 
@@ -1092,6 +1102,8 @@ function parseAnimals(apiData, allItems) {
     if (apiData.farm && apiData.farm.barn && apiData.farm.barn.animals) {
         for (let [animalId, animalInfo] of Object.entries(apiData.farm.barn.animals)) {
             if ((animalInfo.type === "Cow" || animalInfo.type === "Sheep") && animalInfo.awakeAt && animalInfo.asleepAt) {
+                const typeLower = animalInfo.type.toLowerCase();
+                if (!categoryFilters.animal && !categoryFilters[typeLower]) continue;
                 let animalName = `${animalInfo.type} ${animalId}`;
                 allItems[animalName] = {
                     awakeAt: animalInfo.awakeAt, 
@@ -1489,7 +1501,7 @@ async function loadFromAPI() {
         }
         
     let request = new Request(`https://api.sunflower-land.com/community/farms/${FARM_ID}`);
-    request.timeoutInterval = 10;
+    request.timeoutInterval = 3;
     request.headers = {
         "x-api-key": SFL_USER_CONFIG.API_KEY
     };
@@ -1850,7 +1862,9 @@ function groupItemsByTime(allItems) {
             
             addToAnimalGroup(groupedItems, itemName, itemData, wakeRemaining, false);
             
-            if (loveRemaining !== null) {
+            const typeLower = itemData.type.toLowerCase();
+            const loveFilter = SFL_USER_CONFIG.categoryFilters[typeLower + 'Love'];
+            if (loveRemaining !== null && (SFL_USER_CONFIG.categoryFilters.animal || loveFilter)) {
                 addToAnimalGroup(groupedItems, itemName, itemData, loveRemaining, true);
             }
             
