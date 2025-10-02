@@ -1873,11 +1873,14 @@ function groupItemsByTime(allItems) {
             const wakeRemaining = timeResult.wakeTime;
             const loveRemaining = timeResult.loveTime;
             
-            addToAnimalGroup(groupedItems, itemName, itemData, wakeRemaining, false);
-            
             const typeLower = itemData.type.toLowerCase();
-            const loveFilter = SFL_USER_CONFIG.categoryFilters[typeLower + 'Love'];
-            if (loveRemaining !== null && (SFL_USER_CONFIG.categoryFilters.animal || loveFilter)) {
+            const wakeFilter = SFL_USER_CONFIG.categoryFilters.animal || SFL_USER_CONFIG.categoryFilters[typeLower];
+            if (wakeFilter) {
+                addToAnimalGroup(groupedItems, itemName, itemData, wakeRemaining, false);
+            }
+            
+            const loveFilter = SFL_USER_CONFIG.categoryFilters.animal || SFL_USER_CONFIG.categoryFilters[typeLower + 'Love'];
+            if (loveRemaining !== null && loveFilter) {
                 addToAnimalGroup(groupedItems, itemName, itemData, loveRemaining, true);
             }
             
