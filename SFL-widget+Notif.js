@@ -1595,7 +1595,12 @@ function getUpcomingItems(allItems) {
         if (itemName.startsWith('__')) continue;
         const categoryFilters = SFL_USER_CONFIG.categoryFilters;
         if (!categoryFilters[itemData.category]) {
-            if (itemData.category !== 'animal' || (!categoryFilters.animal && !categoryFilters[itemData.type.toLowerCase()])) continue;
+            if (itemData.category === 'animal') {
+                const typeLower = itemData.type.toLowerCase();
+                if (!categoryFilters.animal && !categoryFilters[typeLower] && !categoryFilters[typeLower + 'Love']) continue;
+            } else {
+                continue;
+            }
         }
         if (itemData.category === 'lava_pit') {
             const remainingSeconds = itemData.remainingSeconds != null ? itemData.remainingSeconds : null;
