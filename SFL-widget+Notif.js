@@ -1598,6 +1598,9 @@ function getUpcomingItems(allItems) {
             if (itemData.category === 'animal') {
                 const typeLower = itemData.type.toLowerCase();
                 if (!categoryFilters.animal && !categoryFilters[typeLower] && !categoryFilters[typeLower + 'Love']) continue;
+            } else if (itemData.category === 'resource') {
+                const nameLower = (itemData.name || itemData.type).toLowerCase();
+                if (!categoryFilters.resource && !categoryFilters[nameLower]) continue;
             } else {
                 continue;
             }
