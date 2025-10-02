@@ -440,7 +440,8 @@
                 
                 filters.forEach(filter => {
                     const checked = document.getElementById(filter).checked;
-                    const placeholder = `__FILTER_${filter.toUpperCase()}__`;
+                    // Convertir camelCase en UPPER_CASE avec underscores
+                    const placeholder = `__FILTER_${filter.replace(/([A-Z])/g, '_$1').toUpperCase()}__`;
                     const regex = new RegExp(placeholder, 'g');
                     code = code.replace(regex, checked);
                 });
