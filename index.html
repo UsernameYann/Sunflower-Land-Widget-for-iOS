@@ -184,14 +184,13 @@
         }
         
         .tip { 
-            background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%); 
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
             padding: 20px; 
             border-radius: 10px; 
             margin: 20px 0;
-            border-left: 4px solid #28a745;
         }
         .tip strong {
-            color: #155724;
+            color: #721c24;
         }
         
         img {
@@ -210,32 +209,132 @@
             text-decoration: underline;
         }
         
-        @media (max-width: 768px) {
-            .container { padding: 15px; }
-            h1 { font-size: 2em; }
-            .step { padding: 20px; margin: 20px 0; }
-            .checkbox-group { grid-template-columns: 1fr; }
-            .button-group { flex-direction: column; }
-            button { width: 100%; }
+        .changelog {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-left: 15px;
+            margin-left: -15px;
+        }
+        .changelog-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .changelog-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .changelog-date {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        .changelog-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .widget-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+            align-items: stretch;
+        }
+        .widget-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 350px;
+        }
+        .widget-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+        .widget-card img {
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .widget-card h4 {
+            color: #495057;
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+        .widget-card p {
+            color: #6c757d;
+            font-size: 0.9em;
+            line-height: 1.4;
+            margin: 10px 0;
+            flex: 1;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Sunflower Land Widget</h1>
-        <div class="subtitle">Create your personalized iOS widget in just a few clicks!</div>
+        <h1>SFL Widgets</h1>
 
-        <div class="step" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%); border-left: 4px solid #28a745;">
-            <h3>🆕 What's New - Version October 1st, 2025</h3>
-            <ul>
-                <li>🎛️ Customizable filters available</li>
-                <li>🔑 API Key support now required (mandatory since October 25th, 2025)</li>
-                <li>🏝️ Floating Island notifications</li>
-                <li>⚡ Power icons appear 12h early for better organization (bottom of widget)</li>
-                <li>🌟 Season and events display (bottom of widget)</li>
-            </ul>
+        <div class="step" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%); position: relative;">
+            <h3>🆕 What's New - Version October 30th, 2025</h3>
+            <div class="changelog">
+                <div class="changelog-item">
+                    <div class="changelog-date">📅 October 30th, 2025</div>
+                    <ul class="changelog-list">
+                        <li>🏛️ New Auctions Widget!</li>
+                    </ul>
+                </div>
+                <div class="changelog-item">
+                    <div class="changelog-date">📅 October 1st, 2025</div>
+                    <ul class="changelog-list">
+                        <li>🎛️ Customizable filters available</li>
+                        <li>🔑 API Key support now required (mandatory since October 25th, 2025)</li>
+                        <li>🏝️ Floating Island notifications</li>
+                        <li>⚡ Power icons appear 12h early for better organization (bottom of widget)</li>
+                        <li>🌟 Season and events display (bottom of widget)</li>
+                    </ul>
+                </div>
+            </div>
+            <a href="https://discord.com/channels/880987707214544966/1381574011443740803" target="_blank" style="position: absolute; bottom: 70px; right: 10px; text-decoration: none; color: inherit;">
+                <div style="background: white; padding: 8px 12px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.8em; max-width: 115px; cursor: pointer;">
+                    Questions? Join the Discord! 💬
+                    <div style="position: absolute; bottom: -8px; right: 15px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid white;"></div>
+                </div>
+            </a>
+            <img src="SUMAC.webp" alt="Discord" style="position: absolute; bottom: 10px; right: 10px; width: 50px; height: 50px; image-rendering: pixelated; border-radius: 0; box-shadow: none;">
         </div>
 
+        <div style="text-align: center; margin: 40px 0 20px 0;">
+            <p style="color: rgba(255,255,255,0.8); font-size: 1.1em;">Select a widget to get started</p>
+        </div>
+
+        <div class="widget-showcase">
+            <div class="widget-card" onclick="showWidget('farm')">
+                <h4>🌻 SFL widget+notif</h4>
+                <img src="IMG_9820.jpg" alt="Farm Widget">
+                <p>Complete farm dashboard with customizable filters, resources tracking, and notifications for all your farming activities.</p>
+            </div>
+            
+            <div class="widget-card" onclick="showWidget('auctions')" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
+                <h4>🏛️ SFL auctions</h4>
+                <img src="IMG_1016.png" alt="Auctions Widget" style="background: black;">
+                <p>Get notified about upcoming auctions and never miss bidding opportunities.</p>
+            </div>
+        </div>
+
+        <div id="farm-setup" class="hidden">
         <div class="step">
         <h3>1️⃣ Install Scriptable</h3>
         <p>Download Scriptable from the App Store: <a href="https://apps.apple.com/app/scriptable/id1405459188" target="_blank">Scriptable on App Store</a></p>
@@ -383,28 +482,45 @@
         <div class="tip">
             <strong>Important</strong>: If the widget does not appear, open the Scriptable app to sync your scripts.
         </div>
+        </div>
     </div>
 
-    <div class="step">
-        <h3>Widget Updates</h3>
+        <div id="auctions-setup" class="hidden">
+        <div class="step" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
+            <h3>🏛️ SFL auctions Setup</h3>
+            <p><strong>Get notified about upcoming auctions</strong> and stay ahead of the competition! This widget shows future auctions with notifications so you never miss bidding opportunities.</p>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h4 style="margin-top: 0; color: #495057;">🚀 Quick Setup (2 minutes)</h4>
+                <ol>
+                    <li><strong>Copy the code:</strong> <a href="https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/SFL-auctions.js" target="_blank" style="color: #007bff;">Click here to view the code on GitHub</a>, then copy all the code</li>
+                    <li><strong>Open Scriptable</strong> on your iPhone</li>
+                    <li><strong>Create new script:</strong> Tap the <strong>+</strong> button to create a new script</li>
+                    <li><strong>Paste and save:</strong> Paste the code, name it "SFL_auctions", and save</li>
+                    <li><strong>Add to home screen:</strong> Long press home screen → + → Scriptable → Select "SFL_auctions"</li>
+                </ol>
+            </div>
+        </div>
+    </div>    <div class="step">
+        <h3 style="color: #28a745;">🔄 Widget Updates</h3>
         <p>A new version is out? Go back to this website, regenerate your code with the same settings, and replace the script in Scriptable. Your farm settings will be kept.</p>
     </div>
 
     <div class="step">
         <h3>💡 Tips & FAQ</h3>
         <ul>
-            <li>🌻 Use this generator for easy setup</li>
-            <li>🔔 Notifications require Scriptable to be allowed in iOS settings.</li>
-            <li>📲 Open Scriptable regularly to keep notifications working.</li>
-            <li>🔄 Tap the widget to refresh manually.</li>
-            <li>📱 If copy-paste doesn't work, use the "Download File" button on the website and import the SFL_widget.js file into Scriptable.</li>
+            <li>🌻 <strong>Main Widget:</strong> Use the generator above for your farm overview with custom filters</li>
+            <li>🔔 Notifications require Scriptable to be allowed in iOS settings for both widgets</li>
+            <li>📲 Open Scriptable regularly to keep notifications working</li>
+            <li>🔄 Tap any widget to refresh manually</li>
+            <li>📱 If copy-paste doesn't work, use the "Download File" button and import into Scriptable</li>
         </ul>
     </div>
 
-    <div class="step" style="text-align: center;">
-        <h3>🌻 Bonus & Support</h3>
+    <div style="text-align: center; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; font-size: 0.9em;">
+        <h3 style="font-size: 1.2em; margin-bottom: 10px;">🌻 Bonus & Support</h3>
         <p>👋 Visit my farm: <a href="https://sunflower-land.com/play/#/visit/6826774918530594" target="_blank">Click here to visit my Sunflower Land farm</a></p>
-        <p>💝 Donations (ETH/Polygon): <code>0x450240d67aE2Def43DF8bF15ADC8c51a35918B5A</code></p>
+        <p>🔗 Check out SFLventory: <a href="https://usernameyann.github.io/SFLventory/" target="_blank">https://usernameyann.github.io/SFLventory/</a></p>
         <p>🎉 Enjoy your Sunflower Land widget with notifications!</p>
     </div>
     
@@ -414,6 +530,18 @@
 
     <script>
         const widgetUrl = 'https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/SFL-widget%2BNotif.js';
+
+        function showWidget(type) {
+            // Masquer toutes les sections
+            document.getElementById('farm-setup').classList.add('hidden');
+            document.getElementById('auctions-setup').classList.add('hidden');
+            
+            // Afficher la section demandée
+            document.getElementById(type + '-setup').classList.remove('hidden');
+            
+            // Scroll vers la section
+            document.getElementById(type + '-setup').scrollIntoView({ behavior: 'smooth' });
+        }
 
         document.getElementById('generateBtn').addEventListener('click', async () => {
             const farmId = document.getElementById('farmId').value.trim();
