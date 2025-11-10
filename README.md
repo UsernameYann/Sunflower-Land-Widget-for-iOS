@@ -6,7 +6,7 @@ Create your personalized Sunflower Land widget with notifications in just a few 
 
 <div align="center">
   <img src="IMG_9819.jpg" alt="Widget Screenshot 1" width="250" />
-  <img src="IMG_9820.jpg" alt="Widget Screenshot 2" width="250" />
+  <img src="IMG_9820.png" alt="Widget Screenshot 2" width="250" />
   <img src="IMG_9836.jpg" alt="Widget Screenshot 3" width="250" />
 </div>
 
@@ -26,7 +26,6 @@ Everything is explained step-by-step with visual guides!
 ## 🌻 Bonus & Support
 
 - 👋 Visit my farm: [Click here to visit my Sunflower Land farm](https://sunflower-land.com/play/#/visit/6826774918530594)
-- _Donations (ETH/Polygon):_ `0x450240d67aE2Def43DF8bF15ADC8c51a35918B5A`
 
 ---
 

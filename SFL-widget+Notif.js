@@ -25,7 +25,6 @@ const categoryFilters = {
     
     resource: __FILTER_RESOURCE__,      
     
-    // Ressources individuelles (utilisées uniquement si resource: false)
     tree: __FILTER_TREE__,          
     stone: __FILTER_STONE__,
     iron: __FILTER_IRON__,
@@ -51,18 +50,16 @@ const categoryFilters = {
     vip_chest: __FILTER_VIP_CHEST__,
     bud_box: __FILTER_BUD_BOX__,
 
-    // Pets
     pet: __FILTER_PET__,
     pet_caress: __FILTER_PET_CARESS__,
     pet_feed: __FILTER_PET_FEED__,
 
-    // Animaux individuels (utilisés si animal: false)
-    chicken: __FILTER_CHICKEN__,      // Poules
-    chickenLove: __FILTER_CHICKEN_LOVE__,  // Afficher les ❤️ pour poules
-    cow: __FILTER_COW__,            // Vaches
-    cowLove: __FILTER_COW_LOVE__,      // Afficher les ❤️ pour vaches
-    sheep: __FILTER_SHEEP__,          // Moutons
-    sheepLove: __FILTER_SHEEP_LOVE__,    // Afficher les ❤️ pour moutons
+    chicken: __FILTER_CHICKEN__,      
+    chickenLove: __FILTER_CHICKEN_LOVE__,  
+    cow: __FILTER_COW__,            
+    cowLove: __FILTER_COW_LOVE__,     
+    sheep: __FILTER_SHEEP__,         
+    sheepLove: __FILTER_SHEEP_LOVE__,    
 };
 
 const SFL_USER_CONFIG = { FARM_ID, API_KEY, enableNotifications, categoryFilters };
@@ -618,25 +615,21 @@ function addToAnimalGroup(groupedItems, itemName, itemData, remainingTime, isLov
 }
 
 function addToPetGroup(groupedItems, itemName, itemData, remainingTime) {
-    const action = itemData.action; // 'caress' ou 'feed'
+    const action = itemData.action; 
     const isNFT = itemData.isNFT;
     
-    // Chercher un groupe existant avec la même action ET temps similaire (tolérance 60s)
     for (const [existingKey, existingGroup] of Object.entries(groupedItems)) {
         if (existingGroup.category === 'pet' && existingGroup.action === action) {
             const timeDifference = Math.abs(remainingTime - existingGroup.remainingTime);
             
-            // Appliquer la tolérance de regroupement (60 secondes)
             if (timeDifference <= GROUPING_TOLERANCE_SECONDS) {
                 existingGroup.count++;
                 existingGroup.ids.push(itemName);
                 
-                // Si ce pet est NFT, marquer le groupe comme NFT
                 if (isNFT && !existingGroup.isNFT) {
                     existingGroup.isNFT = true;
                 }
                 
-                // Garder le temps le plus court (premier ready)
                 if (remainingTime < existingGroup.remainingTime) {
                     existingGroup.remainingTime = remainingTime;
                 }
@@ -645,7 +638,6 @@ function addToPetGroup(groupedItems, itemName, itemData, remainingTime) {
         }
     }
     
-    // Créer un nouveau groupe
     const actionLabel = action === 'caress' ? '💕' : '🍖';
     const groupKey = `Pet_${action}_${Object.keys(groupedItems).length}`;
     groupedItems[groupKey] = {
@@ -666,42 +658,36 @@ function getTimeRemaining(itemData) {
     
     if (itemData.category === 'daily') {
         if (!itemData.isCollected) {
-            // Item ready: calculer depuis quand il est disponible (minuit UTC)
             const todayStart = new Date();
             todayStart.setUTCHours(0, 0, 0, 0);
             const readySinceMs = currentTime - todayStart.getTime();
-            return -(readySinceMs / 1000); // Négatif = ready
+            return -(readySinceMs / 1000); 
         }
     const nextResetAtMs = normalizeTs(itemData.nextResetAt);
     return (nextResetAtMs - currentTime) / 1000;
     }
     
-    // Pets - action caress (2h après pettedAt)
     if (itemData.category === 'pet' && itemData.action === 'caress') {
         const napFinishedAtMs = normalizeTs(itemData.napFinishedAt);
         return (napFinishedAtMs - currentTime) / 1000;
     }
     
-    // Pets - action feed (daily reset comme daily collectibles)
     if (itemData.category === 'pet' && itemData.action === 'feed') {
         const fedAtMs = normalizeTs(itemData.fedAt);
-        if (!fedAtMs) return -1000; // Jamais nourri = ready
+        if (!fedAtMs) return -1000; 
         
-        // Vérifier si fedAt est aujourd'hui (UTC)
         const fedDate = new Date(fedAtMs);
         const todayStart = new Date();
         todayStart.setUTCHours(0, 0, 0, 0);
         
-        // Si nourri aujourd'hui, retourner le temps jusqu'au prochain reset (minuit UTC)
         if (fedDate >= todayStart) {
             const tomorrowStart = new Date(todayStart);
             tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
             return (tomorrowStart.getTime() - currentTime) / 1000;
         }
         
-        // Pas nourri aujourd'hui = ready
         const readySinceMs = currentTime - todayStart.getTime();
-        return -(readySinceMs / 1000); // Négatif = ready, augmente avec le temps
+        return -(readySinceMs / 1000); 
     }
     
     if (itemData.category === 'animal' && itemData.awakeAt && itemData.asleepAt) {
@@ -833,7 +819,6 @@ function getItemEmoji(itemType, category, groupData) {
         "Daily Rewards": "🎁"
     };
     
-    // Pets: 🐶 si NFT, 🐱 sinon
     if (category === 'pet' && groupData) {
         return groupData.isNFT ? "🐶" : "🐱";
     }
@@ -1446,11 +1431,8 @@ function parseFloatingIsland(apiData, allItems) {
             
             console.log(`Period ${index+1}: startAt=${startAt}, endAt=${endAt}, now=${now}`);
             
-            // Ne traiter que les périodes futures ou en cours
             if (now < endAt) {  
                 const isActive = now >= startAt && now <= endAt;
-                // Pour les îles actives, on les affiche avec remainingSeconds = 0 pour indiquer qu'elles sont présentes
-                // Pour les futures, on affiche le temps avant apparition
                 const shouldAdd = (startAt - now) > 0 || isActive;
                 
                 console.log(`  isActive: ${isActive}, shouldAdd: ${shouldAdd}`);
@@ -1486,14 +1468,12 @@ function parsePets(apiData, allItems) {
     const pets = apiData.farm?.pets;
     if (!pets) return;
     
-    // Traiter les pets NFT (7 jours avant neglect)
     if (pets.nfts) {
         for (const [petId, petData] of Object.entries(pets.nfts)) {
             const name = petData.name || `Pet #${petId}`;
             const pettedAt = petData.pettedAt || 0;
             const fedAt = petData.requests?.fedAt || 0;
             
-            // Action caress (2h après pettedAt)
             if (SFL_USER_CONFIG.categoryFilters.pet_caress) {
                 const napFinishedAt = pettedAt + (2 * 60 * 60 * 1000);
                 allItems[`${name} (caress)`] = {
@@ -1507,7 +1487,6 @@ function parsePets(apiData, allItems) {
                 };
             }
             
-            // Action feed (daily reset comme daily collectibles)
             if (SFL_USER_CONFIG.categoryFilters.pet_feed) {
                 allItems[`${name} (feed)`] = {
                     category: 'pet',
@@ -1516,19 +1495,17 @@ function parsePets(apiData, allItems) {
                     petId: petId,
                     petName: name,
                     fedAt: fedAt,
-                    neglectDays: 7 // NFT pets: 7 jours
+                    neglectDays: 7 
                 };
             }
         }
     }
     
-    // Traiter les pets communs (3 jours avant neglect)
     if (pets.common) {
         for (const [petName, petData] of Object.entries(pets.common)) {
             const pettedAt = petData.pettedAt || 0;
             const fedAt = petData.requests?.fedAt || 0;
             
-            // Action caress (2h après pettedAt)
             if (SFL_USER_CONFIG.categoryFilters.pet_caress) {
                 const napFinishedAt = pettedAt + (2 * 60 * 60 * 1000);
                 allItems[`${petName} (caress)`] = {
@@ -1541,7 +1518,6 @@ function parsePets(apiData, allItems) {
                 };
             }
             
-            // Action feed (daily reset comme daily collectibles)
             if (SFL_USER_CONFIG.categoryFilters.pet_feed) {
                 allItems[`${petName} (feed)`] = {
                     category: 'pet',
@@ -1549,7 +1525,7 @@ function parsePets(apiData, allItems) {
                     isNFT: false,
                     petName: petName,
                     fedAt: fedAt,
-                    neglectDays: 3 // Common pets: 3 jours
+                    neglectDays: 3 
                 };
             }
         }
@@ -1561,7 +1537,7 @@ function parseSeasonAndEvents(apiData, allItems) {
         allItems['__season'] = { season: apiData.farm.season.season };
     }
     if (apiData.farm && apiData.farm.calendar && apiData.farm.calendar.dates) {
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const today = new Date().toISOString().split('T')[0]; 
         for (const dateObj of apiData.farm.calendar.dates) {
             if (dateObj.date === today) {
                 allItems['__event'] = { event: dateObj.name };
@@ -1824,7 +1800,6 @@ function getUpcomingItems(allItems) {
             continue;
         }
 
-        // Gestion des pets
         if (itemData.category === 'pet') {
             processPetNotifications(itemData, currentTime, oneHourFromNow, upcomingItems);
             continue;
@@ -1892,36 +1867,30 @@ function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFr
 
 function processPetNotifications(itemData, currentTime, oneHourFromNow, upcomingItems) {
     const categoryFilters = SFL_USER_CONFIG.categoryFilters;
-    const action = itemData.action; // 'caress' ou 'feed'
+    const action = itemData.action;
     const petName = itemData.name || itemData.type;
     const isNFT = itemData.isNFT;
     
-    // Vérifier les filtres
     const actionFilter = action === 'caress' ? categoryFilters.pet_caress : categoryFilters.pet_feed;
     if (!actionFilter) return;
     
-    // Calculer le temps restant selon l'action
     let remainingSeconds = 0;
     let readyTime = 0;
     
     if (action === 'caress') {
-        // Caress: 2h après pettedAt
         const pettedAtMs = normalizeTs(itemData.pettedAt);
         const napFinishedAt = pettedAtMs + (2 * 60 * 60 * 1000);
         remainingSeconds = (napFinishedAt - currentTime) / 1000;
         readyTime = napFinishedAt;
     } else if (action === 'feed') {
-        // Feed: daily reset à minuit UTC
         const fedAtMs = normalizeTs(itemData.fedAt);
         const today = new Date(currentTime);
         const todayStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0, 0));
         
         if (fedAtMs < todayStart.getTime()) {
-            // Déjà ready aujourd'hui
             remainingSeconds = 0;
             readyTime = currentTime;
         } else {
-            // Ready demain à minuit UTC
             const tomorrow = new Date(todayStart);
             tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
             remainingSeconds = (tomorrow.getTime() - currentTime) / 1000;
@@ -1929,7 +1898,6 @@ function processPetNotifications(itemData, currentTime, oneHourFromNow, upcoming
         }
     }
     
-    // Ajouter la notification si dans la fenêtre de lookahead
     if (remainingSeconds > 0 && readyTime <= oneHourFromNow) {
         const actionEmoji = action === 'caress' ? '💕' : '🍖';
         upcomingItems.push({
@@ -1946,14 +1914,12 @@ function processPetNotifications(itemData, currentTime, oneHourFromNow, upcoming
         });
     }
     
-    // Neglect warning (seulement pour feed)
     if (action === 'feed' && itemData.fedAt) {
         const fedAtMs = normalizeTs(itemData.fedAt);
         const neglectDays = itemData.neglectDays || 3;
         const neglectAtMs = fedAtMs + (neglectDays * 24 * 60 * 60 * 1000);
         const twelveHoursBeforeNeglect = neglectAtMs - (12 * 60 * 60 * 1000);
         
-        // Si on est dans la fenêtre de warning (12h avant neglect) et pas encore neglect
         if (currentTime < neglectAtMs && currentTime >= twelveHoursBeforeNeglect) {
             const timeUntilNeglect = (neglectAtMs - currentTime) / 1000;
             
@@ -2161,7 +2127,6 @@ function groupItemsByTime(allItems) {
             continue;
         }
         
-        // Pets: groupement spécial par action
         if (category === 'pet') {
             addToPetGroup(groupedItems, itemName, itemData, timeResult);
             continue;
@@ -2299,7 +2264,6 @@ function sortAndFilterGroups(groupedItems) {
 }
 
 function renderWidgetRows(widget, displayedGroups) {
-    // Couleurs pour l'alternance de fond
     const BG_COLOR = Color.dynamic(new Color('#f2f2f7'), new Color('#1C1C1E'));
     const ALT_BG_COLOR = Color.dynamic(new Color('#e5e5ea'), new Color('#252525'));
     const TEXT_COLOR = Color.dynamic(Color.black(), new Color("#E5E5E7"));
@@ -2310,14 +2274,12 @@ function renderWidgetRows(widget, displayedGroups) {
         const emoji = getItemEmoji(group.type, group.category, group);
         let itemName = group.type;
         
-        // Pour les pets, séparer le texte "Pet" de l'emoji 💕/🍖
         let petActionEmoji = "";
         if (group.category === 'pet') {
-            // Extraire l'emoji de fin (💕 ou 🍖)
             const match = itemName.match(/(.*?)\s*(💕|🍖)$/);
             if (match) {
-                itemName = match[1].trim(); // "Pet"
-                petActionEmoji = match[2]; // "💕" ou "🍖"
+                itemName = match[1].trim(); 
+                petActionEmoji = match[2]; 
             }
         }
         
@@ -2368,7 +2330,6 @@ function renderWidgetRows(widget, displayedGroups) {
         rowStack.spacing = 0;
         rowStack.setPadding(1, 10, 1, 0);
         
-        // Alternance de couleur de fond
         rowStack.backgroundColor = rowIndex % 2 === 0 ? ALT_BG_COLOR : BG_COLOR;
         
         let col1Stack = rowStack.addStack();
@@ -2379,19 +2340,16 @@ function renderWidgetRows(widget, displayedGroups) {
         }
         col1Stack.layoutHorizontally();
         
-        // Emoji avec taille spécifique
         let emojiStack = col1Stack.addStack();
         emojiStack.setPadding(1, 0, 0, 0);
         let emojiText = emojiStack.addText(`${emoji} `);
         emojiText.font = Font.mediumMonospacedSystemFont(emojiSize);
         emojiText.lineLimit = 1;
         
-        // Nom avec taille normale
         let col1Text = col1Stack.addText(finalItemName);
         col1Text.font = Font.mediumMonospacedSystemFont(fontSize);
         col1Text.lineLimit = 1;
         
-        // Pet action emoji (💕/🍖) avec taille emoji
         let petActionEmojiText = null;
         if (petActionEmoji) {
             let petActionStack = col1Stack.addStack();
@@ -2401,13 +2359,12 @@ function renderWidgetRows(widget, displayedGroups) {
             petActionEmojiText.lineLimit = 1;
         }
         
-        // Indicators (emojis) avec taille emoji
         let indicatorText = null;
         if (indicators.length > 0) {
             let indicatorStack = col1Stack.addStack();
             indicatorStack.setPadding(1, 0, 0, 0);
             indicatorText = indicatorStack.addText(` ${indicators}`);
-            indicatorText.font = Font.mediumMonospacedSystemFont(emojiSize);  // Petite taille emoji
+            indicatorText.font = Font.mediumMonospacedSystemFont(emojiSize);  
             indicatorText.lineLimit = 1;
         }
         
@@ -2433,7 +2390,6 @@ function renderWidgetRows(widget, displayedGroups) {
         let col3Stack = rowStack.addStack();
         col3Stack.layoutHorizontally();
         
-        // Largeur variable selon la taille du widget
         let col3Width = config.widgetFamily === 'small' ? 55 : 90;
         col3Stack.size = new Size(col3Width, 14);
         
@@ -2442,7 +2398,6 @@ function renderWidgetRows(widget, displayedGroups) {
         col3Text.lineLimit = 1;
         col3Stack.addSpacer();
         
-        // Couleurs pour emoji et nom
         emojiText.textColor = TEXT_COLOR;
         col1Text.textColor = TEXT_COLOR;
         
@@ -2480,7 +2435,7 @@ function renderWidgetRows(widget, displayedGroups) {
         let spacing = ROW_SPACING[config.widgetFamily] || ROW_SPACING.medium;
         widget.addSpacer(spacing);
         
-        rowIndex++; // Incrémenter pour l'alternance
+        rowIndex++; 
     }
 }
 
@@ -2492,7 +2447,6 @@ async function createWidget() {
     
     let widget = new ListWidget();
     
-    // Couleurs adaptatives thème clair/sombre
     const BG_COLOR = Color.dynamic(new Color('#f2f2f7'), new Color('#1C1C1E'));
     const ALT_BG_COLOR = Color.dynamic(new Color('#e5e5ea'), new Color('#252525'));
     
@@ -2538,15 +2492,13 @@ for (const [itemName, itemData] of Object.entries(allItems)) {
     }
 }
 
-// Vérifier si un pet est proche du neglect (12h avant)
 for (const [itemName, itemData] of Object.entries(allItems)) {
     if (itemData.category === 'pet' && itemData.action === 'feed' && itemData.fedAt) {
         const fedAtMs = normalizeTs(itemData.fedAt);
-        const neglectDays = itemData.neglectDays || 3; // 7 pour NFT, 3 pour common
+        const neglectDays = itemData.neglectDays || 3; 
         const neglectAtMs = fedAtMs + (neglectDays * 24 * 60 * 60 * 1000);
         const timeUntilNeglectMs = neglectAtMs - now;
         
-        // Afficher 💀 si on est à moins de 12h du neglect ET pas encore neglect
         if (timeUntilNeglectMs > 0 && timeUntilNeglectMs < twelveHoursMs) {
             showPetNeglectIcon = true;
             break;
@@ -2556,14 +2508,12 @@ for (const [itemName, itemData] of Object.entries(allItems)) {
 
 let bottomStack = widget.addStack();
 bottomStack.layoutHorizontally();
-bottomStack.setPadding(0, 20, 0, 0); // Compenser le padding de 15 à gauche des rows
+bottomStack.setPadding(0, 20, 0, 0); 
 
-// Couleur de texte adaptative
 const BOTTOM_TEXT_COLOR = Color.dynamic(Color.black(), new Color("#E5E5E7"));
 
 bottomStack.addSpacer();
 
-// Stack pour grouper TOUS les éléments ensemble
 let contentStack = bottomStack.addStack();
 contentStack.layoutHorizontally();
 contentStack.spacing = 1;
