@@ -288,8 +288,16 @@
         <h1>SFL Widgets</h1>
 
         <div class="step" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%); position: relative;">
-            <h3>🆕 What's New - Version October 30th, 2025</h3>
+            <h3>🆕 What's New - Version November 10th, 2025</h3>
             <div class="changelog">
+                <div class="changelog-item">
+                    <div class="changelog-date">📅 November 10th, 2025</div>
+                    <ul class="changelog-list">
+                        <li>🐾 Pet tracking added (caress & feed reminders)</li>
+                        <li>🏛️ Auctions Widget: Now displays future auctions in sequence</li>
+                        <li>✨ UI improvements and interface standardization across both widgets</li>
+                    </ul>
+                </div>
                 <div class="changelog-item">
                     <div class="changelog-date">📅 October 30th, 2025</div>
                     <ul class="changelog-list">
@@ -442,6 +450,19 @@
             </div>
         </div>
 
+        <!-- Pets Section -->
+        <div class="filter-section">
+            <h4>🐾 Pets</h4>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="pet" checked> <label for="pet"><strong>All Pets</strong></label></div>
+            </div>
+            <p class="filter-note">💡 <em>Uncheck "All Pets" above if you want to select individual pet actions below:</em></p>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="pet_caress" checked> <label for="pet_caress">💕 Pet Caress</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="pet_feed" checked> <label for="pet_feed">🍖 Pet Feed</label></div>
+            </div>
+        </div>
+
         <div style="text-align: center;">
             <button type="button" id="generateBtn">🚀 Generate My Widget Code</button>
         </div>
@@ -564,7 +585,7 @@
                 code = code.replace(/const enableNotifications = __ENABLE_NOTIFICATIONS__;/, `const enableNotifications = ${enableNotifications};`);
 
                 // Remplacer tous les placeholders de filtres individuellement
-                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box'];
+                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed'];
                 
                 filters.forEach(filter => {
                     const checked = document.getElementById(filter).checked;
