@@ -4,6 +4,9 @@
 
 // ====== SFL WIDGET MODULE: header ======
 
+// Current widget version (matches changelog.json latest date)
+const WIDGET_VERSION = "November 10th, 2025";
+
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
 const FARM_ID = "__FARM_ID__";
@@ -831,6 +834,7 @@ function getItemEmoji(itemType, category, groupData) {
     if (category === 'crop_machine') return emojis[itemType] || "🚜";
     if (category === 'power') return "⚡"; 
     if (category === 'floating_island') return "🏝️";
+    if (category === 'update') return "🔄";
     if (itemType === 'Desert Dig' || itemType === 'Desert Dig:') return "🪏";
     
     return emojis[itemType] || "🌱";
@@ -874,6 +878,31 @@ function getEventEmoji(event) {
         tornado: '🌪️'
     };
     return eventEmojis[event] || '';
+}
+
+async function checkForUpdates() {
+    try {
+        const request = new Request("https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/chargelog.json");
+        request.timeoutInterval = 5;
+        const changelogData = await request.loadJSON();
+
+        if (changelogData.versions && changelogData.versions.length > 0) {
+            const latestVersion = changelogData.versions[0].date;
+
+            if (latestVersion !== WIDGET_VERSION) {
+                return {
+                    updateAvailable: true,
+                    latestVersion: latestVersion,
+                    message: `🔄 Mise à jour disponible (${latestVersion})`
+                };
+            }
+        }
+
+        return { updateAvailable: false };
+    } catch (error) {
+        console.log("⚠️ Impossible de vérifier les mises à jour:", error.message);
+        return { updateAvailable: false };
+    }
 }
 
 
@@ -1690,6 +1719,18 @@ async function loadFromAPI() {
         parseDailyCollectibles(apiData, allItems);
         parseSeasonAndEvents(apiData, allItems);
         
+        // Check for updates
+        const updateInfo = await checkForUpdates();
+        if (updateInfo.updateAvailable) {
+            allItems['__update_available'] = {
+                message: updateInfo.message,
+                category: 'update',
+                type: 'Update Available',
+                name: 'Update Available',
+                amount: 0
+            };
+        }
+        
         saveResources(allItems);
         console.log(`✅ ${Object.keys(allItems).length} items loaded from API`);
         
@@ -2105,6 +2146,9 @@ function groupItemsByTime(allItems) {
         let timeResult;
         if (itemData.category === 'lava_pit' && itemData.remainingSeconds != null) {
             timeResult = itemData.remainingSeconds;
+        } else if (itemData.category === 'update') {
+            // Special handling for update items - always show as ready
+            timeResult = -1000; // Ready immediately
         } else {
             timeResult = getTimeRemaining(itemData);
         }
@@ -2182,7 +2226,8 @@ function groupItemsByTime(allItems) {
                 ids: [itemName], 
                 isReady: remaining <= 0, 
                 hasReward: itemData.hasReward ? true : false,
-                hasSwarm: itemData.hasSwarm || false
+                hasSwarm: itemData.hasSwarm || false,
+                message: itemData.message || null // For update items
             };
             
             if (isLoveTime) {
@@ -2274,6 +2319,11 @@ function renderWidgetRows(widget, displayedGroups) {
         const emoji = getItemEmoji(group.type, group.category, group);
         let itemName = group.type;
         
+        // Special handling for update items
+        if (group.category === 'update' && group.message) {
+            itemName = group.message;
+        }
+        
         let petActionEmoji = "";
         if (group.category === 'pet') {
             const match = itemName.match(/(.*?)\s*(💕|🍖)$/);
@@ -2321,6 +2371,11 @@ function renderWidgetRows(widget, displayedGroups) {
     const totalText = "";
         
         let timeStatus = formatTime(group.remainingTime, config.widgetFamily);
+        
+        // Special handling for update items
+        if (group.category === 'update') {
+            timeStatus = "NOW";
+        }
         
         let fontSize = FONT_SIZES[config.widgetFamily] || FONT_SIZES.medium;
         let emojiSize = EMOJI_SIZES[config.widgetFamily] || EMOJI_SIZES.medium;
@@ -2413,20 +2468,22 @@ function renderWidgetRows(widget, displayedGroups) {
             col2Text.textColor = TEXT_COLOR;
         }
         
-        if (group.remainingTime <= 0) {
+        if (group.category === 'update') {
+            col3Text.textColor = Color.dynamic(new Color("#FF6B35"), new Color("#FF8C42"));
+        } else if (group.remainingTime <= 0) {
             let readyForSeconds = Math.abs(group.remainingTime);
             let readyForDays = readyForSeconds / SECONDS_PER_DAY;
             
             if (readyForDays >= 1) {
-                col3Text.textColor = Color.red();
+                col3Text.textColor = Color.dynamic(new Color("#CC0000"), Color.red());
             } else {
-                col3Text.textColor = Color.green();
+                col3Text.textColor = Color.dynamic(new Color("#008000"), Color.green());
             }
         } else {
             let remainingHours = group.remainingTime / SECONDS_PER_HOUR;
             
             if (remainingHours <= 1) {
-                col3Text.textColor = Color.yellow();
+                col3Text.textColor = Color.dynamic(new Color("#B8860B"), Color.yellow());
             } else {
                 col3Text.textColor = TEXT_COLOR;
             }
@@ -2508,7 +2565,7 @@ for (const [itemName, itemData] of Object.entries(allItems)) {
 
 let bottomStack = widget.addStack();
 bottomStack.layoutHorizontally();
-bottomStack.setPadding(0, 20, 0, 0); 
+bottomStack.setPadding(0, 8, 0, 0); 
 
 const BOTTOM_TEXT_COLOR = Color.dynamic(Color.black(), new Color("#E5E5E7"));
 
@@ -2516,30 +2573,38 @@ bottomStack.addSpacer();
 
 let contentStack = bottomStack.addStack();
 contentStack.layoutHorizontally();
-contentStack.spacing = 1;
+contentStack.spacing = 0;
 
 if (season) {
     let seasonStack = contentStack.addStack();
+    seasonStack.size = new Size(12, 12);
     seasonStack.setPadding(1, 0, 0, 0);
     let seasonText = seasonStack.addText(getSeasonEmoji(season));
     seasonText.font = Font.regularMonospacedSystemFont(8);
     seasonText.textColor = BOTTOM_TEXT_COLOR;
+    contentStack.addSpacer(1);
 }
 
 if (event) {
     let eventStack = contentStack.addStack();
+    eventStack.size = new Size(12, 12);
     eventStack.setPadding(1, 0, 0, 0);
     let eventText = eventStack.addText(getEventEmoji(event));
     eventText.font = Font.regularMonospacedSystemFont(8);
     eventText.textColor = BOTTOM_TEXT_COLOR;
+    contentStack.addSpacer(1);
 }
 
-let updateText = contentStack.addText(`Upd: ${new Date().toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'})}`);
+let updateStack = contentStack.addStack();
+updateStack.size = new Size(80, 0);
+let updateText = updateStack.addText(`Upd: ${new Date().toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'})}`);
 updateText.font = Font.regularMonospacedSystemFont(10);
 updateText.textColor = BOTTOM_TEXT_COLOR;
 
 if (showPowerIcon) {
+    contentStack.addSpacer(1);
     let powerStack = contentStack.addStack();
+    powerStack.size = new Size(12, 12);
     powerStack.setPadding(1, 0, 0, 0);
     let powerIcon = powerStack.addText("⚡");
     powerIcon.font = Font.regularMonospacedSystemFont(8);
@@ -2547,7 +2612,9 @@ if (showPowerIcon) {
 }
 
 if (showPetNeglectIcon) {
+    contentStack.addSpacer(1);
     let neglectStack = contentStack.addStack();
+    neglectStack.size = new Size(12, 12);
     neglectStack.setPadding(1, 0, 0, 0);
     let neglectIcon = neglectStack.addText("💀");
     neglectIcon.font = Font.regularMonospacedSystemFont(8);

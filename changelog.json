@@ -1,0 +1,28 @@
+{
+  "versions": [
+    {
+      "date": "November 10th, 2025",
+      "changes": [
+        "🐾 Pet tracking added (caress & feed reminders)",
+        "🏛️ Auctions Widget: Now displays future auctions in sequence",
+        "✨ UI improvements and interface standardization across both widgets"
+      ]
+    },
+    {
+      "date": "October 30th, 2025",
+      "changes": [
+        "🏛️ New Auctions Widget!"
+      ]
+    },
+    {
+      "date": "October 1st, 2025",
+      "changes": [
+        "🎛️ Customizable filters available",
+        "🔑 API Key support now required (mandatory since October 25th, 2025)",
+        "🏝️ Floating Island notifications",
+        "⚡ Power icons appear 12h early for better organization (bottom of widget)",
+        "🌟 Season and events display (bottom of widget)"
+      ]
+    }
+  ]
+}

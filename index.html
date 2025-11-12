@@ -332,32 +332,9 @@
         <h1>SFL Widgets</h1>
 
         <div class="step" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%); position: relative;">
-            <h3>🆕 What's New - Version November 10th, 2025</h3>
-            <div class="changelog">
-                <div class="changelog-item">
-                    <div class="changelog-date">📅 November 10th, 2025</div>
-                    <ul class="changelog-list">
-                        <li>🐾 Pet tracking added (caress & feed reminders)</li>
-                        <li>🏛️ Auctions Widget: Now displays future auctions in sequence</li>
-                        <li>✨ UI improvements and interface standardization across both widgets</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-date">📅 October 30th, 2025</div>
-                    <ul class="changelog-list">
-                        <li>🏛️ New Auctions Widget!</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-date">📅 October 1st, 2025</div>
-                    <ul class="changelog-list">
-                        <li>🎛️ Customizable filters available</li>
-                        <li>🔑 API Key support now required (mandatory since October 25th, 2025)</li>
-                        <li>🏝️ Floating Island notifications</li>
-                        <li>⚡ Power icons appear 12h early for better organization (bottom of widget)</li>
-                        <li>🌟 Season and events display (bottom of widget)</li>
-                    </ul>
-                </div>
+            <h3>🆕 What's New - Version November 12th, 2025</h3>
+            <div class="changelog" id="changelog-content">
+                <!-- Changelog will be loaded dynamically from changelog.json -->
             </div>
             <a href="https://discord.com/channels/880987707214544966/1381574011443740803" target="_blank" style="position: absolute; bottom: 70px; right: 10px; text-decoration: none; color: inherit;">
                 <div style="background: white; padding: 8px 12px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.8em; max-width: 115px; cursor: pointer;">
@@ -596,6 +573,33 @@
     <script>
         const widgetUrl = 'https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/SFL-widget%2BNotif.js';
 
+        // Load changelog from JSON file
+        async function loadChangelog() {
+            try {
+                const response = await fetch('changelog.json');
+                const data = await response.json();
+                
+                const changelogContent = document.getElementById('changelog-content');
+                changelogContent.innerHTML = data.versions.map(version => `
+                    <div class="changelog-item">
+                        <div class="changelog-date">📅 ${version.date}</div>
+                        <ul class="changelog-list">
+                            ${version.changes.map(change => `<li>${change}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading changelog:', error);
+                // Fallback: afficher un message d'erreur au lieu du contenu dupliqué
+                document.getElementById('changelog-content').innerHTML = `
+                    <div class="changelog-item">
+                        <div class="changelog-date" style="color: #dc3545;">❌ Unable to load changelog</div>
+                        <p style="color: #6c757d; margin: 10px 0;">Please check your internet connection or try refreshing the page.</p>
+                    </div>
+                `;
+            }
+        }
+
         function showWidget(type) {
             // Masquer toutes les sections
             document.getElementById('farm-setup').classList.add('hidden');
@@ -678,4 +682,7 @@
             a.click();
             URL.revokeObjectURL(url);
         });
+
+        // Load changelog when page loads
+        document.addEventListener('DOMContentLoaded', loadChangelog);
     </script>
