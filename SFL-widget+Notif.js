@@ -5,7 +5,7 @@
 // ====== SFL WIDGET MODULE: header ======
 
 // Current widget version (matches changelog.json latest date)
-const WIDGET_VERSION = "November 10th, 2025";
+const WIDGET_VERSION = "November 12th, 2025";
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
@@ -882,23 +882,70 @@ function getEventEmoji(event) {
 
 async function checkForUpdates() {
     try {
-        const request = new Request("https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/chargelog.json");
+        // Check cache first - only check once every 6 hours
+        const CACHE_KEY_UPDATES = "update_check_cache";
+        const CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
+        
+        const cachedResult = safeKeychain('get', CACHE_KEY_UPDATES);
+        if (cachedResult) {
+            const cacheData = safeJSONParse(cachedResult, 'Update Cache');
+            if (cacheData && cacheData.timestamp && cacheData.result && cacheData.widgetVersion) {
+                // Check if widget version has changed since cache
+                if (cacheData.widgetVersion !== WIDGET_VERSION) {
+                    console.log("🔄 Widget version changed, clearing update cache");
+                    safeKeychain('set', CACHE_KEY_UPDATES, null); // Clear cache
+                } else {
+                    const cacheAge = Date.now() - cacheData.timestamp;
+                    if (cacheAge < CACHE_DURATION_MS) {
+                        console.log("🔄 Using cached update check result");
+                        return cacheData.result;
+                    }
+                }
+            }
+        }
+        
+        console.log("🔍 Checking for updates...");
+        const request = new Request("https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/changelog.json");
         request.timeoutInterval = 5;
         const changelogData = await request.loadJSON();
+        console.log("📄 Changelog data loaded successfully");
 
+        let result = { updateAvailable: false };
+        
         if (changelogData.versions && changelogData.versions.length > 0) {
             const latestVersion = changelogData.versions[0].date;
+            console.log(`📅 Latest version from GitHub: ${latestVersion}`);
+            console.log(`📅 Current widget version: ${WIDGET_VERSION}`);
 
-            if (latestVersion !== WIDGET_VERSION) {
-                return {
+            // Parse dates to compare them properly
+            const currentVersionDate = new Date(WIDGET_VERSION.replace(/(\d+)(st|nd|rd|th)/, '$1'));
+            const latestVersionDate = new Date(latestVersion.replace(/(\d+)(st|nd|rd|th)/, '$1'));
+            
+            console.log(`📅 Parsed current version date: ${currentVersionDate}`);
+            console.log(`📅 Parsed latest version date: ${latestVersionDate}`);
+            console.log(`📅 Date comparison: ${latestVersionDate} > ${currentVersionDate} = ${latestVersionDate > currentVersionDate}`);
+
+            if (latestVersionDate > currentVersionDate) {
+                console.log("✅ Update available!");
+                result = {
                     updateAvailable: true,
                     latestVersion: latestVersion,
-                    message: `🔄 Mise à jour disponible (${latestVersion})`
+                    message: `Update`
                 };
+            } else {
+                console.log("✅ No update needed");
             }
         }
 
-        return { updateAvailable: false };
+        // Cache the result with current widget version
+        const cacheData = {
+            timestamp: Date.now(),
+            result: result,
+            widgetVersion: WIDGET_VERSION
+        };
+        safeKeychain('set', CACHE_KEY_UPDATES, JSON.stringify(cacheData));
+        
+        return result;
     } catch (error) {
         console.log("⚠️ Impossible de vérifier les mises à jour:", error.message);
         return { updateAvailable: false };
@@ -1722,7 +1769,7 @@ async function loadFromAPI() {
         // Check for updates
         const updateInfo = await checkForUpdates();
         if (updateInfo.updateAvailable) {
-            allItems['__update_available'] = {
+            allItems['update_available'] = {
                 message: updateInfo.message,
                 category: 'update',
                 type: 'Update Available',
@@ -2374,7 +2421,7 @@ function renderWidgetRows(widget, displayedGroups) {
         
         // Special handling for update items
         if (group.category === 'update') {
-            timeStatus = "NOW";
+            timeStatus = "Now";
         }
         
         let fontSize = FONT_SIZES[config.widgetFamily] || FONT_SIZES.medium;
