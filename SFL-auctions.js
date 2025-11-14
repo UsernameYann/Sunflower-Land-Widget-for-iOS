@@ -14,10 +14,12 @@ function getIngredientEmoji(ingredients) {
   }
 }
 
-const BG_COLOR = Color.dynamic(new Color('#f2f2f7'), new Color('#1C1C1E'));
-const ALT_BG_COLOR = Color.dynamic(new Color('#e5e5ea'), new Color('#252525'));
-const WHITE_COLOR = Color.dynamic(Color.black(), new Color("#E5E5E7"));
-const GRAY_COLOR = Color.dynamic(new Color('#8e8e93'), Color.gray());
+const themeMode = __THEME_MODE__;;
+
+const BG_COLOR = themeMode === 'dark' ? new Color('#1C1C1E') : new Color('#f2f2f7');
+const ALT_BG_COLOR = themeMode === 'dark' ? new Color('#252525') : new Color('#e5e5ea');
+const WHITE_COLOR = themeMode === 'dark' ? new Color("#E5E5E7") : Color.black();
+const GRAY_COLOR = themeMode === 'dark' ? Color.gray() : new Color('#8e8e93');
 const YELLOW_COLOR = Color.yellow();
 const GREEN_COLOR = Color.green();
 const PADDING = 0;

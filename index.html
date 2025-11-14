@@ -332,7 +332,7 @@
         <h1>SFL Widgets</h1>
 
         <div class="step" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%); position: relative;">
-            <h3>🆕 What's New - Version November 12th, 2025</h3>
+            <h3>🆕 What's New - Version November 14th, 2025</h3>
             <div class="changelog" id="changelog-content">
                 <!-- Changelog will be loaded dynamically from changelog.json -->
             </div>
@@ -388,6 +388,12 @@
         <div class="radio-group">
             <label><input type="radio" name="notifications" value="true" checked> Yes</label>
             <label><input type="radio" name="notifications" value="false"> No</label>
+        </div>
+
+        <label>Theme Mode</label>
+        <div class="radio-group">
+            <label><input type="radio" name="themeMode" value="dark" checked> 🌙 Dark</label>
+            <label><input type="radio" name="themeMode" value="light"> ☀️ Light</label>
         </div>
 
         <label>🌟 Filters to display (check what you want to see)</label>
@@ -529,13 +535,36 @@
 
         <div id="auctions-setup" class="hidden">
         <div class="step" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
-            <h3>🏛️ SFL auctions Setup</h3>
+            <h3>🏛️ SFL Auctions Widget Setup</h3>
             <p><strong>Get notified about upcoming auctions</strong> and stay ahead of the competition! This widget shows future auctions with notifications so you never miss bidding opportunities.</p>
             
+            <form id="auctionsConfigForm">
+                <label>🎨 Theme Mode</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="auctionsThemeMode" value="dark" checked> 🌙 Dark</label>
+                    <label><input type="radio" name="auctionsThemeMode" value="light"> ☀️ Light</label>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="button" id="generateAuctionsBtn">🚀 Generate Auctions Widget Code</button>
+                </div>
+            </form>
+
+            <div id="auctionsResult" class="hidden" style="margin-top: 20px;">
+                <h4>✨ Your Auctions Widget Code is Ready!</h4>
+                <p>Copy the code below and paste it into a new Scriptable script named "SFL_auctions.js".</p>
+                <textarea id="auctionsCodeOutput" readonly></textarea>
+                <div class="button-group">
+                    <button id="copyAuctionsBtn">📋 Copy Code</button>
+                    <button id="downloadAuctionsBtn">💾 Download File</button>
+                </div>
+            </div>
+
             <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                <h4 style="margin-top: 0; color: #495057;">🚀 Quick Setup (2 minutes)</h4>
+                <h4 style="margin-top: 0; color: #495057;">📋 Quick Setup Instructions</h4>
                 <ol>
-                    <li><strong>Copy the code:</strong> <a href="https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/SFL-auctions.js" target="_blank" style="color: #007bff;">Click here to view the code on GitHub</a>, then copy all the code</li>
+                    <li><strong>Generate the code:</strong> Select your preferred theme above and click the generate button</li>
+                    <li><strong>Copy the code:</strong> Use the "Copy Code" button or download the file</li>
                     <li><strong>Open Scriptable</strong> on your iPhone</li>
                     <li><strong>Create new script:</strong> Tap the <strong>+</strong> button to create a new script</li>
                     <li><strong>Paste and save:</strong> Paste the code, name it "SFL_auctions", and save</li>
@@ -616,6 +645,7 @@
             const farmId = document.getElementById('farmId').value.trim();
             const apiKey = document.getElementById('apiKey').value.trim();
             const enableNotifications = document.querySelector('input[name="notifications"]:checked').value === 'true';
+            const themeMode = document.querySelector('input[name="themeMode"]:checked').value;
 
             if (!farmId || !apiKey) {
                 alert('Please fill in Farm ID and API Key.');
@@ -631,6 +661,7 @@
                 code = code.replace(/const FARM_ID = "__FARM_ID__";/, `const FARM_ID = "${farmId}";`);
                 code = code.replace(/const API_KEY = "__API_KEY__";/, `const API_KEY = "${apiKey}";`);
                 code = code.replace(/const enableNotifications = __ENABLE_NOTIFICATIONS__;/, `const enableNotifications = ${enableNotifications};`);
+                code = code.replace(/const themeMode = __THEME_MODE__;/, `const themeMode = "${themeMode}";`);
 
                 // Remplacer tous les placeholders de filtres individuellement
                 const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed'];
@@ -679,6 +710,65 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = 'SFL_widget.js';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // ====== AUCTIONS WIDGET HANDLERS ======
+        const auctionsWidgetUrl = 'https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/SFL-auctions.js';
+
+        document.getElementById('generateAuctionsBtn').addEventListener('click', async () => {
+            const themeMode = document.querySelector('input[name="auctionsThemeMode"]:checked').value;
+
+            try {
+                const response = await fetch(auctionsWidgetUrl);
+                if (!response.ok) throw new Error('Erreur de téléchargement');
+                let code = await response.text();
+
+                // Remplacer le placeholder du thème (noter le double point-virgule dans le fichier source)
+                code = code.replace(/const themeMode = __THEME_MODE__;/, `const themeMode = "${themeMode}";`);
+
+                // Afficher le résultat
+                document.getElementById('auctionsCodeOutput').value = code;
+                document.getElementById('auctionsResult').classList.remove('hidden');
+                
+                // Scroll vers le résultat après un court délai pour l'animation
+                setTimeout(() => {
+                    document.getElementById('auctionsResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            } catch (error) {
+                alert('Error during generation: ' + error.message);
+            }
+        });
+
+        document.getElementById('copyAuctionsBtn').addEventListener('click', async () => {
+            const code = document.getElementById('auctionsCodeOutput').value;
+            if (!code) {
+                alert('Generate the code first.');
+                return;
+            }
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(code);
+                    alert('Code copied to clipboard!');
+                } else {
+                    const textarea = document.getElementById('auctionsCodeOutput');
+                    textarea.select();
+                    document.execCommand('copy');
+                    alert('Code copied!');
+                }
+            } catch (error) {
+                alert('Error copying: ' + error.message);
+            }
+        });
+
+        document.getElementById('downloadAuctionsBtn').addEventListener('click', () => {
+            const code = document.getElementById('auctionsCodeOutput').value;
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'SFL_auctions.js';
             a.click();
             URL.revokeObjectURL(url);
         });
