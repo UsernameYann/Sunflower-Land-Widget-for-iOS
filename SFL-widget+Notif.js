@@ -5,7 +5,7 @@
 // ====== SFL WIDGET MODULE: header ======
 
 // Current widget version (matches changelog.json latest date)
-const WIDGET_VERSION = "November 12th, 2025";
+const WIDGET_VERSION = "November 14th, 2025";
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
@@ -21,6 +21,10 @@ const API_KEY = "__API_KEY__";
 // Example: const enableNotifications = true;
 // If you use Scriptable on iOS, notifications will only be scheduled if this parameter is true.
 const enableNotifications = __ENABLE_NOTIFICATIONS__;
+
+// ⚠️ THEME SETTINGS: Control widget appearance
+// 'dark' = always dark theme, 'light' = always light theme
+const themeMode = __THEME_MODE__;
 
 // ⚠️ FILTER SETTINGS: Set to true to show, false to hide categories
 const categoryFilters = {
@@ -65,7 +69,7 @@ const categoryFilters = {
     sheepLove: __FILTER_SHEEP_LOVE__,    
 };
 
-const SFL_USER_CONFIG = { FARM_ID, API_KEY, enableNotifications, categoryFilters };
+const SFL_USER_CONFIG = { FARM_ID, API_KEY, enableNotifications, themeMode, categoryFilters };
 globalThis.SFL_USER_CONFIG = globalThis.SFL_USER_CONFIG || SFL_USER_CONFIG;
 
 
@@ -892,48 +896,35 @@ async function checkForUpdates() {
             if (cacheData && cacheData.timestamp && cacheData.result && cacheData.widgetVersion) {
                 // Check if widget version has changed since cache
                 if (cacheData.widgetVersion !== WIDGET_VERSION) {
-                    console.log("🔄 Widget version changed, clearing update cache");
                     safeKeychain('set', CACHE_KEY_UPDATES, null); // Clear cache
                 } else {
                     const cacheAge = Date.now() - cacheData.timestamp;
                     if (cacheAge < CACHE_DURATION_MS) {
-                        console.log("🔄 Using cached update check result");
                         return cacheData.result;
                     }
                 }
             }
         }
         
-        console.log("🔍 Checking for updates...");
         const request = new Request("https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/changelog.json");
         request.timeoutInterval = 5;
         const changelogData = await request.loadJSON();
-        console.log("📄 Changelog data loaded successfully");
 
         let result = { updateAvailable: false };
         
         if (changelogData.versions && changelogData.versions.length > 0) {
             const latestVersion = changelogData.versions[0].date;
-            console.log(`📅 Latest version from GitHub: ${latestVersion}`);
-            console.log(`📅 Current widget version: ${WIDGET_VERSION}`);
 
             // Parse dates to compare them properly
             const currentVersionDate = new Date(WIDGET_VERSION.replace(/(\d+)(st|nd|rd|th)/, '$1'));
             const latestVersionDate = new Date(latestVersion.replace(/(\d+)(st|nd|rd|th)/, '$1'));
             
-            console.log(`📅 Parsed current version date: ${currentVersionDate}`);
-            console.log(`📅 Parsed latest version date: ${latestVersionDate}`);
-            console.log(`📅 Date comparison: ${latestVersionDate} > ${currentVersionDate} = ${latestVersionDate > currentVersionDate}`);
-
             if (latestVersionDate > currentVersionDate) {
-                console.log("✅ Update available!");
                 result = {
                     updateAvailable: true,
                     latestVersion: latestVersion,
                     message: `Update`
                 };
-            } else {
-                console.log("✅ No update needed");
             }
         }
 
@@ -966,9 +957,7 @@ function getNextDailyReset() {
 function getTodayStart() {
     const now = new Date();
     now.setUTCHours(0, 0, 0, 0);
-    const timestamp = now.getTime();
-    console.log(`Today start UTC: ${timestamp} (${new Date(timestamp)})`);
-    return timestamp;
+    return now.getTime();
 }
 
 function getFirstMondayStartForTimestamp(ms) {
@@ -999,12 +988,10 @@ function checkDailyReset(allItems, itemName, lastCollectedAt) {
     const nextResetAt = getNextDailyReset();
 
     if (!lastCollectedAt) {
-        console.log(`❌ ${itemName}: jamais collecté → pas affiché`);
         return;
     }
 
     if (lastCollectedAt >= todayStartUTC) {
-        console.log(`✅ ${itemName}: collecté aujourd'hui → prochaine collecte demain`);
         allItems[itemName] = {
             nextResetAt: nextResetAt,
             category: 'daily',
@@ -1014,7 +1001,6 @@ function checkDailyReset(allItems, itemName, lastCollectedAt) {
             amount: 0
         };
     } else {
-        console.log(`🟢 ${itemName}: prêt à collecter → disponible maintenant`);
         allItems[itemName] = {
             nextResetAt: Date.now() - 1000,
             category: 'daily',
@@ -1028,13 +1014,10 @@ function checkDailyReset(allItems, itemName, lastCollectedAt) {
 
 function parseDailyCollectibles(apiData, allItems) {
     if (!SFL_USER_CONFIG.categoryFilters.daily) return;
-    console.log("=== DEBUG DAILY COLLECTIBLES ===");
     
     if (apiData.farm && apiData.farm.dailyRewards && apiData.farm.dailyRewards.chest && apiData.farm.dailyRewards.chest.collectedAt) {
-        console.log("Daily Rewards collectedAt:", apiData.farm.dailyRewards.chest.collectedAt);
         checkDailyReset(allItems, "Daily Rewards", apiData.farm.dailyRewards.chest.collectedAt);
     } else {
-        console.log("Daily Rewards: not found or no collectedAt");
         checkDailyReset(allItems, "Daily Rewards", null);
     }
     
@@ -1042,7 +1025,6 @@ function parseDailyCollectibles(apiData, allItems) {
     if (apiData.farm && apiData.farm.collectibles && apiData.farm.collectibles["Maneki Neko"]) {
         const manekiArray = apiData.farm.collectibles["Maneki Neko"];
         if (Array.isArray(manekiArray) && manekiArray.length > 0 && manekiArray[0].shakenAt) {
-            console.log("Maneki shakenAt (farm.collectibles):", manekiArray[0].shakenAt);
             checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
             manekiFound = true;
         }
@@ -1051,22 +1033,18 @@ function parseDailyCollectibles(apiData, allItems) {
     if (!manekiFound && apiData.farm && apiData.farm.home && apiData.farm.home.collectibles && apiData.farm.home.collectibles["Maneki Neko"]) {
         const manekiArray = apiData.farm.home.collectibles["Maneki Neko"];
         if (Array.isArray(manekiArray) && manekiArray.length > 0 && manekiArray[0].shakenAt) {
-            console.log("Maneki shakenAt (farm.home.collectibles):", manekiArray[0].shakenAt);
             checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
             manekiFound = true;
         }
     }
     
     if (!manekiFound) {
-        console.log("Maneki: not found in any location");
         checkDailyReset(allItems, "Maneki Neko", null);
     }
     
     if (apiData.farm && apiData.farm.pumpkinPlaza && apiData.farm.pumpkinPlaza.pirateChest && apiData.farm.pumpkinPlaza.pirateChest.openedAt) {
-        console.log("Pirate openedAt:", apiData.farm.pumpkinPlaza.pirateChest.openedAt);
         checkDailyReset(allItems, "Pirate Chest", apiData.farm.pumpkinPlaza.pirateChest.openedAt);
     } else {
-        console.log("Pirate: not found in pumpkinPlaza");
         checkDailyReset(allItems, "Pirate Chest", null);
     }
 
@@ -1093,25 +1071,16 @@ function parseDailyCollectibles(apiData, allItems) {
 
         if (now >= firstMondayStart && now < firstMondayEnd) {
             if (openedAt && openedAt >= firstMondayStart) {
-                console.log(`VIP Chest: opened this period at ${openedAt}`);
-            } else {
-                console.log('VIP Chest: available now and not yet opened');
+                // Already opened this period
             }
-        } else if (now < firstMondayStart) {
-            console.log(`VIP Chest: next available at ${new Date(firstMondayStart).toUTCString()}`);
-        } else {
-            console.log('VIP Chest: waiting for next month');
         }
     }
 
     if (apiData.farm && apiData.farm.desert && apiData.farm.desert.digging) {
         const digging = apiData.farm.desert.digging;
         const collectedAt = (digging.streak && digging.streak.collectedAt) ? digging.streak.collectedAt : (digging.collectedAt || null);
-        if (collectedAt) console.log('Desert digging collectedAt:', collectedAt);
         checkDailyReset(allItems, "Desert Dig", collectedAt ? collectedAt : null);
     }
-    
-    console.log("=== END DEBUG ===");
 }
 
 function parseResources(apiData, allItems) {
@@ -1442,8 +1411,6 @@ function parsePowers(apiData, allItems) {
                     category: 'power',
                     amount: 1
                 };
-                
-                console.log(`⚡ Found power: ${powerName}, next available in ${Math.round((nextAvailableAt - Date.now()) / 1000 / 3600)}h`);
             }
         }
     }
@@ -1483,35 +1450,25 @@ function parseCropMachine(apiData, allItems) {
 
 function parseFloatingIsland(apiData, allItems) {
     if (!SFL_USER_CONFIG.categoryFilters.floating_island) return;
-    console.log('=== DEBUG parseFloatingIsland ===');
     if (apiData.farm && apiData.farm.floatingIsland) {
         const floatingIsland = apiData.farm.floatingIsland;
         const petalPuzzleSolvedAt = floatingIsland.petalPuzzleSolvedAt;
         const todayStart = getTodayStart();
         
-        console.log('petalPuzzleSolvedAt:', petalPuzzleSolvedAt, 'todayStart:', todayStart, 'solved today?', petalPuzzleSolvedAt >= todayStart);
-        
         if (petalPuzzleSolvedAt && petalPuzzleSolvedAt >= todayStart) {
-            console.log('Puzzle solved today, skipping ALL periods');
             return;
         }
         
         const schedule = floatingIsland.schedule || [];
         const now = Date.now();
         
-        console.log('Schedule length:', schedule.length, 'now:', now);
-        
         schedule.forEach((period, index) => {
             const startAt = period.startAt;
             const endAt = period.endAt;
             
-            console.log(`Period ${index+1}: startAt=${startAt}, endAt=${endAt}, now=${now}`);
-            
             if (now < endAt) {  
                 const isActive = now >= startAt && now <= endAt;
                 const shouldAdd = (startAt - now) > 0 || isActive;
-                
-                console.log(`  isActive: ${isActive}, shouldAdd: ${shouldAdd}`);
                 
                 if (shouldAdd) {  
                     const remainingSeconds = isActive ? 0 : Math.round((startAt - now) / 1000);
@@ -1525,16 +1482,10 @@ function parseFloatingIsland(apiData, allItems) {
                         name: 'Floating Island',
                         category: 'floating_island'
                     };
-                    console.log(`  Added ${isActive ? 'active' : 'future'} island: ${key}, remaining: ${remainingSeconds}s`);
                 }
-            } else {
-                console.log(`  Skipping past period (now >= endAt)`);
             }
         });
-    } else {
-        console.log('No floatingIsland in apiData');
     }
-    console.log('=== END DEBUG ===');
 }
 
 function parsePets(apiData, allItems) {
@@ -1653,7 +1604,6 @@ function parseBuds(apiData, allItems) {
             }
         }
         allItems.__playerBudTypes = playerBudTypes;
-        console.log(`🌱 Found player buds: ${playerBudTypes.join(', ')}`);
     }
 }
 
@@ -1666,7 +1616,6 @@ function parseBudBox(apiData, allItems) {
     const playerBudTypes = allItems.__playerBudTypes || [];
 
     if (!playerBudTypes.includes(todayType)) {
-        console.log(`Bud Box today is ${todayType} but player has no such bud → skipping display`);
         return; 
     }
 
@@ -1695,9 +1644,6 @@ async function loadFromAPI() {
         if (cacheTimestamp) {
             let cacheAge = (currentTime - parseInt(cacheTimestamp)) / 1000 / 60;
             cacheExpired = cacheAge >= CACHE_EXPIRATION_MINUTES;
-            if (cacheExpired) {
-                console.log(`⏰ Cache expired (${Math.round(cacheAge)} minutes old), will refresh data`);
-            }
         } else {
             cacheExpired = true;
         }
@@ -1708,8 +1654,6 @@ async function loadFromAPI() {
             let timeSinceLastCall = (currentTime - parseInt(lastApiCallTime)) / 1000;
             
             if (timeSinceLastCall < API_RATE_LIMIT_SECONDS) {
-                console.log(`⏱️ Rate limit: ${Math.round(API_RATE_LIMIT_SECONDS - timeSinceLastCall)}s remaining. Using cached data.`);
-                
                 let cachedData;
                 cachedData = safeKeychain('get', CACHE_KEY);
                 
@@ -1724,8 +1668,6 @@ async function loadFromAPI() {
                 }
             }
         }
-        
-        console.log("🌐 Making API call to Sunflower Land...");
         
         if (!SFL_USER_CONFIG.API_KEY || SFL_USER_CONFIG.API_KEY === "__API_KEY__") {
             throw new Error("API Key not configured. Please set your API Key in the configuration. Get it from: Game -> Settings -> General -> API Key");
@@ -1833,7 +1775,7 @@ async function cleanupAllSFLNotifications() {
 function getUpcomingItems(allItems) {
     const upcomingItems = [];
     const currentTime = Date.now();
-    const oneHourFromNow = currentTime + (NOTIFICATION_LOOKAHEAD_HOURS * HOUR_TO_MS);
+    const lookaheadLimitMs = currentTime + (NOTIFICATION_LOOKAHEAD_HOURS * HOUR_TO_MS);
     
     for (const [itemName, itemData] of Object.entries(allItems)) {
         if (itemName.startsWith('__')) continue;
@@ -1854,7 +1796,7 @@ function getUpcomingItems(allItems) {
             const readyTime = remainingSeconds != null ? (currentTime + (remainingSeconds * SECOND_TO_MS)) : null;
 
             if (itemData.canCollect) {
-                if (currentTime <= oneHourFromNow) {
+                if (currentTime <= lookaheadLimitMs) {
                     upcomingItems.push({
                         name: itemData.name || itemData.type,
                         category: itemData.category,
@@ -1866,7 +1808,7 @@ function getUpcomingItems(allItems) {
                         hasSwarm: false
                     });
                 }
-            } else if (remainingSeconds != null && remainingSeconds > 0 && readyTime <= oneHourFromNow) {
+            } else if (remainingSeconds != null && remainingSeconds > 0 && readyTime <= lookaheadLimitMs) {
                 upcomingItems.push({
                     name: itemData.name || itemData.type,
                     category: itemData.category,
@@ -1884,19 +1826,19 @@ function getUpcomingItems(allItems) {
         const timeResult = getTimeRemaining(itemData);
 
         if (timeResult.isAnimal) {
-            processAnimalNotifications(itemData, timeResult, currentTime, oneHourFromNow, upcomingItems);
+            processAnimalNotifications(itemData, timeResult, currentTime, lookaheadLimitMs, upcomingItems);
             continue;
         }
 
         if (itemData.category === 'pet') {
-            processPetNotifications(itemData, currentTime, oneHourFromNow, upcomingItems);
+            processPetNotifications(itemData, currentTime, lookaheadLimitMs, upcomingItems);
             continue;
         }
 
         const remainingSeconds = timeResult;
         const readyTime = currentTime + (remainingSeconds * SECOND_TO_MS);
 
-        if (remainingSeconds > 0 && readyTime <= oneHourFromNow) {
+    if (remainingSeconds > 0 && readyTime <= lookaheadLimitMs) {
             upcomingItems.push({
                 name: itemData.name || itemData.type,
                 category: itemData.category,
@@ -1913,7 +1855,7 @@ function getUpcomingItems(allItems) {
     return upcomingItems;
 }
 
-function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFromNow, upcomingItems) {
+function processAnimalNotifications(itemData, timeResult, currentTime, lookaheadLimitMs, upcomingItems) {
     const categoryFilters = SFL_USER_CONFIG.categoryFilters;
     const typeLower = itemData.type.toLowerCase();
     const wakeFilter = categoryFilters.animal || categoryFilters[typeLower];
@@ -1922,7 +1864,7 @@ function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFr
     const wakeRemaining = timeResult.wakeTime;
     const wakeReadyTime = currentTime + (wakeRemaining * SECOND_TO_MS);
     
-    if (wakeRemaining > 0 && wakeFilter && wakeReadyTime <= oneHourFromNow) {
+    if (wakeRemaining > 0 && wakeFilter && wakeReadyTime <= lookaheadLimitMs) {
         upcomingItems.push({
             name: itemData.name || itemData.type,
             category: itemData.category,
@@ -1938,7 +1880,7 @@ function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFr
     if (timeResult.loveTime !== null && timeResult.loveTime > 0 && loveFilter) {
         const loveReadyTime = currentTime + (timeResult.loveTime * SECOND_TO_MS);
         
-        if (loveReadyTime <= oneHourFromNow) {
+    if (loveReadyTime <= lookaheadLimitMs) {
             upcomingItems.push({
                 name: itemData.name || itemData.type,
                 category: itemData.category,
@@ -1953,7 +1895,7 @@ function processAnimalNotifications(itemData, timeResult, currentTime, oneHourFr
     }
 }
 
-function processPetNotifications(itemData, currentTime, oneHourFromNow, upcomingItems) {
+function processPetNotifications(itemData, currentTime, lookaheadLimitMs, upcomingItems) {
     const categoryFilters = SFL_USER_CONFIG.categoryFilters;
     const action = itemData.action;
     const petName = itemData.name || itemData.type;
@@ -1986,7 +1928,7 @@ function processPetNotifications(itemData, currentTime, oneHourFromNow, upcoming
         }
     }
     
-    if (remainingSeconds > 0 && readyTime <= oneHourFromNow) {
+    if (remainingSeconds > 0 && readyTime <= lookaheadLimitMs) {
         const actionEmoji = action === 'caress' ? '💕' : '🍖';
         upcomingItems.push({
             name: `Pet ${actionEmoji}`,
@@ -2011,7 +1953,7 @@ function processPetNotifications(itemData, currentTime, oneHourFromNow, upcoming
         if (currentTime < neglectAtMs && currentTime >= twelveHoursBeforeNeglect) {
             const timeUntilNeglect = (neglectAtMs - currentTime) / 1000;
             
-            if (twelveHoursBeforeNeglect <= oneHourFromNow) {
+            if (twelveHoursBeforeNeglect <= lookaheadLimitMs) {
                 upcomingItems.push({
                     name: `⚠️ ${petName} neglect warning`,
                     category: 'pet',
@@ -2182,8 +2124,21 @@ async function manageNotifications() {
 
 // ====== WIDGET RENDERING ======
 
+function getThemeColors(themeMode) {
+    const isDarkMode = themeMode === 'light' ? false : true; // Default to dark
+    
+    return {
+        BG_COLOR: isDarkMode ? new Color('#1C1C1E') : new Color('#f2f2f7'),
+        ALT_BG_COLOR: isDarkMode ? new Color('#252525') : new Color('#e5e5ea'),
+        TEXT_COLOR: isDarkMode ? new Color("#E5E5E7") : Color.black(),
+        INFO_COLOR: isDarkMode ? new Color("#0A84FF") : new Color("#007AFF"),
+        BOTTOM_TEXT_COLOR: isDarkMode ? new Color("#E5E5E7") : Color.black(),
+        isDarkMode: isDarkMode
+    };
+}
+
 function groupItemsByTime(allItems) {
-    const groupedItems = {};
+    let groupedItems = {};
     
     for (const [itemName, itemData] of Object.entries(allItems)) {
     if (itemName.startsWith('__')) continue;
@@ -2355,11 +2310,8 @@ function sortAndFilterGroups(groupedItems) {
     return filteredGroups.slice(0, maxItems);
 }
 
-function renderWidgetRows(widget, displayedGroups) {
-    const BG_COLOR = Color.dynamic(new Color('#f2f2f7'), new Color('#1C1C1E'));
-    const ALT_BG_COLOR = Color.dynamic(new Color('#e5e5ea'), new Color('#252525'));
-    const TEXT_COLOR = Color.dynamic(Color.black(), new Color("#E5E5E7"));
-    
+function renderWidgetRows(widget, displayedGroups, themeColors) {
+    const isDarkMode = themeColors.isDarkMode;
     let rowIndex = 0;
     
     for (let group of displayedGroups) {
@@ -2432,7 +2384,7 @@ function renderWidgetRows(widget, displayedGroups) {
         rowStack.spacing = 0;
         rowStack.setPadding(1, 10, 1, 0);
         
-        rowStack.backgroundColor = rowIndex % 2 === 0 ? ALT_BG_COLOR : BG_COLOR;
+        rowStack.backgroundColor = rowIndex % 2 === 0 ? themeColors.ALT_BG_COLOR : themeColors.BG_COLOR;
         
         let col1Stack = rowStack.addStack();
         if (config.widgetFamily === 'small') {
@@ -2500,39 +2452,39 @@ function renderWidgetRows(widget, displayedGroups) {
         col3Text.lineLimit = 1;
         col3Stack.addSpacer();
         
-        emojiText.textColor = TEXT_COLOR;
-        col1Text.textColor = TEXT_COLOR;
+        emojiText.textColor = themeColors.TEXT_COLOR;
+        col1Text.textColor = themeColors.TEXT_COLOR;
         
         if (petActionEmojiText) {
-            petActionEmojiText.textColor = TEXT_COLOR;
+            petActionEmojiText.textColor = themeColors.TEXT_COLOR;
         }
         
         if (indicatorText) {
-            indicatorText.textColor = TEXT_COLOR;
+            indicatorText.textColor = themeColors.TEXT_COLOR;
         }
         
         if (config.widgetFamily !== 'small' && col2Text) {
-            col2Text.textColor = TEXT_COLOR;
+            col2Text.textColor = themeColors.TEXT_COLOR;
         }
         
         if (group.category === 'update') {
-            col3Text.textColor = Color.dynamic(new Color("#FF6B35"), new Color("#FF8C42"));
+            col3Text.textColor = isDarkMode ? new Color("#FF8C42") : new Color("#FF6B35");
         } else if (group.remainingTime <= 0) {
             let readyForSeconds = Math.abs(group.remainingTime);
             let readyForDays = readyForSeconds / SECONDS_PER_DAY;
             
             if (readyForDays >= 1) {
-                col3Text.textColor = Color.dynamic(new Color("#CC0000"), Color.red());
+                col3Text.textColor = isDarkMode ? Color.red() : new Color("#CC0000");
             } else {
-                col3Text.textColor = Color.dynamic(new Color("#008000"), Color.green());
+                col3Text.textColor = isDarkMode ? Color.green() : new Color("#008000");
             }
         } else {
             let remainingHours = group.remainingTime / SECONDS_PER_HOUR;
             
             if (remainingHours <= 1) {
-                col3Text.textColor = Color.dynamic(new Color("#B8860B"), Color.yellow());
+                col3Text.textColor = isDarkMode ? Color.yellow() : new Color("#B8860B");
             } else {
-                col3Text.textColor = TEXT_COLOR;
+                col3Text.textColor = themeColors.TEXT_COLOR;
             }
         }
         
@@ -2551,32 +2503,60 @@ async function createWidget() {
     
     let widget = new ListWidget();
     
-    const BG_COLOR = Color.dynamic(new Color('#f2f2f7'), new Color('#1C1C1E'));
-    const ALT_BG_COLOR = Color.dynamic(new Color('#e5e5ea'), new Color('#252525'));
+    // Get theme colors based on user preference
+    const themeMode = SFL_USER_CONFIG.themeMode || 'dark'; // Default to dark if not set
+    const themeColors = getThemeColors(themeMode);
     
-    widget.backgroundColor = BG_COLOR;
+    // Auto-detect widget size if not set
+    if (!config.widgetFamily) {
+        // Default to medium if not detected
+        config.widgetFamily = 'medium';
+    }
+    
+    // Adjust spacing based on widget size for better fit
+    let topPadding, bottomPadding, sidePadding;
+    switch (config.widgetFamily) {
+        case 'small':
+            topPadding = 2;
+            bottomPadding = 2;
+            sidePadding = 4;
+            break;
+        case 'medium':
+            topPadding = 4;
+            bottomPadding = 4;
+            sidePadding = 8;
+            break;
+        case 'large':
+            topPadding = 6;
+            bottomPadding = 6;
+            sidePadding = 10;
+            break;
+        default:
+            topPadding = 4;
+            bottomPadding = 4;
+            sidePadding = 8;
+    }
+    
+    widget.backgroundColor = themeColors.BG_COLOR;
     
     let groupedItems = groupItemsByTime(allItems);
     
     if (Object.keys(groupedItems).length === 0) {
-        const TEXT_COLOR = Color.dynamic(Color.black(), new Color("#8E8E93"));
-        const INFO_COLOR = Color.dynamic(new Color("#007AFF"), new Color("#0A84FF"));
-        
         let noData = widget.addText("No items tracked");
         noData.font = Font.mediumMonospacedSystemFont(12);
-        noData.textColor = TEXT_COLOR;
+        noData.textColor = themeColors.TEXT_COLOR;
         noData.centerAlignText();
         
         widget.addSpacer(10);
         
         let infoText = widget.addText("Loading from API...");
         infoText.font = Font.mediumMonospacedSystemFont(10);
-        infoText.textColor = INFO_COLOR;
+        infoText.textColor = themeColors.INFO_COLOR;
         infoText.centerAlignText();
     } else {
         let displayedGroups = sortAndFilterGroups(groupedItems);
         
-        renderWidgetRows(widget, displayedGroups);
+        renderWidgetRows(widget, displayedGroups, themeColors);
     }
     
     widget.addSpacer(0);
@@ -2612,9 +2592,24 @@ for (const [itemName, itemData] of Object.entries(allItems)) {
 
 let bottomStack = widget.addStack();
 bottomStack.layoutHorizontally();
-bottomStack.setPadding(0, 8, 0, 0); 
 
-const BOTTOM_TEXT_COLOR = Color.dynamic(Color.black(), new Color("#E5E5E7"));
+let rightPadding;
+switch (config.widgetFamily) {
+    case 'small':
+        rightPadding = 20;
+        break;
+    case 'medium':
+        rightPadding = 28;
+        break;
+    case 'large':
+        rightPadding = 28;
+        break;
+    default:
+        rightPadding = 20;
+}
+bottomStack.setPadding(0, rightPadding, 0, 0); 
+
+const BOTTOM_TEXT_COLOR = themeColors.BOTTOM_TEXT_COLOR;
 
 bottomStack.addSpacer();
 

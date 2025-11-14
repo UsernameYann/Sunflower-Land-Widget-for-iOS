@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "date": "November 14th, 2025",
+      "changes": [
+        "🎨 Theme Mode selector added: Choose between Dark and Light themes for both widgets"
+      ]
+    },
+    {
       "date": "November 12th, 2025",
       "changes": [
         "🐾 Pet tracking added (caress & feed reminders)",
