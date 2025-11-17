@@ -14,7 +14,7 @@ function getIngredientEmoji(ingredients) {
   }
 }
 
-const themeMode = __THEME_MODE__;;
+const themeMode = __THEME_MODE__;
 
 const BG_COLOR = themeMode === 'dark' ? new Color('#1C1C1E') : new Color('#f2f2f7');
 const ALT_BG_COLOR = themeMode === 'dark' ? new Color('#252525') : new Color('#e5e5ea');
@@ -160,15 +160,17 @@ const auctions = [
 
 function formatTime(ms) {
   const totalSec = Math.floor(ms / 1000);
+  if (totalSec < 60) {
+    return `${totalSec}s`;
+  }
   const d = Math.floor(totalSec / 86400);
   const h = Math.floor((totalSec % 86400) / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
   let units = [];
   if (d > 0) units.push(`${d}d`);
   if (h > 0) units.push(`${h}h`);
-  if (m > 0) units.push(`${m.toString().padStart(2,'0')}`);
-  if (s > 0 || units.length === 0) units.push(`${s.toString().padStart(2,'0')}`);
+  if (m > 0) units.push(`${m}m`);
+  if (units.length === 0) units.push('0m');
   return units.slice(0, TIME_DISPLAY_UNITS).join('');
 }
 
@@ -222,13 +224,13 @@ upcoming.forEach((auction, index) => {
     const msLeft = auction.startAt - now;
     timeLeft = formatTime(msLeft);
     if (msLeft < 3600000) {
-      color = new Color(YELLOW_COLOR);
+      color = YELLOW_COLOR;
     } else {
       color = WHITE_COLOR;
     }
   } else if (now >= auction.startAt && now < auction.endAt) {
     timeLeft = 'Now!';
-    color = new Color(GREEN_COLOR); 
+    color = GREEN_COLOR; 
   } else {
     timeLeft = '';
     color = WHITE_COLOR;
