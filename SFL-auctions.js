@@ -182,16 +182,9 @@ const upcoming = auctions
 
 async function setupNotifications() {
   let pendingNotifications = await Notification.allPending();
-  for (let notification of pendingNotifications) {
-    if (notification.identifier && notification.identifier.startsWith('auction_')) {
-      try {
-        await notification.remove();
-      } catch (error) {}
-    }
-  }
+  let existingIds = new Set(pendingNotifications.map(n => n.identifier));
   const now = Date.now();
   const upcomingAuctions = auctions.filter(a => a.startAt > now && a.startAt < now + TWELVE_HOURS);
-  let existingIds = new Set(pendingNotifications.map(n => n.identifier));
   for (const auction of upcomingAuctions) {
     let ing = getIngredientEmoji(auction.ingredients);
     let notifId = `auction_${auction.startAt}`;
