@@ -5,7 +5,7 @@
 // ====== SFL WIDGET MODULE: header ======
 
 // Current widget version (matches changelog.json latest date)
-const WIDGET_VERSION = "November 14th, 2025";
+const WIDGET_VERSION = "December 28th, 2025";
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
@@ -194,6 +194,13 @@ function getLavaPitTimeSeconds(farm) {
     ) {
         time = time / 2;
     }
+    if (
+        farm &&
+        farm.boostsUsedAt &&
+        farm.boostsUsedAt["Magma Stone"]
+    ) {
+        time = time * 0.85;
+    }
     return time;
 }
 
@@ -369,6 +376,9 @@ const POWER_COOLDOWN_TIMES = {
     "Petal Blessed": 96 * 60 * 60,     
     "Grease Lightning": 96 * 60 * 60,  
 };
+
+// Base honey production time aligned with server logic (ms)
+const DEFAULT_HONEY_PRODUCTION_TIME = 24 * 60 * 60 * 1000;
 
 // ====== APP CONSTANTS ======
 
@@ -727,9 +737,9 @@ function getTimeRemaining(itemData) {
         return (nextResetAtMs - nowMs) / 1000;
     }
     
-    if (itemData.category === 'beehive' && itemData.attachedUntil) {
-    const attachedUntilMs = normalizeTs(itemData.attachedUntil);
-    return (attachedUntilMs - currentTime) / 1000;
+    if (itemData.category === 'beehive' && itemData.readyAt) {
+    const readyAtMs = normalizeTs(itemData.readyAt);
+    return (readyAtMs - currentTime) / 1000;
     }
     
     if (itemData.category === 'crafting' && itemData.readyAt) {
@@ -1266,14 +1276,88 @@ function parseBeehives(apiData, allItems) {
     if (!SFL_USER_CONFIG.categoryFilters.beehive) return;
     if (apiData.farm && apiData.farm.beehives) {
         for (let [hiveId, hiveInfo] of Object.entries(apiData.farm.beehives)) {
-            if (hiveInfo.flowers && hiveInfo.flowers.length > 0) {
-                let latestFlower = hiveInfo.flowers.reduce((latest, current) => 
-                    current.attachedUntil > latest.attachedUntil ? current : latest
-                );
-                
+            if (hiveInfo.honey && hiveInfo.honey.updatedAt !== undefined) {
+                const now = Date.now();
+                const honeyProducedMs = hiveInfo.honey.produced || 0; // ms
+                const honeyUpdatedAtMs = hiveInfo.honey.updatedAt;    // ms timestamp
+                const flowers = (hiveInfo.flowers || []).slice().sort((a, b) => a.attachedAt - b.attachedAt);
+
+                // 1) Accumulate production up to "now" using the same logic as beehiveMachine
+                const currentProducedMs = flowers.reduce((produced, flower) => {
+                    const start = Math.max(honeyUpdatedAtMs, flower.attachedAt || 0);
+                    const end = Math.min(now, flower.attachedUntil || 0);
+                    const rate = (flower.rate ?? 1);
+                    if (end > start) {
+                        return produced + Math.max(end - start, 0) * rate;
+                    }
+                    return produced;
+                }, honeyProducedMs);
+
+                let honeyLeftMs = Math.max(0, DEFAULT_HONEY_PRODUCTION_TIME - currentProducedMs);
+                let readyAt = now;
+
+                if (honeyLeftMs > 0) {
+                    // 2) Build future events to project exact completion (start/end of flower attachments)
+                    const events = [];
+                    flowers.forEach((flower) => {
+                        const rate = (flower.rate ?? 1);
+                        const rawStart = flower.attachedAt || 0;
+                        const rawEnd = flower.attachedUntil || 0;
+                        const start = Math.max(now, rawStart);
+                        const end = rawEnd;
+                        // Avoid double-counting currently active flowers: we already add their rate in initial speed.
+                        if (end > now) {
+                            // Only push the start event if it begins in the future.
+                            if (start > now) {
+                                events.push({ t: start, delta: rate });
+                            }
+                            events.push({ t: end, delta: -rate });
+                        }
+                    });
+                    events.sort((a, b) => (a.t - b.t) || (a.delta - b.delta));
+
+                    // Initial speed = sum of currently active attachments
+                    let speed = flowers.reduce((acc, flower) => {
+                        const rate = (flower.rate ?? 1);
+                        return acc + (((flower.attachedAt || 0) <= now && (flower.attachedUntil || 0) > now) ? rate : 0);
+                    }, 0);
+
+                    let prev = now;
+                    let finished = false;
+
+                    for (const ev of events) {
+                        const dt = ev.t - prev;
+                        if (dt > 0 && speed > 0) {
+                            const produced = dt * speed;
+                            if (produced >= honeyLeftMs) {
+                                const timeNeeded = honeyLeftMs / speed;
+                                readyAt = prev + timeNeeded;
+                                finished = true;
+                                break;
+                            }
+                            honeyLeftMs -= produced;
+                        }
+                        speed += ev.delta;
+                        prev = ev.t;
+                    }
+
+                    if (!finished) {
+                        // If production continues after last event
+                        if (speed > 0 && honeyLeftMs > 0) {
+                            readyAt = prev + (honeyLeftMs / speed);
+                            finished = true;
+                        }
+                    }
+
+                    // If never finished, mark as undefined to avoid false ready notifications
+                    if (!finished) {
+                        readyAt = undefined;
+                    }
+                }
+
                 let hiveName = `Beehive ${hiveId}`;
                 allItems[hiveName] = {
-                    attachedUntil: latestFlower.attachedUntil, 
+                    readyAt: readyAt,
                     type: 'Beehive',
                     name: 'Beehive', 
                     category: 'beehive', 
@@ -1395,12 +1479,13 @@ function parseComposters(apiData, allItems) {
 
 function parsePowers(apiData, allItems) {
     if (!SFL_USER_CONFIG.categoryFilters.power) return;
+    const hasLunasCrescent = apiData.farm && apiData.farm.wardrobe && apiData.farm.wardrobe["Luna's Crescent"] > 0;
     if (apiData.farm && apiData.farm.bumpkin && apiData.farm.bumpkin.previousPowerUseAt) {
         const powers = apiData.farm.bumpkin.previousPowerUseAt;
         
         for (let [powerName, lastUsedAt] of Object.entries(powers)) {
             if (POWER_COOLDOWN_TIMES[powerName]) {
-                const cooldownSeconds = POWER_COOLDOWN_TIMES[powerName];
+                const cooldownSeconds = POWER_COOLDOWN_TIMES[powerName] * (hasLunasCrescent ? 0.5 : 1);
                 const nextAvailableAt = lastUsedAt + (cooldownSeconds * 1000); 
                 
                 allItems[powerName] = {
@@ -1636,36 +1721,33 @@ async function loadFromAPI() {
     const CACHE_EXPIRATION_MINUTES = 600;
     
     try {
-        let cacheTimestamp = safeKeychain('get', CACHE_TIMESTAMP_KEY);
-        
-        let currentTime = Date.now();
-        let cacheExpired = false;
-        
-        if (cacheTimestamp) {
-            let cacheAge = (currentTime - parseInt(cacheTimestamp)) / 1000 / 60;
-            cacheExpired = cacheAge >= CACHE_EXPIRATION_MINUTES;
-        } else {
-            cacheExpired = true;
+        const cacheTimestamp = safeKeychain('get', CACHE_TIMESTAMP_KEY);
+        const currentTime = Date.now();
+        const lastApiCallTime = safeKeychain('get', LAST_API_CALL_KEY);
+
+        // Enforce strict 15s rate-limit between API calls. Never call API within this window.
+        const canCallApi = !lastApiCallTime || ((currentTime - parseInt(lastApiCallTime)) / 1000) >= API_RATE_LIMIT_SECONDS;
+
+        // If within rate-limit window, serve cache or return empty data. NEVER attempt API.
+        if (!canCallApi) {
+            const cachedData = safeKeychain('get', CACHE_KEY);
+            if (cachedData) {
+                const parsedData = safeJSONParse(cachedData, 'Cache');
+                if (parsedData) {
+                    saveResources(parsedData);
+                    return parsedData;
+                }
+            }
+            // Within 15s window: must not call API, return empty data to avoid blocking
+            logInfo('Cache', 'Within 15s rate-limit window; serving fallback data');
+            return loadResources();
         }
         
-        let lastApiCallTime = safeKeychain('get', LAST_API_CALL_KEY);
-        
-        if (!cacheExpired && lastApiCallTime) {
-            let timeSinceLastCall = (currentTime - parseInt(lastApiCallTime)) / 1000;
-            
-            if (timeSinceLastCall < API_RATE_LIMIT_SECONDS) {
-                let cachedData;
-                cachedData = safeKeychain('get', CACHE_KEY);
-                
-                if (cachedData) {
-                    const parsedData = safeJSONParse(cachedData, 'Cache');
-                    if (parsedData) {
-                        saveResources(parsedData);
-                        return parsedData;
-                    } else {
-                        logWarning('Cache', 'Failed to parse cached data, making new API call');
-                    }
-                }
+        // (Optional) cache expiry information retained for telemetry/logging; not gating API calls now.
+        if (cacheTimestamp) {
+            const cacheAgeMinutes = (currentTime - parseInt(cacheTimestamp)) / 1000 / 60;
+            if (cacheAgeMinutes >= CACHE_EXPIRATION_MINUTES) {
+                logInfo('Cache', `Expired (age ${cacheAgeMinutes.toFixed(1)} min), forcing API refresh`);
             }
         }
         
@@ -1681,9 +1763,9 @@ async function loadFromAPI() {
     let apiData = await request.loadJSON();
 
     // Sauvegarde du cache API brut, formaté lisiblement
-    Keychain.set('RAW_API_CACHE_KEY', JSON.stringify(apiData, null, 2));
+    safeKeychain('set', 'RAW_API_CACHE_KEY', JSON.stringify(apiData, null, 2));
 
-    Keychain.set(LAST_API_CALL_KEY, currentTime.toString());
+    safeKeychain('set', LAST_API_CALL_KEY, currentTime.toString());
         
         let allItems = {};
         
@@ -2563,7 +2645,7 @@ async function createWidget() {
 
 let showPowerIcon = false;
 let showPetNeglectIcon = false;
-const twelveHoursMs = 12 * 60 * 60 * 1000;
+const twelveHoursMs = 6 * 60 * 60 * 1000;
 const now = Date.now();
 
 for (const [itemName, itemData] of Object.entries(allItems)) {
@@ -2693,7 +2775,7 @@ async function main() {
             
             if (timeSinceLastCheck >= NOTIFICATION_CHECK_INTERVAL_SECONDS) {
                 await manageNotifications();
-                Keychain.set('sfl_last_notification_check', currentTime.toString());
+                safeKeychain('set', 'sfl_last_notification_check', currentTime.toString());
             }
         }
     } else {

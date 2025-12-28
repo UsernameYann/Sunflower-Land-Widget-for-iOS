@@ -1,6 +1,14 @@
 {
   "versions": [
     {
+      "date": "December 28th, 2025",
+      "changes": [
+        "🌙 Added Luna’s Crescent & Magma Stone boosts",
+        "🔔 Widget indicator threshold: 6h (vs 12h)",
+        "🍯 Updated Beehive readyAt"
+      ]
+    },
+    {
       "date": "November 14th, 2025",
       "changes": [
         "🎨 Theme Mode selector added: Choose between Dark and Light themes for both widgets"
