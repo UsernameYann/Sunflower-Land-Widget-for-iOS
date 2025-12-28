@@ -332,7 +332,7 @@
         <h1>SFL Widgets</h1>
 
         <div class="step" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%); position: relative;">
-            <h3>🆕 What's New - Version December 28th, 2025</h3>
+            <h3 id="changelog-title">🆕 What's New - Version Loading...</h3>
             <div class="changelog" id="changelog-content">
                 <!-- Changelog will be loaded dynamically from changelog.json -->
             </div>
@@ -608,6 +608,12 @@
                 const response = await fetch('changelog.json');
                 const data = await response.json();
                 
+                // Mettre à jour le titre avec la date la plus récente
+                if (data.versions && data.versions.length > 0) {
+                    const latestDate = data.versions[0].date;
+                    document.getElementById('changelog-title').textContent = `🆕 What's New - Version ${latestDate}`;
+                }
+                
                 const changelogContent = document.getElementById('changelog-content');
                 changelogContent.innerHTML = data.versions.map(version => `
                     <div class="changelog-item">
@@ -619,6 +625,7 @@
                 `).join('');
             } catch (error) {
                 console.error('Error loading changelog:', error);
+                document.getElementById('changelog-title').textContent = '🆕 What\'s New';
                 // Fallback: afficher un message d'erreur au lieu du contenu dupliqué
                 document.getElementById('changelog-content').innerHTML = `
                     <div class="changelog-item">
