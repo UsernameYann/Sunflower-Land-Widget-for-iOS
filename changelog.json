@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "date": "January 1st, 2026",
+      "changes": [
+        "🍯 Updated Beehive"
+      ]
+    },
+    {
       "date": "December 28th, 2025",
       "changes": [
         "🌙 Added Luna’s Crescent & Magma Stone boosts",

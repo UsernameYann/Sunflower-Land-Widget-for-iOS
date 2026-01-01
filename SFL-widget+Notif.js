@@ -5,7 +5,7 @@
 // ====== SFL WIDGET MODULE: header ======
 
 // Current widget version (matches changelog.json latest date)
-const WIDGET_VERSION = "December 28th, 2025";
+const WIDGET_VERSION = "January 1st, 2026";
 
 // ====== CONFIGURATION ======
 // ⚠️ CHANGE YOUR FARM ID HERE:
@@ -737,7 +737,11 @@ function getTimeRemaining(itemData) {
         return (nextResetAtMs - nowMs) / 1000;
     }
     
-    if (itemData.category === 'beehive' && itemData.readyAt) {
+    if (itemData.category === 'beehive') {
+    // If no valid readyAt (flowers can't complete production), skip this beehive
+    if (!itemData.readyAt) {
+        return null;
+    }
     const readyAtMs = normalizeTs(itemData.readyAt);
     return (readyAtMs - currentTime) / 1000;
     }
@@ -1907,6 +1911,11 @@ function getUpcomingItems(allItems) {
 
         const timeResult = getTimeRemaining(itemData);
 
+        // Skip items with no valid time remaining (e.g., beehives without flower support)
+        if (timeResult === null) {
+            continue;
+        }
+
         if (timeResult.isAnimal) {
             processAnimalNotifications(itemData, timeResult, currentTime, lookaheadLimitMs, upcomingItems);
             continue;
@@ -2235,6 +2244,11 @@ function groupItemsByTime(allItems) {
             timeResult = -1000; // Ready immediately
         } else {
             timeResult = getTimeRemaining(itemData);
+        }
+        
+        // Skip items with no valid time remaining (e.g., beehives without flower support)
+        if (timeResult === null) {
+            continue;
         }
         
         if (timeResult.isAnimal) {
