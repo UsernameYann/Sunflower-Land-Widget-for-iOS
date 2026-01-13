@@ -5,9 +5,9 @@ Create your personalized Sunflower Land widget with notifications in just a few 
 ## 🖼️ Preview
 
 <div align="center">
-  <img src="IMG_9819.jpg" alt="Widget Screenshot 1" width="250" />
-  <img src="IMG_9820.png" alt="Widget Screenshot 2" width="250" />
-  <img src="IMG_9836.jpg" alt="Widget Screenshot 3" width="250" />
+  <img src="images/IMG_9819.jpg" alt="Widget Screenshot 1" width="250" />
+  <img src="images/IMG_9820.png" alt="Widget Screenshot 2" width="250" />
+  <img src="images/IMG_9836.jpg" alt="Widget Screenshot 3" width="250" />
 </div>
 
 ## 🚀 Get Started
