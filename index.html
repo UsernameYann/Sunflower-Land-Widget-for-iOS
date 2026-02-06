@@ -464,6 +464,7 @@
                 <div class="checkbox-item"><input type="checkbox" id="crop_machine" checked> <label for="crop_machine">🚜 Crop Machine</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="floating_island" checked> <label for="floating_island">☁️ Floating Island</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="lava_pit" checked> <label for="lava_pit">🌋 Lava Pits</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="crab_trap" checked> <label for="crab_trap">🦀 Crab Traps</label></div>
             </div>
         </div>
 
@@ -472,8 +473,8 @@
             <h4>🎁 Collectibles & Rewards</h4>
             <div class="checkbox-group">
                 <div class="checkbox-item"><input type="checkbox" id="daily" checked> <label for="daily">📅 Daily Collectibles</label></div>
-                <div class="checkbox-item"><input type="checkbox" id="vip_chest" checked> <label for="vip_chest">💎 VIP Chest</label></div>
-                <div class="checkbox-item"><input type="checkbox" id="bud_box" checked> <label for="bud_box">📦 Bud Box</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="vip_chest"> <label for="vip_chest">💎 VIP Chest</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="bud_box" checked> <label for="bud_box">👽 Bud Box</label></div>
             </div>
         </div>
 
@@ -487,6 +488,19 @@
             <div class="checkbox-group">
                 <div class="checkbox-item"><input type="checkbox" id="pet_caress" checked> <label for="pet_caress">💕 Pet Caress</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="pet_feed" checked> <label for="pet_feed">🍖 Pet Feed</label></div>
+            </div>
+        </div>
+
+        <!-- Refresh Notifications Section -->
+        <div class="filter-section">
+            <h4>🔔 Refresh Notifications</h4>
+            <p class="filter-note">💡 <em>These notifications trigger on widget refresh to alert you about time-sensitive events:</em></p>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="pet_neglect" checked> <label for="pet_neglect">💀 Pets Neglected (8h before)</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="sick_animal" checked> <label for="sick_animal">🤢 Sick Animals</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="power_notification" checked> <label for="power_notification">⚡ Power Alert (8h before)</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="trades" checked> <label for="trades">💰 Trades Completed</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="social_projects" checked> <label for="social_projects">👷 Social Projects</label></div>
             </div>
         </div>
 
@@ -591,8 +605,8 @@
     <div style="text-align: center; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; font-size: 0.9em;">
         <h3 style="font-size: 1.2em; margin-bottom: 10px;">🌻 Bonus & Support</h3>
         <p>👋 Visit my farm: <a href="https://sunflower-land.com/play/#/visit/6826774918530594" target="_blank">Click here to visit my Sunflower Land farm</a></p>
-        <p>🔗 Check out SFLventory: <a href="https://usernameyann.github.io/SFLventory/" target="_blank">https://usernameyann.github.io/SFLventory/</a></p>
-        <p>🎉 Enjoy your Sunflower Land widget with notifications!</p>
+        <p>🔗 Check out my <a href="https://usernameyann.github.io/SFLventory/" target="_blank">SFLventory</a></p>
+        <p>🎉 Enjoy your <a href="https://sunflower-land.com/" target="_blank">Sunflower Land</a> widget with notifications!</p>
     </div>
     
     </div> <!-- container -->
@@ -671,7 +685,7 @@
                 code = code.replace(/const themeMode = __THEME_MODE__;/, `const themeMode = "${themeMode}";`);
 
                 // Remplacer tous les placeholders de filtres individuellement
-                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed'];
+                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'crab_trap', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed', 'pet_neglect', 'sick_animal', 'power_notification', 'trades', 'social_projects'];
                 
                 filters.forEach(filter => {
                     const checked = document.getElementById(filter).checked;
