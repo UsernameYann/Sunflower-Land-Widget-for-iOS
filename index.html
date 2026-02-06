@@ -679,10 +679,10 @@
                 let code = await response.text();
 
                 // Remplacer les placeholders de base
-                code = code.replace(/const FARM_ID = "__FARM_ID__";/, `const FARM_ID = "${farmId}";`);
-                code = code.replace(/const API_KEY = "__API_KEY__";/, `const API_KEY = "${apiKey}";`);
-                code = code.replace(/const enableNotifications = __ENABLE_NOTIFICATIONS__;/, `const enableNotifications = ${enableNotifications};`);
-                code = code.replace(/const themeMode = __THEME_MODE__;/, `const themeMode = "${themeMode}";`);
+                code = code.replace(/FARM_ID: "__FARM_ID__",/, `FARM_ID: "${farmId}",`);
+                code = code.replace(/API_KEY: "__API_KEY__",/, `API_KEY: "${apiKey}",`);
+                code = code.replace(/enableNotifications: __ENABLE_NOTIFICATIONS__,/, `enableNotifications: ${enableNotifications},`);
+                code = code.replace(/themeMode: __THEME_MODE__,/, `themeMode: "${themeMode}",`);
 
                 // Remplacer tous les placeholders de filtres individuellement
                 const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'crab_trap', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed', 'pet_neglect', 'sick_animal', 'power_notification', 'trades', 'social_projects'];
