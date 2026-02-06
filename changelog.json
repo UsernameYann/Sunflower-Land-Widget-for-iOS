@@ -1,6 +1,14 @@
 {
   "versions": [
     {
+      "date": "February 6th, 2026",
+      "changes": [
+        "🦀 Crab Traps & Fish Market tracking added",
+        "🔔 New refresh notifications: neglected pets (8h warning), sick animals, completed trades, social projects at goal, power sources (8h warning)",
+        "🎨 New notification icons in widget: 👷 (projects completed), 💰 (trades done), 🤢 (sick animals)"
+      ]
+    },
+    {
       "date": "January 1st, 2026",
       "changes": [
         "🍯 Updated Beehive"
