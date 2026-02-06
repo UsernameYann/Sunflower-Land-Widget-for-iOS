@@ -1,7 +1,4 @@
-// ====== SFL WIDGET MODULE: header ======
 const WIDGET_VERSION = "February 6th, 2026";
-
-// ====== CONFIGURATION ======
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -59,8 +56,6 @@ const SFL_USER_CONFIG = {
 };
 
 globalThis.SFL_USER_CONFIG = globalThis.SFL_USER_CONFIG || SFL_USER_CONFIG;
-
-// ====== TIME CONSTANTS (modularized) ======
 
 const SECOND_TO_MS = 1000;
 const MINUTE_TO_MS = 60 * SECOND_TO_MS;
@@ -199,7 +194,7 @@ function getMagicMushroomTimeSeconds(islandType) {
     desert: 24 * 60 * 60,
     volcano: 22 * 60 * 60,
   };
-  return times[islandType] || 48 * 60 * 60; // default to basic if unknown
+  return times[islandType] || 48 * 60 * 60; 
 }
 
 function getLavaPitTimeSeconds(farm) {
@@ -229,8 +224,6 @@ if (typeof module !== "undefined") {
   module.exports = { getLavaPitTimeSeconds };
 }
 
-// ====== UI CONSTANTS (modularized) ======
-
 const WIDGET_LIMITS = {
   small: 9,
   medium: 9,
@@ -250,9 +243,9 @@ const EMOJI_SIZES = {
 };
 
 const COLUMN_WIDTHS = {
-  item: 160, // Colonne nom d'item (augmenté pour plus d'espace)
-  quantity: 50, // Colonne quantité
-  small: 95, // Widget small (un peu plus large pour les noms)
+  item: 160, 
+  quantity: 50,
+  small: 95, 
 };
 
 const ROW_SPACING = {
@@ -270,14 +263,10 @@ const COOKING_BUILDINGS = {
   "Fish Market": "Fish Market",
 };
 
-// ====== STORAGE / CACHE CONSTANTS (modularized) ======
-
 const RESOURCES_KEY = "sunflower_resources";
 const CACHE_KEY = "sunflower_api_cache";
 const CACHE_TIMESTAMP_KEY = "sunflower_cache_timestamp";
 const LAST_API_CALL_KEY = "sunflower_last_api_call";
-
-// ====== UTILITY FUNCTIONS ======
 
 function logError(context, error, details = "") {
   const message = details
@@ -329,7 +318,6 @@ function normalizeTs(ts) {
   return ts;
 }
 
-// ====== DATE HELPERS ======
 function getNextDailyReset() {
   const now = new Date();
   const tomorrow = new Date(now);
@@ -789,22 +777,17 @@ function formatTime(timeRemainingSeconds, widgetFamily = "medium") {
     else if (minutes > 0) return `${minutes}m`;
     else return `${seconds}s`;
   } else {
-    // Format pour medium/large
     const h = String(hours).padStart(2, "0");
     const m = String(minutes).padStart(2, "0");
     const s = String(seconds).padStart(2, "0");
 
     if (days > 0) {
-      // Format: 1d12h05m03s
       return `${days}d${h}h${m}m${s}s`;
     } else if (hours > 0) {
-      // Format: 5h12m02s
       return `${hours}h${m}m${s}s`;
     } else if (minutes > 0) {
-      // Format: 4min02s
       return `${minutes}min${s}s`;
     } else {
-      // Format: 12s
       return `${seconds}s`;
     }
   }
@@ -876,7 +859,6 @@ async function checkForUpdates() {
   }
 }
 
-// ====== SOCIAL PROJECTS DETECTION ======
 function getCurrentSocialProjectsSnapshot(allItems) {
   const snapshot = {};
   const villageProjects = allItems["__socialProjects"];
@@ -891,7 +873,6 @@ function getCurrentSocialProjectsSnapshot(allItems) {
     "Basic Cooking Pot": 10,
   };
 
-  // Collect all projects at or above limit
   for (const [projectName, limit] of Object.entries(SOCIAL_PROJECT_LIMITS)) {
     const project = villageProjects[projectName];
     if (project && typeof project.cheers === "number") {
@@ -908,7 +889,6 @@ function getCurrentSocialProjectsSnapshot(allItems) {
   return snapshot;
 }
 
-// For widget: check if any social projects at limit
 function shouldShowSocialProjectIcon(allItems) {
   try {
     if (!SFL_USER_CONFIG?.categoryFilters?.social_projects) return false;
@@ -923,7 +903,6 @@ function shouldShowSocialProjectIcon(allItems) {
   }
 }
 
-// ====== POWER DETECTION ======
 function getCurrentPowerSnapshot(allItems) {
   const snapshot = {};
   const now = Date.now();
@@ -937,7 +916,6 @@ function getCurrentPowerSnapshot(allItems) {
     ) {
       const nextAvailableAtMs = normalizeTs(itemData.nextAvailableAt);
       const timeRemainingMs = nextAvailableAtMs - now;
-      // Affichage widget: dès que c'est dans les 8h
       if (timeRemainingMs > 0 && timeRemainingMs < lookaheadLimitMs) {
         snapshot[itemName] = {
           name: itemName,
@@ -949,7 +927,6 @@ function getCurrentPowerSnapshot(allItems) {
   return snapshot;
 }
 
-// For widget: check if any power sources coming soon
 function shouldShowPowerIcon(allItems) {
   try {
     if (!SFL_USER_CONFIG?.categoryFilters?.power_notification) return false;
@@ -960,7 +937,6 @@ function shouldShowPowerIcon(allItems) {
   }
 }
 
-// ====== PET NEGLECT DETECTION ======
 function getCurrentPetNeglectSnapshot(allItems) {
   const snapshot = {};
   const now = Date.now();
@@ -976,7 +952,6 @@ function getCurrentPetNeglectSnapshot(allItems) {
       const neglectDays = itemData.neglectDays || 3;
       const neglectAtMs = fedAtMs + neglectDays * 24 * 60 * 60 * 1000;
       const timeUntilNeglectMs = neglectAtMs - now;
-      // Fenêtre notif: entre 10h et 8h dans le futur (pour fireDate positif)
       if (
         timeUntilNeglectMs > EIGHT_HOURS_MS &&
         timeUntilNeglectMs < lookaheadLimitMs
@@ -994,7 +969,6 @@ function getCurrentPetNeglectSnapshot(allItems) {
   return snapshot;
 }
 
-// For widget: snapshot for icon (show within 8h)
 function getCurrentPetNeglectIconSnapshot(allItems) {
   const snapshot = {};
   const now = Date.now();
@@ -1010,7 +984,6 @@ function getCurrentPetNeglectIconSnapshot(allItems) {
       const neglectDays = itemData.neglectDays || 3;
       const neglectAtMs = fedAtMs + neglectDays * 24 * 60 * 60 * 1000;
       const timeUntilNeglectMs = neglectAtMs - now;
-      // Icône: dès que c'est dans les 8h
       if (timeUntilNeglectMs > 0 && timeUntilNeglectMs < lookaheadLimitMs) {
         const petId = itemData.petName || itemData.name || itemData.type;
         snapshot[petId] = { name: petId, neglectAtMs: neglectAtMs };
@@ -1020,7 +993,6 @@ function getCurrentPetNeglectIconSnapshot(allItems) {
   return snapshot;
 }
 
-// For widget: check if any pets at risk of neglect
 function shouldShowPetNeglectIcon(allItems) {
   try {
     if (!SFL_USER_CONFIG?.categoryFilters?.pet_neglect) return false;
@@ -1035,13 +1007,11 @@ function shouldShowPetNeglectIcon(allItems) {
   }
 }
 
-// ====== TRADES COMPLETED DETECTION ======
 function getCurrentCompletedTradesSnapshot(allItems) {
   const snapshot = {};
   const trades = allItems["__trades"];
   if (!trades || typeof trades !== "object") return snapshot;
 
-  // Collect all completed trades (listings with fulfilledAt)
   if (trades.listings && typeof trades.listings === "object") {
     for (const [tradeId, listing] of Object.entries(trades.listings)) {
       if (listing.fulfilledAt) {
@@ -1053,7 +1023,6 @@ function getCurrentCompletedTradesSnapshot(allItems) {
     }
   }
 
-  // Collect all completed trades (offers with fulfilledAt)
   if (trades.offers && typeof trades.offers === "object") {
     for (const [tradeId, offer] of Object.entries(trades.offers)) {
       if (offer.fulfilledAt) {
@@ -1068,7 +1037,6 @@ function getCurrentCompletedTradesSnapshot(allItems) {
   return snapshot;
 }
 
-// For widget: check if any trades completed
 function shouldShowTradesCompletedIcon(allItems) {
   try {
     if (!SFL_USER_CONFIG?.categoryFilters?.trades) return false;
@@ -1083,13 +1051,11 @@ function shouldShowTradesCompletedIcon(allItems) {
   }
 }
 
-// ====== SICK ANIMAL DETECTION ======
 function getCurrentSickAnimalsSnapshot(allItems) {
   const snapshot = {};
   const sickAnimals = allItems["__sickAnimals"];
   if (!sickAnimals) return snapshot;
 
-  // Collect all sick animals with their IDs
   if (sickAnimals.barn && typeof sickAnimals.barn === "object") {
     for (const [animalId, animal] of Object.entries(sickAnimals.barn)) {
       if (animal.state === "sick") {
@@ -1109,7 +1075,6 @@ function getCurrentSickAnimalsSnapshot(allItems) {
   return snapshot;
 }
 
-// For widget: check if any animals are sick
 function shouldShowSickAnimalIcon(allItems) {
   try {
     if (!SFL_USER_CONFIG?.categoryFilters?.sick_animal) return false;
@@ -1124,7 +1089,6 @@ function shouldShowSickAnimalIcon(allItems) {
   }
 }
 
-// ====== SICK ANIMAL NOTIFICATION (STATE CHANGE DETECTION) ======
 function detectNewlySickAnimals(allItems) {
   try {
     const SICK_ANIMALS_SNAPSHOT_KEY = "sfl_sick_animals_snapshot";
@@ -1135,7 +1099,6 @@ function detectNewlySickAnimals(allItems) {
     );
     const currentSnapshot = getCurrentSickAnimalsSnapshot(allItems);
 
-    // Find newly sick animals (in current but not in previous)
     const newlySick = [];
     for (const [animalKey, animalData] of Object.entries(currentSnapshot)) {
       if (!previousSnapshot[animalKey]) {
@@ -1143,7 +1106,6 @@ function detectNewlySickAnimals(allItems) {
       }
     }
 
-    // Save current snapshot for next refresh
     safeKeychain(
       "set",
       SICK_ANIMALS_SNAPSHOT_KEY,
@@ -1161,7 +1123,6 @@ function detectNewlySickAnimals(allItems) {
   }
 }
 
-// ====== TRADES COMPLETED NOTIFICATION (STATE CHANGE DETECTION) ======
 function detectNewlyCompletedTrades(allItems) {
   try {
     const TRADES_SNAPSHOT_KEY = "sfl_completed_trades_snapshot";
@@ -1172,7 +1133,6 @@ function detectNewlyCompletedTrades(allItems) {
     );
     const currentSnapshot = getCurrentCompletedTradesSnapshot(allItems);
 
-    // Find newly completed trades (in current but not in previous)
     const newlyCompleted = [];
     for (const [tradeKey, tradeData] of Object.entries(currentSnapshot)) {
       if (!previousSnapshot[tradeKey]) {
@@ -1180,7 +1140,6 @@ function detectNewlyCompletedTrades(allItems) {
       }
     }
 
-    // Save current snapshot for next refresh
     safeKeychain("set", TRADES_SNAPSHOT_KEY, JSON.stringify(currentSnapshot));
 
     return newlyCompleted;
@@ -1194,7 +1153,6 @@ function detectNewlyCompletedTrades(allItems) {
   }
 }
 
-// ====== SOCIAL PROJECTS NOTIFICATION (LIMIT REACHED DETECTION) ======
 function detectNewSocialProjectLimits(allItems) {
   try {
     const PROJECTS_SNAPSHOT_KEY = "sfl_social_projects_snapshot";
@@ -1205,7 +1163,6 @@ function detectNewSocialProjectLimits(allItems) {
     );
     const currentSnapshot = getCurrentSocialProjectsSnapshot(allItems);
 
-    // Find newly limited projects (in current but not in previous)
     const newlyLimited = [];
     for (const [projectName, projectData] of Object.entries(currentSnapshot)) {
       if (!previousSnapshot[projectName]) {
@@ -1213,7 +1170,6 @@ function detectNewSocialProjectLimits(allItems) {
       }
     }
 
-    // Save current snapshot for next refresh
     safeKeychain("set", PROJECTS_SNAPSHOT_KEY, JSON.stringify(currentSnapshot));
 
     return newlyLimited;
@@ -1227,7 +1183,6 @@ function detectNewSocialProjectLimits(allItems) {
   }
 }
 
-// ====== UNIFIED ITEM PROCESSING ======
 function processItems(allItems, options = {}) {
   const {
     mode = "notifications",
@@ -1245,14 +1200,13 @@ function processItems(allItems, options = {}) {
     if (!itemData || (!itemData.name && !itemData.type && !itemData.category))
       continue;
 
-    // Les items de catégorie "update" doivent toujours passer pour le widget
     if (itemData.category === "update") {
       if (!isNotificationMode) {
         processedItems.push({
           name: itemData.name || itemData.type,
           category: itemData.category,
           readyTime: currentTime,
-          remainingSeconds: -1000, // prêt immédiatement
+          remainingSeconds: -1000, 
           totalAmount: itemData.amount || 0,
           emoji: getItemEmoji(
             itemData.name || itemData.type,
@@ -1352,10 +1306,8 @@ function processItems(allItems, options = {}) {
       const loveFilter =
         categoryFilters.animal || categoryFilters[typeLower + "Love"];
 
-      // Gestion wake (réveil)
       const wakeRemaining = timeResult.wakeTime;
       const wakeReadyTime = currentTime + wakeRemaining * SECOND_TO_MS;
-      // Afficher sur le widget même si prêt (wakeRemaining <= 0)
       if (!isNotificationMode) {
         if (wakeFilter) {
           const item = {
@@ -1396,7 +1348,6 @@ function processItems(allItems, options = {}) {
         }
       }
 
-      // Gestion love (câlin)
       const loveRemaining = timeResult.loveTime;
       const loveReadyTime = currentTime + loveRemaining * SECOND_TO_MS;
       if (!isNotificationMode) {
@@ -1441,7 +1392,6 @@ function processItems(allItems, options = {}) {
       const readyTime = currentTime + remainingSeconds * SECOND_TO_MS;
       const action = itemData.action;
 
-      // Toujours afficher sur le widget, même si prêt (remainingSeconds <= 0)
       if (!isNotificationMode) {
         const petName = itemData.petName || itemData.name || itemData.type;
         const item = {
@@ -1464,7 +1414,6 @@ function processItems(allItems, options = {}) {
         };
         processedItems.push(item);
       } else {
-        // Notifications : seulement si à venir
         if (remainingSeconds > 0 && readyTime <= lookaheadLimitMs) {
           const petName = itemData.petName || itemData.name || itemData.type;
           const item = {
@@ -1662,8 +1611,6 @@ function getEventEmoji(event) {
   return eventEmojis[event] || "";
 }
 
-// ====== PARSERS & DAILY ======
-
 function checkDailyReset(allItems, itemName, lastCollectedAt) {
   const todayStartUTC = getTodayStart();
   const nextResetAt = getNextDailyReset();
@@ -1696,7 +1643,6 @@ function checkDailyReset(allItems, itemName, lastCollectedAt) {
 function parseDailyCollectibles(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.daily) return;
 
-  // Daily Rewards
   if (
     apiData.farm &&
     apiData.farm.dailyRewards &&
@@ -1712,7 +1658,6 @@ function parseDailyCollectibles(apiData, allItems) {
     checkDailyReset(allItems, "Daily Rewards", null);
   }
 
-  // Maneki Neko
   let manekiFound = false;
   if (
     apiData.farm &&
@@ -1750,7 +1695,6 @@ function parseDailyCollectibles(apiData, allItems) {
     checkDailyReset(allItems, "Maneki Neko", null);
   }
 
-  // Pirate Chest
   if (
     apiData.farm &&
     apiData.farm.pumpkinPlaza &&
@@ -1766,7 +1710,6 @@ function parseDailyCollectibles(apiData, allItems) {
     checkDailyReset(allItems, "Pirate Chest", null);
   }
 
-  // VIP Chest
   if (
     apiData.farm &&
     apiData.farm.pumpkinPlaza &&
@@ -1805,7 +1748,6 @@ function parseDailyCollectibles(apiData, allItems) {
     };
   }
 
-  // Desert Dig
   if (apiData.farm && apiData.farm.desert && apiData.farm.desert.digging) {
     const digging = apiData.farm.desert.digging;
     const collectedAt =
@@ -1815,7 +1757,6 @@ function parseDailyCollectibles(apiData, allItems) {
     checkDailyReset(allItems, "Desert Dig", collectedAt ? collectedAt : null);
   }
 
-  // Shipments (nouveau daily avec restockedAt)
   if (
     apiData.farm &&
     apiData.farm.shipments &&
@@ -2187,7 +2128,6 @@ function parseMushrooms(apiData, allItems) {
     let mushrooms = apiData.farm.mushrooms;
     const uncollectedMushrooms = mushrooms.mushrooms || {};
 
-    // Track Wild Mushroom (spawnedAt)
     if (mushrooms.spawnedAt) {
       const baseItem = {
         plantedAt: mushrooms.spawnedAt,
@@ -2197,7 +2137,6 @@ function parseMushrooms(apiData, allItems) {
         amount: 0,
       };
 
-      // Sum all uncollected Wild Mushrooms
       let wildTotal = 0;
       let hasWild = false;
       for (let [, mush] of Object.entries(uncollectedMushrooms)) {
@@ -2208,7 +2147,6 @@ function parseMushrooms(apiData, allItems) {
       }
 
       if (hasWild) {
-        // Wild Mushroom uncollected: mark as ready
         baseItem.harvestSeconds = 1;
         baseItem.amount = wildTotal;
         baseItem.isUncollected = true;
@@ -2219,7 +2157,6 @@ function parseMushrooms(apiData, allItems) {
       allItems["Mushroom"] = baseItem;
     }
 
-    // Track Magic Mushroom (magicSpawnedAt)
     if (mushrooms.magicSpawnedAt) {
       const islandType = apiData.farm.island
         ? apiData.farm.island.type
@@ -2235,7 +2172,6 @@ function parseMushrooms(apiData, allItems) {
         harvestSeconds: harvestSeconds,
       };
 
-      // Sum all uncollected Magic Mushrooms
       let magicTotal = 0;
       let hasMagic = false;
       for (let [, mush] of Object.entries(uncollectedMushrooms)) {
@@ -2246,7 +2182,6 @@ function parseMushrooms(apiData, allItems) {
       }
 
       if (hasMagic) {
-        // Magic Mushroom uncollected: mark as ready
         magicItem.harvestSeconds = 1;
         magicItem.amount = magicTotal;
         magicItem.isUncollected = true;
@@ -2608,8 +2543,6 @@ function parseSeasonAndEvents(apiData, allItems) {
   }
 }
 
-// ====== BUDS & BUD BOX ======
-
 const BUD_ORDER = [
   "Plaza",
   "Woodlands",
@@ -2653,7 +2586,6 @@ function parseBudBox(apiData, allItems) {
   const todayType = getDailyBudBoxType(Date.now());
   const playerBudTypes = allItems.__playerBudTypes || [];
 
-  // Si le type d'aujourd'hui est disponible ET pas encore collecté
   if (playerBudTypes.includes(todayType)) {
     const itemName = `Bud Box: ${todayType}`;
     checkDailyReset(allItems, itemName, openedAt ? openedAt : null);
@@ -2667,7 +2599,6 @@ function parseBudBox(apiData, allItems) {
     }
   }
 
-  // Vérifier si le type de DEMAIN sera disponible pour programmer la notification
   const tomorrowMs = Date.now() + 24 * 60 * 60 * 1000;
   const tomorrowType = getDailyBudBoxType(tomorrowMs);
 
@@ -2675,13 +2606,12 @@ function parseBudBox(apiData, allItems) {
     const tomorrowItemName = `Bud Box: ${tomorrowType}`;
     const nextResetAt = getNextDailyReset();
 
-    // Créer un item pour le prochain reset (pour les notifications)
     allItems[tomorrowItemName] = {
       nextResetAt: nextResetAt,
       category: "bud_box",
       type: "Bud Box",
       name: tomorrowItemName,
-      isCollected: true, // Marqué comme collecté car c'est pour demain
+      isCollected: true, 
       amount: 0,
       hasBud: true,
     };
@@ -2773,14 +2703,11 @@ async function loadFromAPI() {
     parseBudBox(apiData, allItems);
     parseSeasonAndEvents(apiData, allItems);
 
-    // Add social projects data for widget display
     allItems["__socialProjects"] =
       apiData.farm?.socialFarming?.villageProjects || {};
 
-    // Add trades data for completed trades detection
     allItems["__trades"] = apiData.farm?.trades || {};
 
-    // Add barn and henHouse animals data for sick animal detection
     const sickAnimals = {};
     if (apiData.farm?.barn?.animals) {
       sickAnimals.barn = apiData.farm.barn.animals;
@@ -2831,8 +2758,6 @@ async function loadFromAPI() {
     return loadResources();
   }
 }
-
-// ====== NOTIFICATION SYSTEM ======
 
 function handleNotificationError(operation, identifier, error) {
   logError(
@@ -2990,7 +2915,6 @@ async function cleanupObsoleteNotifications(
   let removedNotificationsCount = 0;
 
   for (let notification of pendingNotifications) {
-    // Ne nettoyer que les notifications de groupes horaires
     if (
       notification.identifier &&
       notification.identifier.startsWith("sfl_group_")
@@ -3028,12 +2952,10 @@ async function manageNotifications() {
     currentUpcomingIds,
   );
 
-  // Check for state-change notifications (sick animals, trades, social projects)
   let sickAnimalResult = await notifySickAnimals(allItems);
   let tradesResult = await notifyCompletedTrades(allItems);
   let socialProjectsResult = await notifySocialProjectLimits(allItems);
 
-  // Schedule timer-based warnings (power, pet neglect) with fireDate
   let powerResult = await notifyPowerWarning(allItems, existingNotificationIds);
   let petNeglectResult = await notifyPetNeglectWarning(
     allItems,
@@ -3087,7 +3009,6 @@ async function manageNotifications() {
   };
 }
 
-// ====== SICK ANIMAL NOTIFICATION ======
 async function notifySickAnimals(allItems) {
   if (
     !SFL_USER_CONFIG.enableNotifications ||
@@ -3122,7 +3043,6 @@ async function notifySickAnimals(allItems) {
   }
 }
 
-// ====== TRADES COMPLETED NOTIFICATION ======
 async function notifyCompletedTrades(allItems) {
   if (
     !SFL_USER_CONFIG.enableNotifications ||
@@ -3156,7 +3076,6 @@ async function notifyCompletedTrades(allItems) {
   }
 }
 
-// ====== SOCIAL PROJECTS NOTIFICATION ======
 async function notifySocialProjectLimits(allItems) {
   if (
     !SFL_USER_CONFIG.enableNotifications ||
@@ -3191,7 +3110,6 @@ async function notifySocialProjectLimits(allItems) {
   }
 }
 
-// ====== POWER NOTIFICATION ======
 async function notifyPowerWarning(allItems, existingNotificationIds) {
   if (
     !SFL_USER_CONFIG.enableNotifications ||
@@ -3204,7 +3122,6 @@ async function notifyPowerWarning(allItems, existingNotificationIds) {
     let scheduledCount = 0;
     let cleanedCount = 0;
 
-    // Schedule notifications for each power source only between 10h and 8h before
     const now = Date.now();
     for (const [itemName, itemData] of Object.entries(allItems)) {
       if (
@@ -3251,16 +3168,13 @@ async function notifyPowerWarning(allItems, existingNotificationIds) {
       }
     }
 
-    // Clean up notifications that are in the past or for items that no longer exist
     const pendingNotifications = await Notification.allPending();
     for (let notif of pendingNotifications) {
       if (notif.identifier && notif.identifier.startsWith("sfl_power_")) {
         const itemName = notif.identifier.replace("sfl_power_", "");
-        // Check if notification trigger date is in the past
         const triggerDate = notif.nextTriggerDate;
         const isInPast = triggerDate && triggerDate.getTime() < now;
 
-        // Only remove if notification is in the past or power doesn't exist in allItems at all
         const powerExists =
           allItems[itemName] && allItems[itemName].category === "power";
         if (isInPast || !powerExists) {
@@ -3288,7 +3202,6 @@ async function notifyPowerWarning(allItems, existingNotificationIds) {
   }
 }
 
-// ====== PET NEGLECT NOTIFICATION ======
 async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
   if (
     !SFL_USER_CONFIG.enableNotifications ||
@@ -3302,10 +3215,9 @@ async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
     let scheduledCount = 0;
     let cleanedCount = 0;
 
-    // Schedule notifications for each pet at risk of neglect
     for (const [petId, petData] of Object.entries(neglectPets)) {
       const notifId = `sfl_pet_neglect_${petId}`;
-      const fireDate = new Date(petData.fireDate); // Already calculated in snapshot
+      const fireDate = new Date(petData.fireDate); 
 
       if (!existingNotificationIds.has(notifId)) {
         let notification = new Notification();
@@ -3328,7 +3240,6 @@ async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
       }
     }
 
-    // Clean up notifications that are obsolete (past or pet no longer at risk)
     const pendingNotifications = await Notification.allPending();
     const now = Date.now();
     for (let notif of pendingNotifications) {
@@ -3337,10 +3248,8 @@ async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
         const triggerDate = notif.nextTriggerDate;
         const isInPast = triggerDate && triggerDate.getTime() < now;
 
-        // Check if pet is still in the at-risk snapshot
         const petStillAtRisk = neglectPets[petId] !== undefined;
 
-        // Remove if notification is in the past OR pet is no longer at risk
         if (isInPast || !petStillAtRisk) {
           try {
             await notif.remove();
@@ -3366,9 +3275,7 @@ async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
   }
 }
 
-// ====== WIDGET RENDERING ======
-
-const DEBUG_WIDGET = false; // Set to true to trace widget data
+const DEBUG_WIDGET = false; 
 
 function getThemeColors(themeMode) {
   const isDarkMode = themeMode === "light" ? false : true;
@@ -3557,13 +3464,11 @@ function renderWidgetRows(widget, displayedGroups, themeColors) {
     rowStack.layoutHorizontally();
     rowStack.spacing = 0;
 
-    // Padding vertical seulement, pas de padding horizontal pour que les couleurs aillent de bout en bout
     rowStack.setPadding(1, 0, 1, 0);
 
     rowStack.backgroundColor =
       rowIndex % 2 === 0 ? themeColors.ALT_BG_COLOR : themeColors.BG_COLOR;
 
-    // Spacer gauche pour padding interne
     rowStack.addSpacer(15);
 
     let col1Stack = rowStack.addStack();
@@ -3624,7 +3529,6 @@ function renderWidgetRows(widget, displayedGroups, themeColors) {
     let col3Stack = rowStack.addStack();
     col3Stack.layoutHorizontally();
 
-    // Largeur fixe selon la taille du widget
     let col3Width;
     switch (config.widgetFamily) {
       case "small":
@@ -3645,10 +3549,8 @@ function renderWidgetRows(widget, displayedGroups, themeColors) {
     col3Text.font = Font.mediumMonospacedSystemFont(fontSize);
     col3Text.lineLimit = 1;
 
-    // Spacer flexible pour pousser le dernier spacer contre le bord droit
     rowStack.addSpacer();
 
-    // Spacer droit pour padding interne (sera collé au bord droit grâce au spacer flexible)
     rowStack.addSpacer(5);
 
     emojiText.textColor = themeColors.TEXT_COLOR;
@@ -3713,10 +3615,8 @@ async function createWidget(allItems = null) {
     config.widgetFamily = "medium";
   }
 
-  // Padding values per widget size are handled inline where needed (kept for future use)
-
   widget.backgroundColor = themeColors.BG_COLOR;
-  widget.setPadding(0, 0, 0, 0); // Pas de padding pour que les bandes de couleur aillent de bout en bout
+  widget.setPadding(0, 0, 0, 0); 
 
   let groupedItems = groupItemsByTime(allItems);
 
@@ -3754,24 +3654,23 @@ async function createWidget(allItems = null) {
   bottomStack.layoutHorizontally();
   bottomStack.spacing = 0;
   const bottomPad = config.widgetFamily === "small" ? 6 : 8;
-  bottomStack.setPadding(2, bottomPad, 2, bottomPad); // Padding pour le bas seulement
+  bottomStack.setPadding(2, bottomPad, 2, bottomPad); 
 
   const BOTTOM_TEXT_COLOR = themeColors.BOTTOM_TEXT_COLOR;
 
-  // Largeurs fixes pour garantir un centre parfaitement stable
   let sideWidth;
   let centerWidth;
   switch (config.widgetFamily) {
     case "small":
-      sideWidth = 40; // Assez large pour 2 emojis (12x2 + espace)
+      sideWidth = 40; 
       centerWidth = 70;
       break;
     case "medium":
-      sideWidth = 50; // Assez large pour plusieurs icônes
+      sideWidth = 50; 
       centerWidth = 110;
       break;
     case "large":
-      sideWidth = 50; // Assez large pour plusieurs icônes
+      sideWidth = 50; 
       centerWidth = 110;
       break;
     default:
@@ -3779,14 +3678,12 @@ async function createWidget(allItems = null) {
       centerWidth = 90;
   }
 
-  // Centrer le bloc complet dans le widget
   bottomStack.addSpacer();
 
-  // === ZONE GAUCHE (Season/Event collés à l'heure) ===
   let leftStack = bottomStack.addStack();
   leftStack.layoutHorizontally();
   leftStack.size = new Size(sideWidth, 0);
-  leftStack.addSpacer(); // pousse les emojis vers la droite (près de l'heure)
+  leftStack.addSpacer(); 
 
   if (season) {
     let seasonStack = leftStack.addStack();
@@ -3806,12 +3703,10 @@ async function createWidget(allItems = null) {
     eventText.textColor = BOTTOM_TEXT_COLOR;
   }
 
-  // === ZONE CENTRALE (Heure fixe et centrée) ===
   let centerStack = bottomStack.addStack();
   centerStack.layoutHorizontally();
   centerStack.size = new Size(centerWidth, 0);
 
-  // Padding gauche différent selon la taille du widget
   let centerPaddingLeft;
   switch (config.widgetFamily) {
     case "small":
@@ -3848,7 +3743,6 @@ async function createWidget(allItems = null) {
     updateFallback.lineLimit = 1;
   }
 
-  // === ZONE DROITE (Alertes collées à l'heure) ===
   let rightStack = bottomStack.addStack();
   rightStack.layoutHorizontally();
   rightStack.size = new Size(sideWidth, 0);
@@ -3899,14 +3793,12 @@ async function createWidget(allItems = null) {
     sickAnimalIcon.textColor = new Color("#FF6B35");
   }
 
-  rightStack.addSpacer(); // pousse les emojis vers la gauche (près de l'heure)
+  rightStack.addSpacer();
 
   bottomStack.addSpacer();
 
   return widget;
 }
-
-// ====== MAIN SCRIPT ======
 
 async function main() {
   console.log("🌻 Starting Sunflower Land widget...");
