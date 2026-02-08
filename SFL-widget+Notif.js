@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "February 6th, 2026";
+const WIDGET_VERSION = "February 8th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -244,7 +244,7 @@ const EMOJI_SIZES = {
 
 const COLUMN_WIDTHS = {
   item: 160, 
-  quantity: 50,
+  quantity: 50, 
   small: 95, 
 };
 
@@ -1715,37 +1715,38 @@ function parseDailyCollectibles(apiData, allItems) {
     apiData.farm.pumpkinPlaza &&
     apiData.farm.pumpkinPlaza.vipChest
   ) {
-    if (!SFL_USER_CONFIG.categoryFilters.vip_chest) return;
-    const vip = apiData.farm.pumpkinPlaza.vipChest;
-    const openedAt = vip.openedAt || null;
-    const now = Date.now();
+    if (SFL_USER_CONFIG.categoryFilters.vip_chest) {
+      const vip = apiData.farm.pumpkinPlaza.vipChest;
+      const openedAt = vip.openedAt || null;
+      const now = Date.now();
 
-    const firstMondayStart = getFirstMondayStartForTimestamp(now);
-    const firstMondayEnd = firstMondayStart + 24 * 60 * 60 * 1000;
+      const firstMondayStart = getFirstMondayStartForTimestamp(now);
+      const firstMondayEnd = firstMondayStart + 24 * 60 * 60 * 1000;
 
-    const d = new Date(now);
-    let year = d.getUTCFullYear();
-    let month = d.getUTCMonth() + 1;
-    if (month > 11) {
-      month = 0;
-      year++;
+      const d = new Date(now);
+      let year = d.getUTCFullYear();
+      let month = d.getUTCMonth() + 1;
+      if (month > 11) {
+        month = 0;
+        year++;
+      }
+      const firstOfNext = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+      const day = firstOfNext.getUTCDay();
+      const diff = (1 - day + 7) % 7;
+      const nextFirstMondayStart =
+        firstOfNext.getTime() + diff * 24 * 60 * 60 * 1000;
+
+      allItems["VIP Chest"] = {
+        availableAt: firstMondayStart,
+        availableUntil: firstMondayEnd,
+        nextResetAt: nextFirstMondayStart,
+        openedAt: openedAt,
+        type: "VIP Chest",
+        name: "VIP Chest",
+        category: "vip_chest",
+        amount: 0,
+      };
     }
-    const firstOfNext = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
-    const day = firstOfNext.getUTCDay();
-    const diff = (1 - day + 7) % 7;
-    const nextFirstMondayStart =
-      firstOfNext.getTime() + diff * 24 * 60 * 60 * 1000;
-
-    allItems["VIP Chest"] = {
-      availableAt: firstMondayStart,
-      availableUntil: firstMondayEnd,
-      nextResetAt: nextFirstMondayStart,
-      openedAt: openedAt,
-      type: "VIP Chest",
-      name: "VIP Chest",
-      category: "vip_chest",
-      amount: 0,
-    };
   }
 
   if (apiData.farm && apiData.farm.desert && apiData.farm.desert.digging) {
@@ -3793,7 +3794,7 @@ async function createWidget(allItems = null) {
     sickAnimalIcon.textColor = new Color("#FF6B35");
   }
 
-  rightStack.addSpacer();
+  rightStack.addSpacer(); 
 
   bottomStack.addSpacer();
 

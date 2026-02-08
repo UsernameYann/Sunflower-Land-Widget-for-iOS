@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "date": "February 8th, 2026",
+      "changes": [
+        "📅 Daily filters are now reactivated when VIP Chest is disabled"
+      ]
+    },
+    {
       "date": "February 6th, 2026",
       "changes": [
         "🦀 Crab Traps & Fish Market tracking added",
