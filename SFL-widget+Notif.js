@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "February 8th, 2026";
+const WIDGET_VERSION = "March 19th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -28,6 +28,7 @@ const SFL_USER_CONFIG = {
     cooking: __FILTER_COOKING__,
     composter: __FILTER_COMPOSTER__,
     power: __FILTER_POWER__,
+    boosts: __FILTER_BOOSTS__,
     crop_machine: __FILTER_CROP_MACHINE__,
     floating_island: __FILTER_FLOATING_ISLAND__,
     lava_pit: __FILTER_LAVA_PIT__,
@@ -194,7 +195,7 @@ function getMagicMushroomTimeSeconds(islandType) {
     desert: 24 * 60 * 60,
     volcano: 22 * 60 * 60,
   };
-  return times[islandType] || 48 * 60 * 60; 
+  return times[islandType] || 48 * 60 * 60;
 }
 
 function getLavaPitTimeSeconds(farm) {
@@ -216,6 +217,25 @@ const POWER_COOLDOWN_TIMES = {
   "Instant Gratification": 96 * 60 * 60,
   "Petal Blessed": 96 * 60 * 60,
   "Grease Lightning": 96 * 60 * 60,
+};
+
+const EXPIRY_COOLDOWNS = {
+  "Fox Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Hound Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Boar Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Sparrow Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Toucan Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Collie Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Badger Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Stag Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Mole Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Bear Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Tortoise Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Moth Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Bantam Shrine": 7 * 24 * 60 * 60 * 1000,
+  "Legendary Shrine": 24 * 60 * 60 * 1000,
+  "Obsidian Shrine": 14 * 24 * 60 * 60 * 1000,
+  "Trading Shrine": 30 * 24 * 60 * 60 * 1000,
 };
 
 const DEFAULT_HONEY_PRODUCTION_TIME = 24 * 60 * 60 * 1000;
@@ -318,6 +338,7 @@ function normalizeTs(ts) {
   return ts;
 }
 
+// ====== DATE HELPERS ======
 function getNextDailyReset() {
   const now = new Date();
   const tomorrow = new Date(now);
@@ -653,6 +674,11 @@ function getTimeRemaining(itemData) {
   if (itemData.category === "power" && itemData.nextAvailableAt) {
     const nextAvailableAtMs = normalizeTs(itemData.nextAvailableAt);
     return (nextAvailableAtMs - currentTime) / 1000;
+  }
+
+  if (itemData.category === "boosts" && itemData.readyAt) {
+    const readyAtMs = normalizeTs(itemData.readyAt);
+    return (readyAtMs - currentTime) / 1000;
   }
 
   if (itemData.category === "vip_chest") {
@@ -1474,6 +1500,12 @@ function processItems(allItems, options = {}) {
     const remainingSeconds = timeResult;
     const readyTime = currentTime + remainingSeconds * SECOND_TO_MS;
 
+    const amountCount = ["crab_trap", "cooking", "crafting"].includes(
+      itemData.category,
+    )
+      ? itemData.amount || 1
+      : 1;
+
     if (isNotificationMode) {
       if (remainingSeconds > 0 && readyTime <= lookaheadLimitMs) {
         processedItems.push({
@@ -1482,7 +1514,7 @@ function processItems(allItems, options = {}) {
           readyTime: readyTime,
           remainingSeconds: remainingSeconds,
           totalAmount: itemData.amount || 0,
-          count: itemData.category === "crab_trap" ? itemData.amount || 1 : 1,
+          count: amountCount,
           emoji: getItemEmoji(
             itemData.name || itemData.type,
             itemData.category,
@@ -1498,7 +1530,7 @@ function processItems(allItems, options = {}) {
         readyTime: readyTime,
         remainingSeconds: remainingSeconds,
         totalAmount: itemData.amount || 0,
-        count: itemData.category === "crab_trap" ? itemData.amount || 1 : 1,
+        count: amountCount,
         emoji: getItemEmoji(itemData.name || itemData.type, itemData.category),
         hasReward: itemData.hasReward || false,
         hasSwarm: itemData.hasSwarm || false,
@@ -1579,6 +1611,7 @@ function getItemEmoji(itemType, category, groupData) {
   if (category === "bud_box") return "👽";
   if (category === "crop_machine") return emojis[itemType] || "🚜";
   if (category === "power") return "⚡";
+  if (category === "boosts") return "⛩️";
   if (category === "floating_island") return "🏝️";
   if (category === "update") return "🔄";
   if (itemType === "Desert Dig" || itemType === "Desert Dig:") return "🪏";
@@ -2201,12 +2234,38 @@ function parseCrafting(apiData, allItems) {
   if (apiData.farm && apiData.farm.craftingBox) {
     let craftingBox = apiData.farm.craftingBox;
 
+    if (Array.isArray(craftingBox.queue) && craftingBox.queue.length > 0) {
+      for (let i = 0; i < craftingBox.queue.length; i++) {
+        const queueItem = craftingBox.queue[i];
+        if (!queueItem || !queueItem.readyAt) continue;
+
+        const itemName =
+          queueItem.name || queueItem.collectible || "Unknown Item";
+        const key = `Crafting: ${itemName}`;
+
+        if (allItems[key]) {
+          allItems[key].amount += queueItem.amount || 1;
+          allItems[key].readyAt = queueItem.readyAt;
+        } else {
+          allItems[key] = {
+            readyAt: queueItem.readyAt,
+            type: itemName,
+            name: itemName,
+            category: "crafting",
+            amount: queueItem.amount || 1,
+          };
+        }
+      }
+      return;
+    }
+
     if (
       craftingBox.status === "crafting" &&
       craftingBox.item &&
       craftingBox.readyAt
     ) {
-      let itemName = craftingBox.item.collectible || "Unknown Item";
+      let itemName =
+        craftingBox.item.collectible || craftingBox.item.name || "Unknown Item";
       allItems[`Crafting: ${itemName}`] = {
         readyAt: craftingBox.readyAt,
         type: itemName,
@@ -2237,13 +2296,18 @@ function parseCooking(apiData, allItems) {
             for (let craft of building.crafting) {
               if (craft.readyAt && craft.name) {
                 let cookingName = `${craft.name} (${COOKING_BUILDINGS[buildingType] || buildingType})`;
-                allItems[cookingName] = {
-                  readyAt: craft.readyAt,
-                  type: craft.name,
-                  name: craft.name,
-                  category: "cooking",
-                  amount: craft.amount || 1,
-                };
+                if (allItems[cookingName]) {
+                  allItems[cookingName].amount += craft.amount || 1;
+                  allItems[cookingName].readyAt = craft.readyAt;
+                } else {
+                  allItems[cookingName] = {
+                    readyAt: craft.readyAt,
+                    type: craft.name,
+                    name: craft.name,
+                    category: "cooking",
+                    amount: craft.amount || 1,
+                  };
+                }
               }
             }
           }
@@ -2303,13 +2367,18 @@ function parseFishMarket(apiData, allItems) {
         for (let item of building.processing) {
           if (item.readyAt && item.name) {
             let itemName = `${item.name} (${COOKING_BUILDINGS["Fish Market"] || "Fish Market"})`;
-            allItems[itemName] = {
-              readyAt: item.readyAt,
-              type: item.name,
-              name: item.name,
-              category: "cooking",
-              amount: 1,
-            };
+            if (allItems[itemName]) {
+              allItems[itemName].amount += 1;
+              allItems[itemName].readyAt = item.readyAt;
+            } else {
+              allItems[itemName] = {
+                readyAt: item.readyAt,
+                type: item.name,
+                name: item.name,
+                category: "cooking",
+                amount: 1,
+              };
+            }
           }
         }
       }
@@ -2342,6 +2411,49 @@ function parsePowers(apiData, allItems) {
           type: powerName,
           name: powerName,
           category: "power",
+          amount: 1,
+        };
+      }
+    }
+  }
+}
+
+function parseBoosts(apiData, allItems) {
+  if (!SFL_USER_CONFIG.categoryFilters.boosts) return;
+
+  const now = Date.now();
+  const sources = [
+    { label: "Farm", collectibles: apiData.farm?.collectibles },
+    { label: "Home", collectibles: apiData.farm?.home?.collectibles },
+  ];
+
+  for (const source of sources) {
+    if (!source.collectibles) continue;
+
+    for (const [collectibleName, placedList] of Object.entries(
+      source.collectibles,
+    )) {
+      const cooldownMs = EXPIRY_COOLDOWNS[collectibleName];
+      if (!cooldownMs || !Array.isArray(placedList)) continue;
+
+      for (let i = 0; i < placedList.length; i++) {
+        const placed = placedList[i];
+        if (!placed || !placed.coordinates || !placed.createdAt) continue;
+
+        const createdAt = normalizeTs(placed.createdAt);
+        const expiresAt = createdAt + cooldownMs;
+        if (expiresAt <= now) continue;
+
+        const placementId = placed.id || `${i + 1}`;
+        const itemKey = `${collectibleName} (${source.label} ${placementId})`;
+
+        allItems[itemKey] = {
+          createdAt: createdAt,
+          readyAt: expiresAt,
+          expiresAt: expiresAt,
+          type: collectibleName,
+          name: collectibleName,
+          category: "boosts",
           amount: 1,
         };
       }
@@ -2462,68 +2574,72 @@ function parseFloatingIsland(apiData, allItems) {
 function parsePets(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.pet) return;
 
-  const pets = apiData.farm?.pets;
-  if (!pets) return;
+  const petSources = [apiData.farm?.pets, apiData.farm?.petHouse?.pets].filter(
+    Boolean,
+  );
+  if (petSources.length === 0) return;
 
-  if (pets.nfts) {
-    for (const [petId, petData] of Object.entries(pets.nfts)) {
-      const name = petData.name || `Pet #${petId}`;
-      const pettedAt = petData.pettedAt || 0;
-      const fedAt = petData.requests?.fedAt || 0;
+  for (const pets of petSources) {
+    if (pets.nfts) {
+      for (const [petId, petData] of Object.entries(pets.nfts)) {
+        const name = petData.name || `Pet #${petId}`;
+        const pettedAt = petData.pettedAt || 0;
+        const fedAt = petData.requests?.fedAt || 0;
 
-      if (SFL_USER_CONFIG.categoryFilters.pet_caress) {
-        const napFinishedAt = pettedAt + 2 * 60 * 60 * 1000;
-        allItems[`${name} (caress)`] = {
-          category: "pet",
-          action: "caress",
-          isNFT: true,
-          petId: petId,
-          petName: name,
-          pettedAt: pettedAt,
-          napFinishedAt: napFinishedAt,
-        };
-      }
+        if (SFL_USER_CONFIG.categoryFilters.pet_caress) {
+          const napFinishedAt = pettedAt + 2 * 60 * 60 * 1000;
+          allItems[`${name} (caress)`] = {
+            category: "pet",
+            action: "caress",
+            isNFT: true,
+            petId: petId,
+            petName: name,
+            pettedAt: pettedAt,
+            napFinishedAt: napFinishedAt,
+          };
+        }
 
-      if (SFL_USER_CONFIG.categoryFilters.pet_feed) {
-        allItems[`${name} (feed)`] = {
-          category: "pet",
-          action: "feed",
-          isNFT: true,
-          petId: petId,
-          petName: name,
-          fedAt: fedAt,
-          neglectDays: 7,
-        };
+        if (SFL_USER_CONFIG.categoryFilters.pet_feed) {
+          allItems[`${name} (feed)`] = {
+            category: "pet",
+            action: "feed",
+            isNFT: true,
+            petId: petId,
+            petName: name,
+            fedAt: fedAt,
+            neglectDays: 7,
+          };
+        }
       }
     }
-  }
 
-  if (pets.common) {
-    for (const [petName, petData] of Object.entries(pets.common)) {
-      const pettedAt = petData.pettedAt || 0;
-      const fedAt = petData.requests?.fedAt || 0;
+    if (pets.common) {
+      for (const [petName, petData] of Object.entries(pets.common)) {
+        const pettedAt = petData.pettedAt || 0;
+        const fedAt = petData.requests?.fedAt || 0;
 
-      if (SFL_USER_CONFIG.categoryFilters.pet_caress) {
-        const napFinishedAt = pettedAt + 2 * 60 * 60 * 1000;
-        allItems[`${petName} (caress)`] = {
-          category: "pet",
-          action: "caress",
-          isNFT: false,
-          petName: petName,
-          pettedAt: pettedAt,
-          napFinishedAt: napFinishedAt,
-        };
-      }
+        if (SFL_USER_CONFIG.categoryFilters.pet_caress) {
+          const napFinishedAt = pettedAt + 2 * 60 * 60 * 1000;
+          allItems[`${petName} (caress)`] = {
+            category: "pet",
+            action: "caress",
+            isNFT: false,
+            petName: petName,
+            pettedAt: pettedAt,
+            napFinishedAt: napFinishedAt,
+          };
+        }
 
-      if (SFL_USER_CONFIG.categoryFilters.pet_feed) {
-        allItems[`${petName} (feed)`] = {
-          category: "pet",
-          action: "feed",
-          isNFT: false,
-          petName: petName,
-          fedAt: fedAt,
-          neglectDays: 3,
-        };
+        if (SFL_USER_CONFIG.categoryFilters.pet_feed) {
+          allItems[`${petName} (feed)`] = {
+            category: "pet",
+            action: "feed",
+            isNFT: false,
+            petName: petName,
+            fedAt: fedAt,
+            neglectDays: 3,
+          };
+        }
       }
     }
   }
@@ -2612,7 +2728,7 @@ function parseBudBox(apiData, allItems) {
       category: "bud_box",
       type: "Bud Box",
       name: tomorrowItemName,
-      isCollected: true, 
+      isCollected: true,
       amount: 0,
       hasBud: true,
     };
@@ -2697,6 +2813,7 @@ async function loadFromAPI() {
     parseCropMachine(apiData, allItems);
     parseCrabTraps(apiData, allItems);
     parsePowers(apiData, allItems);
+    parseBoosts(apiData, allItems);
 
     parseFloatingIsland(apiData, allItems);
     parseDailyCollectibles(apiData, allItems);
@@ -2887,12 +3004,13 @@ function createNotificationBody(uniqueItemsMap, group) {
     let count = item.count || group.items.length;
     let countText = count > 1 ? ` x${count}` : "";
     let totalText = "";
+    let statusText = item.category === "boosts" ? "expires" : "is ready";
 
     let specialIndicators = "";
     if (item.hasReward) specialIndicators += " 🎁";
     if (item.hasSwarm) specialIndicators += " 🐝";
 
-    return `${item.name} is ready ${item.emoji}${countText}${totalText}${specialIndicators}`;
+    return `${item.name} ${statusText} ${item.emoji}${countText}${totalText}${specialIndicators}`;
   } else {
     let itemSummaries = Array.from(uniqueItemsMap.entries()).map(([, item]) => {
       let itemCount = item.count || 1;
@@ -3218,7 +3336,7 @@ async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
 
     for (const [petId, petData] of Object.entries(neglectPets)) {
       const notifId = `sfl_pet_neglect_${petId}`;
-      const fireDate = new Date(petData.fireDate); 
+      const fireDate = new Date(petData.fireDate);
 
       if (!existingNotificationIds.has(notifId)) {
         let notification = new Notification();
@@ -3277,6 +3395,11 @@ async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
 }
 
 const DEBUG_WIDGET = false; 
+
+// Compact mode: 2x screens or 3x screens narrower than 402pts (iPhone 16 and below standard, mini, SE, XR, 11)
+const IS_COMPACT_DEVICE = !(
+  Device.screenScale() >= 3 && Device.screenSize().width >= 402
+);
 
 function getThemeColors(themeMode) {
   const isDarkMode = themeMode === "light" ? false : true;
@@ -3386,7 +3509,8 @@ function sortAndFilterGroups(groupedItems) {
     });
   }
 
-  const maxItems = WIDGET_LIMITS[config.widgetFamily] || WIDGET_LIMITS.medium;
+  const baseLimit = WIDGET_LIMITS[config.widgetFamily] || WIDGET_LIMITS.medium;
+  const maxItems = IS_COMPACT_DEVICE ? baseLimit - 1 : baseLimit;
   return filteredGroups.slice(0, maxItems);
 }
 
@@ -3516,7 +3640,7 @@ function renderWidgetRows(widget, displayedGroups, themeColors) {
       rowStack.addSpacer(5);
 
       let col2Stack = rowStack.addStack();
-      col2Stack.size = new Size(60, 14);
+      col2Stack.size = new Size(IS_COMPACT_DEVICE ? 30 : 60, 14);
       col2Text = col2Stack.addText(`${quantity}${totalText}`);
       col2Text.font = Font.mediumMonospacedSystemFont(fontSize);
       col2Text.centerAlignText();
@@ -3533,7 +3657,7 @@ function renderWidgetRows(widget, displayedGroups, themeColors) {
     let col3Width;
     switch (config.widgetFamily) {
       case "small":
-        col3Width = 55;
+        col3Width = IS_COMPACT_DEVICE ? 40 : 55;
         break;
       case "medium":
         col3Width = 90;
@@ -3617,7 +3741,7 @@ async function createWidget(allItems = null) {
   }
 
   widget.backgroundColor = themeColors.BG_COLOR;
-  widget.setPadding(0, 0, 0, 0); 
+  widget.setPadding(0, 0, 0, 0);
 
   let groupedItems = groupItemsByTime(allItems);
 
@@ -3655,7 +3779,7 @@ async function createWidget(allItems = null) {
   bottomStack.layoutHorizontally();
   bottomStack.spacing = 0;
   const bottomPad = config.widgetFamily === "small" ? 6 : 8;
-  bottomStack.setPadding(2, bottomPad, 2, bottomPad); 
+  bottomStack.setPadding(2, bottomPad, 2, bottomPad);
 
   const BOTTOM_TEXT_COLOR = themeColors.BOTTOM_TEXT_COLOR;
 
@@ -3663,15 +3787,15 @@ async function createWidget(allItems = null) {
   let centerWidth;
   switch (config.widgetFamily) {
     case "small":
-      sideWidth = 40; 
+      sideWidth = 40;
       centerWidth = 70;
       break;
     case "medium":
-      sideWidth = 50; 
+      sideWidth = 50;
       centerWidth = 110;
       break;
     case "large":
-      sideWidth = 50; 
+      sideWidth = 50;
       centerWidth = 110;
       break;
     default:
@@ -3684,7 +3808,7 @@ async function createWidget(allItems = null) {
   let leftStack = bottomStack.addStack();
   leftStack.layoutHorizontally();
   leftStack.size = new Size(sideWidth, 0);
-  leftStack.addSpacer(); 
+  leftStack.addSpacer();
 
   if (season) {
     let seasonStack = leftStack.addStack();
@@ -3794,7 +3918,7 @@ async function createWidget(allItems = null) {
     sickAnimalIcon.textColor = new Color("#FF6B35");
   }
 
-  rightStack.addSpacer(); 
+  rightStack.addSpacer();
 
   bottomStack.addSpacer();
 

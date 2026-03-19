@@ -1,6 +1,15 @@
 {
   "versions": [
     {
+      "date": "March 19th, 2026",
+      "changes": [
+        "⛩️ Shrines tracking added",
+        "🐾 Pet parsing now includes Farm + Pet House",
+        "📱 Adaptive widget density for compact iPhones",
+        "📦 Crafting Box updated"
+      ]
+    },
+    {
       "date": "February 8th, 2026",
       "changes": [
         "📅 Daily filters are now reactivated when VIP Chest is disabled"

@@ -461,6 +461,7 @@
             <h4>🏝️ Special Areas</h4>
             <div class="checkbox-group">
                 <div class="checkbox-item"><input type="checkbox" id="power" checked> <label for="power">⚡ Powers</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="boosts" checked> <label for="boosts">⛩️ Boosts (Shrines)</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="crop_machine" checked> <label for="crop_machine">🚜 Crop Machine</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="floating_island" checked> <label for="floating_island">☁️ Floating Island</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="lava_pit" checked> <label for="lava_pit">🌋 Lava Pits</label></div>
@@ -685,7 +686,7 @@
                 code = code.replace(/themeMode: __THEME_MODE__,/, `themeMode: "${themeMode}",`);
 
                 // Remplacer tous les placeholders de filtres individuellement
-                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'crop_machine', 'floating_island', 'lava_pit', 'crab_trap', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed', 'pet_neglect', 'sick_animal', 'power_notification', 'trades', 'social_projects'];
+                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'boosts', 'crop_machine', 'floating_island', 'lava_pit', 'crab_trap', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed', 'pet_neglect', 'sick_animal', 'power_notification', 'trades', 'social_projects'];
                 
                 filters.forEach(filter => {
                     const checked = document.getElementById(filter).checked;
