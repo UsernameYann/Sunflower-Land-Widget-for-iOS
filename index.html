@@ -516,21 +516,60 @@
         <h3>✨ Your Widget Code is Ready!</h3>
         <p>Copy the code below and paste it into a new Scriptable script named "SFL_widget.js".</p>
         <textarea id="codeOutput" readonly></textarea>
-        <div class="button-group">
-            <button id="copyBtn">📋 Copy Code</button>
-            <button id="downloadBtn">💾 Download File</button>
+        <div class="button-group" style="align-items: flex-end;">
+            <div style="flex: 1; text-align: center;">
+                <p style="font-size: 0.85em; color: #6c757d; margin: 0 0 6px 0;">✋ Manual</p>
+                <button id="copyBtn">📋 Copy Code</button>
+            </div>
+            <div style="flex: 1; text-align: center;">
+                <p style="font-size: 0.85em; color: #28a745; font-weight: 600; margin: 0 0 6px 0;">⚡ With Shortcuts</p>
+                <button id="downloadBtn">💾 Download File</button>
+            </div>
         </div>
     </div>
 
-    <div class="step">
-        <h3>3️⃣ Open Scriptable</h3>
-        <p>Open the Scriptable app on your iPhone. Tap the <strong>+</strong> button to create a new script.</p>
+    <!-- Chemin Manuel (Copy Code) -->
+    <div id="steps-manual" class="hidden">
+        <div class="step">
+            <h3>3️⃣ Open Scriptable</h3>
+            <p>Open the Scriptable app on your iPhone. Tap the <strong>+</strong> button to create a new script.</p>
+        </div>
+        <div class="step">
+            <h3>4️⃣ Paste and save</h3>
+            <p>Paste the generated code, name it "SFL_widget.js", and save. Add the widget to your home screen!</p>
+            <img src="images/scriptable.gif" alt="How to paste and save in Scriptable" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
+        </div>
     </div>
 
-    <div class="step">
-        <h3>4️⃣ Paste and save</h3>
-        <p>Paste the generated code, name it "SFL_widget.js", and save. Add the widget to your home screen!</p>
-        <img src="images/scriptable.gif" alt="How to paste and save in Scriptable" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
+    <!-- Chemin Automatique (Download + Raccourcis) -->
+    <div id="steps-shortcut" class="hidden">
+        <div class="step">
+            <h3>3️⃣ Install "Install_SFL_Widget" (optional)</h3>
+            <p style="margin-top: 15px;"><strong>How to use it:</strong></p>
+            <ol style="padding-left: 20px; line-height: 1.8;">
+                <li>Click <strong>Add Shortcut</strong> right below:</li>
+            </ol>
+            <div style="text-align: center; margin: 15px 0;">
+                <a href="https://www.icloud.com/shortcuts/2e7da823f9004435872c4a4f63091d8b" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: linear-gradient(135deg, #007aff 0%, #0056cc 100%); color: white; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1em; box-shadow: 0 4px 14px rgba(0,122,255,0.35);">➕ Add Shortcut</a>
+            </div>
+            <ol start="2" style="padding-left: 20px; line-height: 1.8;">
+                <li>Get the Shortcut.</li>
+                <li>Add the Shortcut.</li>
+                <li>The <strong>Shortcuts</strong> app will open, tap <strong>"l'Assistant"</strong>.</li>
+            </ol>
+            <div class="tip">
+                <strong>⚠️ Required permissions on first launch</strong>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8;">
+                    <li>Allow <strong>file saving</strong>.</li>
+                    <li>Also allow <strong>file deletion</strong>.</li>
+                </ul>
+            </div>
+            <p style="margin-top: 15px;">Once validated, the file will be in the <strong>Scriptable</strong> app. You can close Shortcuts.</p>
+        </div>
+        <div class="step">
+            <h3>4️⃣ Open and run the script</h3>
+            <p>Open <strong>Scriptable</strong> on your iPhone and tap <strong>SFL_widget</strong> in the list to run it. You can close Scriptable.</p>
+        </div>
     </div>
 
     <div class="step">
@@ -705,6 +744,8 @@
         });
 
         document.getElementById('copyBtn').addEventListener('click', async () => {
+            document.getElementById('steps-manual').classList.remove('hidden');
+            document.getElementById('steps-shortcut').classList.add('hidden');
             const code = document.getElementById('codeOutput').value;
             if (!code) {
                 alert('Generate the code first.');
@@ -726,6 +767,9 @@
         });
 
         document.getElementById('downloadBtn').addEventListener('click', () => {
+            document.getElementById('steps-manual').classList.add('hidden');
+            document.getElementById('steps-shortcut').classList.remove('hidden');
+            document.getElementById('steps-shortcut').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             const code = document.getElementById('codeOutput').value;
             const blob = new Blob([code], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
