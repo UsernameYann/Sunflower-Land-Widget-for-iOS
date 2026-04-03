@@ -175,6 +175,21 @@
             flex-wrap: wrap;
             margin-top: 20px;
         }
+
+        /* Keep result action buttons visually identical in size */
+        #result .button-group > div {
+            flex: 1;
+        }
+
+        #result .button-group > div button {
+            width: 100%;
+            height: 52px;
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
         
         ol { 
             padding-left: 25px;
@@ -522,7 +537,7 @@
                 <button id="copyBtn">📋 Copy Code</button>
             </div>
             <div style="flex: 1; text-align: center;">
-                <p style="font-size: 0.85em; color: #28a745; font-weight: 600; margin: 0 0 6px 0;">⚡ With Shortcuts</p>
+                <p style="font-size: 0.85em; color: #28a745; margin: 0 0 6px 0;">⚡ With Shortcuts</p>
                 <button id="downloadBtn">💾 Download File</button>
             </div>
         </div>
@@ -553,9 +568,8 @@
                 <a href="https://www.icloud.com/shortcuts/2e7da823f9004435872c4a4f63091d8b" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: linear-gradient(135deg, #007aff 0%, #0056cc 100%); color: white; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1em; box-shadow: 0 4px 14px rgba(0,122,255,0.35);">➕ Add Shortcut</a>
             </div>
             <ol start="2" style="padding-left: 20px; line-height: 1.8;">
-                <li>Get the Shortcut.</li>
                 <li>Add the Shortcut.</li>
-                <li>The <strong>Shortcuts</strong> app will open, tap <strong>"l'Assistant"</strong>.</li>
+                <li>The <strong>Shortcuts</strong> app will open, tap <strong>"Install_SFL_Widget"</strong>.</li>
             </ol>
             <div class="tip">
                 <strong>⚠️ Required permissions on first launch</strong>
@@ -565,10 +579,12 @@
                 </ul>
             </div>
             <p style="margin-top: 15px;">Once validated, the file will be in the <strong>Scriptable</strong> app. You can close Shortcuts.</p>
+            <img src="images/Install_SFL_Widget_R.gif" alt="How to install the Install_SFL_Widget shortcut" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
         </div>
         <div class="step">
             <h3>4️⃣ Open and run the script</h3>
             <p>Open <strong>Scriptable</strong> on your iPhone and tap <strong>SFL_widget</strong> in the list to run it. You can close Scriptable.</p>
+            <img src="images/open_run.gif" alt="How to open and run the script in Scriptable" style="width: 100%; max-width: 340px; border-radius: 14px; box-shadow: 0 2px 12px #a0522d22; margin: 1em auto; display: block;">
         </div>
     </div>
 
