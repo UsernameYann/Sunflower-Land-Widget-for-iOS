@@ -1,6 +1,15 @@
 {
   "versions": [
     {
+      "date": "April 5th, 2026",
+      "changes": [
+        "🌋 Lava Pit tracking now uses API readyAt for accurate timers",
+        "⛩️ Filters now display expired shrine items",
+        "🔔 Notification flow optimized",
+        "🔗 Update banner now opens the widget generator page"
+      ]
+    },
+    {
       "date": "March 19th, 2026",
       "changes": [
         "⛩️ Shrines tracking added",

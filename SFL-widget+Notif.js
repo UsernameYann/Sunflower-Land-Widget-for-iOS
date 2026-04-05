@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "March 19th, 2026";
+const WIDGET_VERSION = "April 5th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -198,17 +198,6 @@ function getMagicMushroomTimeSeconds(islandType) {
   return times[islandType] || 48 * 60 * 60;
 }
 
-function getLavaPitTimeSeconds(farm) {
-  let time = 72 * 60 * 60;
-  if (farm && farm.boostsUsedAt && farm.boostsUsedAt["Obsidian Necklace"]) {
-    time = time / 2;
-  }
-  if (farm && farm.boostsUsedAt && farm.boostsUsedAt["Magma Stone"]) {
-    time = time * 0.85;
-  }
-  return time;
-}
-
 const POWER_COOLDOWN_TIMES = {
   "Instant Growth": 72 * 60 * 60,
   "Tree Blitz": 24 * 60 * 60,
@@ -240,10 +229,6 @@ const EXPIRY_COOLDOWNS = {
 
 const DEFAULT_HONEY_PRODUCTION_TIME = 24 * 60 * 60 * 1000;
 
-if (typeof module !== "undefined") {
-  module.exports = { getLavaPitTimeSeconds };
-}
-
 const WIDGET_LIMITS = {
   small: 9,
   medium: 9,
@@ -263,9 +248,9 @@ const EMOJI_SIZES = {
 };
 
 const COLUMN_WIDTHS = {
-  item: 160, 
-  quantity: 50, 
-  small: 95, 
+  item: 160,
+  quantity: 50,
+  small: 95,
 };
 
 const ROW_SPACING = {
@@ -338,19 +323,26 @@ function normalizeTs(ts) {
   return ts;
 }
 
-// ====== DATE HELPERS ======
-function getNextDailyReset() {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  tomorrow.setUTCHours(0, 0, 0, 0);
-  return tomorrow.getTime();
+let _todayStartMs = null;
+function getTodayStart() {
+  if (_todayStartMs === null) {
+    const now = new Date();
+    now.setUTCHours(0, 0, 0, 0);
+    _todayStartMs = now.getTime();
+  }
+  return _todayStartMs;
 }
 
-function getTodayStart() {
-  const now = new Date();
-  now.setUTCHours(0, 0, 0, 0);
-  return now.getTime();
+let _nextDailyResetMs = null;
+function getNextDailyReset() {
+  if (_nextDailyResetMs === null) {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    tomorrow.setUTCHours(0, 0, 0, 0);
+    _nextDailyResetMs = tomorrow.getTime();
+  }
+  return _nextDailyResetMs;
 }
 
 function getFirstMondayStartForTimestamp(ms) {
@@ -364,6 +356,20 @@ function getFirstMondayStartForTimestamp(ms) {
     firstOfMonth.getTime() + diff * 24 * 60 * 60 * 1000,
   );
   return firstMonday.getTime();
+}
+
+function getNextFirstMonday(ms) {
+  const d = new Date(ms);
+  let year = d.getUTCFullYear();
+  let month = d.getUTCMonth() + 1;
+  if (month > 11) {
+    month = 0;
+    year++;
+  }
+  const firstOfNext = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+  const day = firstOfNext.getUTCDay();
+  const diff = (1 - day + 7) % 7;
+  return firstOfNext.getTime() + diff * 24 * 60 * 60 * 1000;
 }
 
 function loadResources() {
@@ -626,24 +632,11 @@ function groupByReadyTimeWindow(
 function getTimeRemaining(itemData) {
   const currentTime = Date.now();
 
-  if (itemData.category === "daily") {
+  if (itemData.category === "daily" || itemData.category === "bud_box") {
     if (!itemData.isCollected) {
-      const todayStartMs = getTodayStart();
-      const readySinceMs = currentTime - todayStartMs;
-      return -(readySinceMs / 1000);
+      return -(currentTime - getTodayStart()) / 1000;
     }
-    const nextResetAtMs = normalizeTs(itemData.nextResetAt);
-    return (nextResetAtMs - currentTime) / 1000;
-  }
-
-  if (itemData.category === "bud_box") {
-    if (!itemData.isCollected) {
-      const todayStartMs = getTodayStart();
-      const readySinceMs = currentTime - todayStartMs;
-      return -(readySinceMs / 1000);
-    }
-    const nextResetAtMs = normalizeTs(itemData.nextResetAt);
-    return (nextResetAtMs - currentTime) / 1000;
+    return (normalizeTs(itemData.nextResetAt) - currentTime) / 1000;
   }
 
   if (itemData.category === "pet" && itemData.action === "caress") {
@@ -712,29 +705,13 @@ function getTimeRemaining(itemData) {
     return (readyAtMs - currentTime) / 1000;
   }
 
-  if (itemData.category === "crafting" && itemData.readyAt) {
-    const readyAtMs = normalizeTs(itemData.readyAt);
-    return (readyAtMs - currentTime) / 1000;
-  }
-
-  if (itemData.category === "cooking" && itemData.readyAt) {
-    const readyAtMs = normalizeTs(itemData.readyAt);
-    return (readyAtMs - currentTime) / 1000;
-  }
-
-  if (itemData.category === "composter" && itemData.readyAt) {
-    const readyAtMs = normalizeTs(itemData.readyAt);
-    return (readyAtMs - currentTime) / 1000;
-  }
-
-  if (itemData.category === "crop_machine" && itemData.readyAt) {
-    const readyAtMs = normalizeTs(itemData.readyAt);
-    return (readyAtMs - currentTime) / 1000;
-  }
-
-  if (itemData.category === "crab_trap" && itemData.readyAt) {
-    const readyAtMs = normalizeTs(itemData.readyAt);
-    return (readyAtMs - currentTime) / 1000;
+  if (
+    ["crafting", "cooking", "composter", "crop_machine", "crab_trap"].includes(
+      itemData.category,
+    ) &&
+    itemData.readyAt
+  ) {
+    return (normalizeTs(itemData.readyAt) - currentTime) / 1000;
   }
 
   if (
@@ -834,7 +811,9 @@ async function checkForUpdates() {
         cacheData.widgetVersion
       ) {
         if (cacheData.widgetVersion !== WIDGET_VERSION) {
-          safeKeychain("set", CACHE_KEY_UPDATES, null);
+          try {
+            Keychain.remove(CACHE_KEY_UPDATES);
+          } catch (e) {}
         } else {
           const cacheAge = Date.now() - cacheData.timestamp;
           if (cacheAge < CACHE_DURATION_MS) {
@@ -1232,7 +1211,7 @@ function processItems(allItems, options = {}) {
           name: itemData.name || itemData.type,
           category: itemData.category,
           readyTime: currentTime,
-          remainingSeconds: -1000, 
+          remainingSeconds: -1000,
           totalAmount: itemData.amount || 0,
           emoji: getItemEmoji(
             itemData.name || itemData.type,
@@ -1755,19 +1734,7 @@ function parseDailyCollectibles(apiData, allItems) {
 
       const firstMondayStart = getFirstMondayStartForTimestamp(now);
       const firstMondayEnd = firstMondayStart + 24 * 60 * 60 * 1000;
-
-      const d = new Date(now);
-      let year = d.getUTCFullYear();
-      let month = d.getUTCMonth() + 1;
-      if (month > 11) {
-        month = 0;
-        year++;
-      }
-      const firstOfNext = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
-      const day = firstOfNext.getUTCDay();
-      const diff = (1 - day + 7) % 7;
-      const nextFirstMondayStart =
-        firstOfNext.getTime() + diff * 24 * 60 * 60 * 1000;
+      const nextFirstMondayStart = getNextFirstMonday(now);
 
       allItems["VIP Chest"] = {
         availableAt: firstMondayStart,
@@ -1869,27 +1836,26 @@ function parseLavaPits(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.lava_pit) return;
   if (apiData.farm && apiData.farm.lavaPits) {
     for (let [pitId, pitInfo] of Object.entries(apiData.farm.lavaPits)) {
-      const startedAt = pitInfo.startedAt || pitInfo.createdAt || null;
       const removedAt = pitInfo.removedAt || pitInfo.collectedAt || null;
 
       if (removedAt) {
         continue;
       }
 
+      const readyAt = pitInfo.readyAt || null;
+      if (!readyAt) {
+        continue;
+      }
+
       const pitName = `Lava Pit ${pitId}`;
-      const durationSeconds = getLavaPitTimeSeconds(apiData.farm);
-      const endAt = startedAt ? startedAt + durationSeconds * 1000 : null;
       const now = Date.now();
-      const remainingSeconds = endAt ? Math.round((endAt - now) / 1000) : null;
-      const isRunning = !!startedAt && !removedAt;
-      const canCollect = endAt ? now >= endAt && !removedAt : false;
+      const remainingSeconds = Math.round((readyAt - now) / 1000);
+      const canCollect = now >= readyAt;
 
       allItems[pitName] = {
-        startedAt: startedAt,
+        readyAt: readyAt,
         removedAt: removedAt,
-        endAt: endAt,
         remainingSeconds: remainingSeconds,
-        isRunning: isRunning,
         canCollect: canCollect,
         type: "Lava Pit",
         name: "Lava Pit",
@@ -1899,7 +1865,6 @@ function parseLavaPits(apiData, allItems) {
     }
   }
 }
-
 function parseCrops(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.crop) return;
   if (apiData.farm && apiData.farm.crops) {
@@ -1950,67 +1915,37 @@ function parseFruits(apiData, allItems) {
 
 function parseAnimals(apiData, allItems) {
   const categoryFilters = SFL_USER_CONFIG.categoryFilters;
-  if (apiData.farm && apiData.farm.henHouse && apiData.farm.henHouse.animals) {
-    for (let [animalId, animalInfo] of Object.entries(
-      apiData.farm.henHouse.animals,
-    )) {
-      if (
-        animalInfo.type === "Chicken" &&
-        animalInfo.awakeAt &&
-        animalInfo.asleepAt
-      ) {
-        if (
-          !categoryFilters.animal &&
-          !categoryFilters.chicken &&
-          !categoryFilters.chickenLove
-        )
-          continue;
-        let animalName = `${animalInfo.type} ${animalId}`;
-        allItems[animalName] = {
-          awakeAt: animalInfo.awakeAt,
-          asleepAt: animalInfo.asleepAt,
-          lovedAt: animalInfo.lovedAt || null,
-          type: animalInfo.type,
-          name: animalInfo.type,
-          category: "animal",
-          amount: 0,
-          state: animalInfo.state || "unknown",
-          hasReward: animalInfo.reward ? true : false,
-        };
-      }
-    }
+
+  function addAnimal(animalId, animalInfo) {
+    if (!animalInfo.awakeAt || !animalInfo.asleepAt) return;
+    const typeLower = animalInfo.type.toLowerCase();
+    if (
+      !categoryFilters.animal &&
+      !categoryFilters[typeLower] &&
+      !categoryFilters[typeLower + "Love"]
+    )
+      return;
+    allItems[`${animalInfo.type} ${animalId}`] = {
+      awakeAt: animalInfo.awakeAt,
+      asleepAt: animalInfo.asleepAt,
+      lovedAt: animalInfo.lovedAt || null,
+      type: animalInfo.type,
+      name: animalInfo.type,
+      category: "animal",
+      amount: 0,
+      state: animalInfo.state || "unknown",
+      hasReward: !!animalInfo.reward,
+    };
   }
 
-  if (apiData.farm && apiData.farm.barn && apiData.farm.barn.animals) {
-    for (let [animalId, animalInfo] of Object.entries(
-      apiData.farm.barn.animals,
-    )) {
-      if (
-        (animalInfo.type === "Cow" || animalInfo.type === "Sheep") &&
-        animalInfo.awakeAt &&
-        animalInfo.asleepAt
-      ) {
-        const typeLower = animalInfo.type.toLowerCase();
-        if (
-          !categoryFilters.animal &&
-          !categoryFilters[typeLower] &&
-          !categoryFilters[typeLower + "Love"]
-        )
-          continue;
-        let animalName = `${animalInfo.type} ${animalId}`;
-        allItems[animalName] = {
-          awakeAt: animalInfo.awakeAt,
-          asleepAt: animalInfo.asleepAt,
-          lovedAt: animalInfo.lovedAt || null,
-          type: animalInfo.type,
-          name: animalInfo.type,
-          category: "animal",
-          amount: 0,
-          state: animalInfo.state || "unknown",
-          hasReward: animalInfo.reward ? true : false,
-        };
-      }
-    }
+  const henAnimals = apiData.farm?.henHouse?.animals || {};
+  for (const [id, info] of Object.entries(henAnimals)) {
+    if (info.type === "Chicken") addAnimal(id, info);
+  }
+
+  const barnAnimals = apiData.farm?.barn?.animals || {};
+  for (const [id, info] of Object.entries(barnAnimals)) {
+    if (info.type === "Cow" || info.type === "Sheep") addAnimal(id, info);
   }
 }
 
@@ -2157,75 +2092,53 @@ function parseGreenhouse(apiData, allItems) {
 
 function parseMushrooms(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.mushroom) return;
+  const farm = apiData.farm;
+  if (!farm?.mushrooms) return;
 
-  if (apiData.farm && apiData.farm.mushrooms) {
-    let mushrooms = apiData.farm.mushrooms;
-    const uncollectedMushrooms = mushrooms.mushrooms || {};
+  const mushrooms = farm.mushrooms;
+  const uncollected = mushrooms.mushrooms || {};
+  const islandType = farm.island?.type || "basic";
 
-    if (mushrooms.spawnedAt) {
-      const baseItem = {
-        plantedAt: mushrooms.spawnedAt,
-        type: "Mushroom",
-        name: "Mushroom",
-        category: "mushroom",
-        amount: 0,
-      };
-
-      let wildTotal = 0;
-      let hasWild = false;
-      for (let [, mush] of Object.entries(uncollectedMushrooms)) {
-        if (mush.name === "Wild Mushroom") {
-          wildTotal += mush.amount || 0;
-          hasWild = true;
-        }
+  function addMushroom(type, spawnedAt, harvestSeconds, uncollectedName) {
+    if (!spawnedAt) return;
+    const now = Date.now();
+    const item = {
+      plantedAt: spawnedAt,
+      type,
+      name: type,
+      category: "mushroom",
+      amount: 0,
+      harvestSeconds,
+    };
+    let total = 0;
+    let found = false;
+    for (const mush of Object.values(uncollected)) {
+      if (mush.name === uncollectedName) {
+        total += mush.amount || 0;
+        found = true;
       }
-
-      if (hasWild) {
-        baseItem.harvestSeconds = 1;
-        baseItem.amount = wildTotal;
-        baseItem.isUncollected = true;
-        const now = Date.now();
-        baseItem.plantedAt = Math.min(baseItem.plantedAt || now, now - 1000);
-      }
-
-      allItems["Mushroom"] = baseItem;
     }
-
-    if (mushrooms.magicSpawnedAt) {
-      const islandType = apiData.farm.island
-        ? apiData.farm.island.type
-        : "basic";
-      const harvestSeconds = getMagicMushroomTimeSeconds(islandType);
-
-      const magicItem = {
-        plantedAt: mushrooms.magicSpawnedAt,
-        type: "Magic Mushroom",
-        name: "Magic Mushroom",
-        category: "mushroom",
-        amount: 0,
-        harvestSeconds: harvestSeconds,
-      };
-
-      let magicTotal = 0;
-      let hasMagic = false;
-      for (let [, mush] of Object.entries(uncollectedMushrooms)) {
-        if (mush.name === "Magic Mushroom") {
-          magicTotal += mush.amount || 0;
-          hasMagic = true;
-        }
-      }
-
-      if (hasMagic) {
-        magicItem.harvestSeconds = 1;
-        magicItem.amount = magicTotal;
-        magicItem.isUncollected = true;
-        const now = Date.now();
-        magicItem.plantedAt = Math.min(magicItem.plantedAt || now, now - 1000);
-      }
-
-      allItems["Magic Mushroom"] = magicItem;
+    if (found) {
+      item.harvestSeconds = 1;
+      item.amount = total;
+      item.isUncollected = true;
+      item.plantedAt = Math.min(spawnedAt, now - 1000);
     }
+    allItems[type] = item;
   }
+
+  addMushroom(
+    "Mushroom",
+    mushrooms.spawnedAt,
+    MUSHROOMS_TIMES.Mushroom,
+    "Wild Mushroom",
+  );
+  addMushroom(
+    "Magic Mushroom",
+    mushrooms.magicSpawnedAt,
+    getMagicMushroomTimeSeconds(islandType),
+    "Magic Mushroom",
+  );
 }
 
 function parseCrafting(apiData, allItems) {
@@ -2442,7 +2355,6 @@ function parseBoosts(apiData, allItems) {
 
         const createdAt = normalizeTs(placed.createdAt);
         const expiresAt = createdAt + cooldownMs;
-        if (expiresAt <= now) continue;
 
         const placementId = placed.id || `${i + 1}`;
         const itemKey = `${collectibleName} (${source.label} ${placementId})`;
@@ -2473,15 +2385,12 @@ function parseCropMachine(apiData, allItems) {
         for (let i = 0; i < machine.queue.length; i++) {
           const entry = machine.queue[i];
           if (entry && entry.crop) {
-            let readyAtMs = null;
-            if (entry.readyAt) {
-              readyAtMs =
-                typeof entry.readyAt === "number" && entry.readyAt < 1e12
-                  ? entry.readyAt * 1000
-                  : entry.readyAt;
-            } else if (entry.growsUntil) {
-              readyAtMs = entry.growsUntil;
-            }
+            if (!entry.readyAt) continue;
+
+            let readyAtMs =
+              typeof entry.readyAt === "number" && entry.readyAt < 1e12
+                ? entry.readyAt * 1000
+                : entry.readyAt;
 
             if (!readyAtMs) continue;
 
@@ -3075,10 +2984,15 @@ async function manageNotifications() {
   let tradesResult = await notifyCompletedTrades(allItems);
   let socialProjectsResult = await notifySocialProjectLimits(allItems);
 
-  let powerResult = await notifyPowerWarning(allItems, existingNotificationIds);
+  let powerResult = await notifyPowerWarning(
+    allItems,
+    existingNotificationIds,
+    pendingNotifications,
+  );
   let petNeglectResult = await notifyPetNeglectWarning(
     allItems,
     existingNotificationIds,
+    pendingNotifications,
   );
 
   console.log(
@@ -3148,7 +3062,7 @@ async function notifySickAnimals(allItems) {
     const title = `🤢 Animal Sick!`;
     const body = `${count} ${animalTypes}`;
 
-    let notification = await new Notification();
+    let notification = new Notification();
     notification.title = title;
     notification.body = body;
     notification.identifier = `sfl_sick_animal_${Date.now()}`;
@@ -3181,7 +3095,7 @@ async function notifyCompletedTrades(allItems) {
     const title = `💰 Deal Completed!`;
     const body = `${count} ${count === 1 ? "deal is" : "deals are"} completed`;
 
-    let notification = await new Notification();
+    let notification = new Notification();
     notification.title = title;
     notification.body = body;
     notification.identifier = `sfl_trade_${Date.now()}`;
@@ -3215,7 +3129,7 @@ async function notifySocialProjectLimits(allItems) {
     const title = `👷 Social Project Completed!`;
     const body = `${count} ${projectNames}`;
 
-    let notification = await new Notification();
+    let notification = new Notification();
     notification.title = title;
     notification.body = body;
     notification.identifier = `sfl_social_project_${Date.now()}`;
@@ -3229,7 +3143,11 @@ async function notifySocialProjectLimits(allItems) {
   }
 }
 
-async function notifyPowerWarning(allItems, existingNotificationIds) {
+async function notifyPowerWarning(
+  allItems,
+  existingNotificationIds,
+  pendingNotifications,
+) {
   if (
     !SFL_USER_CONFIG.enableNotifications ||
     !SFL_USER_CONFIG.categoryFilters.power_notification
@@ -3287,7 +3205,6 @@ async function notifyPowerWarning(allItems, existingNotificationIds) {
       }
     }
 
-    const pendingNotifications = await Notification.allPending();
     for (let notif of pendingNotifications) {
       if (notif.identifier && notif.identifier.startsWith("sfl_power_")) {
         const itemName = notif.identifier.replace("sfl_power_", "");
@@ -3321,7 +3238,11 @@ async function notifyPowerWarning(allItems, existingNotificationIds) {
   }
 }
 
-async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
+async function notifyPetNeglectWarning(
+  allItems,
+  existingNotificationIds,
+  pendingNotifications,
+) {
   if (
     !SFL_USER_CONFIG.enableNotifications ||
     !SFL_USER_CONFIG.categoryFilters.pet_neglect
@@ -3359,7 +3280,6 @@ async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
       }
     }
 
-    const pendingNotifications = await Notification.allPending();
     const now = Date.now();
     for (let notif of pendingNotifications) {
       if (notif.identifier && notif.identifier.startsWith("sfl_pet_neglect_")) {
@@ -3394,9 +3314,8 @@ async function notifyPetNeglectWarning(allItems, existingNotificationIds) {
   }
 }
 
-const DEBUG_WIDGET = false; 
+const DEBUG_WIDGET = false;
 
-// Compact mode: 2x screens or 3x screens narrower than 402pts (iPhone 16 and below standard, mini, SE, XR, 11)
 const IS_COMPACT_DEVICE = !(
   Device.screenScale() >= 3 && Device.screenSize().width >= 402
 );
@@ -3431,7 +3350,7 @@ function groupItemsByTime(allItems) {
         item.remainingSeconds,
         true,
       );
-    } else if (item.isPetFeed || item.isPetCaress) {
+    } else if (item.category === "pet") {
       addToPetGroup(groupedItems, item.name, item, item.remainingSeconds);
     } else {
       addToGenericGroup(groupedItems, item.name, item, item.remainingSeconds);
@@ -3742,6 +3661,11 @@ async function createWidget(allItems = null) {
 
   widget.backgroundColor = themeColors.BG_COLOR;
   widget.setPadding(0, 0, 0, 0);
+
+  if (allItems["update_available"]) {
+    widget.url =
+      "https://usernameyann.github.io/Sunflower-Land-Widget-for-iOS/";
+  }
 
   let groupedItems = groupItemsByTime(allItems);
 
