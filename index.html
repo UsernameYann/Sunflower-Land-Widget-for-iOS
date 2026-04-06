@@ -615,6 +615,23 @@
                     <label><input type="radio" name="auctionsThemeMode" value="light"> ☀️ Light</label>
                 </div>
 
+                <label>🏷️ Auction filters</label>
+                <div class="filter-section">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item"><input type="checkbox" id="auction_speckled_kissing_fish" checked> <label for="auction_speckled_kissing_fish">🐟 Speckled Kissing Fish</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_fisherman_s_boat" checked> <label for="auction_fisherman_s_boat">⛵ Fisherman's Boat</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_sea_arch" checked> <label for="auction_sea_arch">🌊 Sea Arch</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_spring_guardian" checked> <label for="auction_spring_guardian">🛡️ Spring Guardian</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_broccoli_hat" checked> <label for="auction_broccoli_hat">🥦 Broccoli Hat</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_obsidian_necklace" checked> <label for="auction_obsidian_necklace">🖤 Obsidian Necklace</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_victoria_s_apron" checked> <label for="auction_victoria_s_apron">🧵 Victoria's Apron</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_beast_shoes" checked> <label for="auction_beast_shoes">👟 Beast Shoes</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_crimstone_spikes_hair" checked> <label for="auction_crimstone_spikes_hair">💇 Crimstone Spikes Hair</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_pet" checked> <label for="auction_pet">🐾 Pet</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="auction_paw_aura" checked> <label for="auction_paw_aura">✨ Paw Aura</label></div>
+                    </div>
+                </div>
+
                 <div style="text-align: center; margin-top: 20px;">
                     <button type="button" id="generateAuctionsBtn">🚀 Generate Auctions Widget Code</button>
                 </div>
@@ -801,6 +818,19 @@
 
         document.getElementById('generateAuctionsBtn').addEventListener('click', async () => {
             const themeMode = document.querySelector('input[name="auctionsThemeMode"]:checked').value;
+            const auctionsFilterMap = {
+                auction_speckled_kissing_fish: 'SPECKLED_KISSING_FISH',
+                auction_fisherman_s_boat: 'FISHERMAN_S_BOAT',
+                auction_sea_arch: 'SEA_ARCH',
+                auction_spring_guardian: 'SPRING_GUARDIAN',
+                auction_broccoli_hat: 'BROCCOLI_HAT',
+                auction_obsidian_necklace: 'OBSIDIAN_NECKLACE',
+                auction_victoria_s_apron: 'VICTORIA_S_APRON',
+                auction_beast_shoes: 'BEAST_SHOES',
+                auction_crimstone_spikes_hair: 'CRIMSTONE_SPIKES_HAIR',
+                auction_pet: 'PET',
+                auction_paw_aura: 'PAW_AURA'
+            };
 
             try {
                 const response = await fetch(auctionsWidgetUrl);
@@ -809,6 +839,13 @@
 
                 // Remplacer le placeholder du thème (noter le double point-virgule dans le fichier source)
                 code = code.replace(/const themeMode = __THEME_MODE__;/, `const themeMode = "${themeMode}";`);
+
+                // Remplacer les placeholders de filtres Auctions par true/false (booléens)
+                Object.entries(auctionsFilterMap).forEach(([checkboxId, placeholderSuffix]) => {
+                    const checked = document.getElementById(checkboxId).checked;
+                    const regex = new RegExp(`"__FILTER_${placeholderSuffix}__"`, 'g');
+                    code = code.replace(regex, checked);
+                });
 
                 // Afficher le résultat
                 document.getElementById('auctionsCodeOutput').value = code;
