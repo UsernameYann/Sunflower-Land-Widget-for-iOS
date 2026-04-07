@@ -3,8 +3,8 @@ function getIngredientEmoji(ingredients) {
     return '🌸';
   } else if (ingredients.includes('Gem')) {
     return '💎';
-  } else if (ingredients.includes('Floater')) {
-    return '🛟';
+  } else if (ingredients.includes('Pet Cookie')) {
+    return '🍪';
   } else {
     return ingredients.map(i => {
       if (i === 'Gem') return '💎';
@@ -136,13 +136,10 @@ function formatTime(ms) {
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
   
-  let units = [];
-  if (d > 0) units.push(`${d}d`);
-  if (h > 0) units.push(`${h}h`);
-  if (m > 0) units.push(`${m.toString().padStart(2,'0')}`);
-  if (s > 0 || units.length === 0) units.push(`${s.toString().padStart(2,'0')}`);
-  
-  return units.slice(0, TIME_DISPLAY_UNITS).join('');
+  if (d > 0) return `${d}d${h}h`;
+  if (h > 0) return `${h}h${m}`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
 }
 
 const now = Date.now();
@@ -205,13 +202,13 @@ upcoming.forEach((auction, index) => {
     const msLeft = auction.startAt - now;
     timeLeft = formatTime(msLeft);
     if (msLeft < 3600000) {
-      color = new Color(YELLOW_COLOR);
+      color = YELLOW_COLOR;
     } else {
       color = WHITE_COLOR;
     }
   } else if (now >= auction.startAt && now < auction.endAt) {
     timeLeft = 'Now!';
-    color = new Color(GREEN_COLOR); 
+    color = GREEN_COLOR; 
   } else {
     timeLeft = '';
     color = WHITE_COLOR;

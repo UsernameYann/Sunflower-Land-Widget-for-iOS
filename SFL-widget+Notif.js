@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "April 5th, 2026";
+const WIDGET_VERSION = "April 7th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -1244,20 +1244,20 @@ function processItems(allItems, options = {}) {
     }
 
     if (itemData.category === "lava_pit") {
-      const remainingSeconds =
-        itemData.remainingSeconds != null ? itemData.remainingSeconds : null;
-      const readyTime =
-        remainingSeconds != null
-          ? currentTime + remainingSeconds * SECOND_TO_MS
-          : null;
+      const readyAt = itemData.readyAt || null;
+      if (!readyAt) continue;
+      const remainingSeconds = Math.round(
+        (readyAt - currentTime) / SECOND_TO_MS,
+      );
+      const canCollect = currentTime >= readyAt;
 
-      if (itemData.canCollect) {
+      if (canCollect) {
         if (isNotificationMode && currentTime <= lookaheadLimitMs) {
           processedItems.push({
             name: itemData.name || itemData.type,
             category: itemData.category,
-            readyTime: currentTime,
-            remainingSeconds: 0,
+            readyTime: readyAt,
+            remainingSeconds: remainingSeconds,
             totalAmount: itemData.amount || 0,
             emoji: getItemEmoji(
               itemData.name || itemData.type,
@@ -1270,8 +1270,8 @@ function processItems(allItems, options = {}) {
           processedItems.push({
             name: itemData.name || itemData.type,
             category: itemData.category,
-            readyTime: currentTime,
-            remainingSeconds: 0,
+            readyTime: readyAt,
+            remainingSeconds: remainingSeconds,
             totalAmount: itemData.amount || 0,
             emoji: getItemEmoji(
               itemData.name || itemData.type,
@@ -1279,12 +1279,12 @@ function processItems(allItems, options = {}) {
             ),
           });
         }
-      } else if (remainingSeconds != null && remainingSeconds > 0) {
-        if (!isNotificationMode || readyTime <= lookaheadLimitMs) {
+      } else if (remainingSeconds > 0) {
+        if (!isNotificationMode || readyAt <= lookaheadLimitMs) {
           processedItems.push({
             name: itemData.name || itemData.type,
             category: itemData.category,
-            readyTime: readyTime,
+            readyTime: readyAt,
             remainingSeconds: remainingSeconds,
             totalAmount: itemData.amount || 0,
             emoji: getItemEmoji(
@@ -1836,9 +1836,7 @@ function parseLavaPits(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.lava_pit) return;
   if (apiData.farm && apiData.farm.lavaPits) {
     for (let [pitId, pitInfo] of Object.entries(apiData.farm.lavaPits)) {
-      const removedAt = pitInfo.removedAt || pitInfo.collectedAt || null;
-
-      if (removedAt) {
+      if (pitInfo.removedAt) {
         continue;
       }
 
@@ -1854,7 +1852,6 @@ function parseLavaPits(apiData, allItems) {
 
       allItems[pitName] = {
         readyAt: readyAt,
-        removedAt: removedAt,
         remainingSeconds: remainingSeconds,
         canCollect: canCollect,
         type: "Lava Pit",

@@ -1,6 +1,14 @@
 {
   "versions": [
     {
+      "date": "April 7th, 2026",
+      "changes": [
+        "Sorry, I tested an AI agent and it followed the game logic a bit too literally 😂",
+        "🌋 Lava Pit issue: if collected and not restarted, it stays as ready in the list",
+        "🏛️ Auctions Widget fixed: color format errors corrected"
+      ]
+    },
+    {
       "date": "April 5th, 2026",
       "changes": [
         "🌋 Lava Pit tracking now uses API readyAt for accurate timers",
