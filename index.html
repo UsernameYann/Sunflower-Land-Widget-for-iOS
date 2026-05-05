@@ -468,6 +468,7 @@
                 <div class="checkbox-item"><input type="checkbox" id="crafting" checked> <label for="crafting">🔧 Crafting</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="cooking" checked> <label for="cooking">👩‍🍳 Cooking</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="composter" checked> <label for="composter">♻️ Composters</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="aging_shed" checked> <label for="aging_shed">🐟 Aging Shed</label></div>
             </div>
         </div>
 
@@ -481,6 +482,7 @@
                 <div class="checkbox-item"><input type="checkbox" id="floating_island" checked> <label for="floating_island">☁️ Floating Island</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="lava_pit" checked> <label for="lava_pit">🌋 Lava Pits</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="crab_trap" checked> <label for="crab_trap">🦀 Crab Traps</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="salt_farm" checked> <label for="salt_farm">🧂 Salt Farm</label></div>
             </div>
         </div>
 
@@ -758,7 +760,7 @@
                 code = code.replace(/themeMode: __THEME_MODE__,/, `themeMode: "${themeMode}",`);
 
                 // Remplacer tous les placeholders de filtres individuellement
-                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'power', 'boosts', 'crop_machine', 'floating_island', 'lava_pit', 'crab_trap', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed', 'pet_neglect', 'sick_animal', 'power_notification', 'trades', 'social_projects'];
+                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'aging_shed', 'power', 'boosts', 'crop_machine', 'floating_island', 'lava_pit', 'crab_trap', 'salt_farm', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed', 'pet_neglect', 'sick_animal', 'power_notification', 'trades', 'social_projects'];
                 
                 filters.forEach(filter => {
                     const checked = document.getElementById(filter).checked;

@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "April 7th, 2026";
+const WIDGET_VERSION = "May 5th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -33,6 +33,8 @@ const SFL_USER_CONFIG = {
     floating_island: __FILTER_FLOATING_ISLAND__,
     lava_pit: __FILTER_LAVA_PIT__,
     crab_trap: __FILTER_CRAB_TRAP__,
+    aging_shed: __FILTER_AGING_SHED__,
+    salt_farm: __FILTER_SALT_FARM__,
     daily: __FILTER_DAILY__,
     vip_chest: __FILTER_VIP_CHEST__,
     bud_box: __FILTER_BUD_BOX__,
@@ -228,6 +230,8 @@ const EXPIRY_COOLDOWNS = {
 };
 
 const DEFAULT_HONEY_PRODUCTION_TIME = 24 * 60 * 60 * 1000;
+
+// ====== UI CONSTANTS (modularized) ======
 
 const WIDGET_LIMITS = {
   small: 9,
@@ -1226,7 +1230,15 @@ function processItems(allItems, options = {}) {
       continue;
     }
 
-    if (!categoryFilters[itemData.category]) {
+    const categoryFilterKey = [
+      "aging_rack",
+      "fermentation_rack",
+      "spice_rack",
+    ].includes(itemData.category)
+      ? "aging_shed"
+      : itemData.category;
+
+    if (!categoryFilters[categoryFilterKey]) {
       if (itemData.category === "animal") {
         const typeLower = itemData.type.toLowerCase();
         if (
@@ -1287,6 +1299,114 @@ function processItems(allItems, options = {}) {
             readyTime: readyAt,
             remainingSeconds: remainingSeconds,
             totalAmount: itemData.amount || 0,
+            emoji: getItemEmoji(
+              itemData.name || itemData.type,
+              itemData.category,
+            ),
+            hasReward: false,
+            hasSwarm: false,
+          });
+        }
+      }
+      continue;
+    }
+
+    if (
+      ["aging_rack", "fermentation_rack", "spice_rack"].includes(
+        itemData.category,
+      )
+    ) {
+      const readyAt = itemData.readyAt || null;
+      if (!readyAt) continue;
+
+      const remainingSeconds = Math.round(
+        (readyAt - currentTime) / SECOND_TO_MS,
+      );
+      const canCollect = currentTime >= readyAt;
+
+      if (canCollect) {
+        if (!isNotificationMode) {
+          processedItems.push({
+            name: itemData.name || itemData.type,
+            category: itemData.category,
+            readyTime: readyAt,
+            remainingSeconds: remainingSeconds,
+            totalAmount: 0,
+            emoji: getItemEmoji(
+              itemData.name || itemData.type,
+              itemData.category,
+            ),
+            hasReward: false,
+            hasSwarm: false,
+          });
+        } else if (currentTime <= lookaheadLimitMs) {
+          processedItems.push({
+            name: itemData.name || itemData.type,
+            category: itemData.category,
+            readyTime: readyAt,
+            remainingSeconds: remainingSeconds,
+            totalAmount: 0,
+            emoji: getItemEmoji(
+              itemData.name || itemData.type,
+              itemData.category,
+            ),
+            hasReward: false,
+            hasSwarm: false,
+          });
+        }
+      } else if (remainingSeconds > 0) {
+        if (!isNotificationMode || readyAt <= lookaheadLimitMs) {
+          processedItems.push({
+            name: itemData.name || itemData.type,
+            category: itemData.category,
+            readyTime: readyAt,
+            remainingSeconds: remainingSeconds,
+            totalAmount: 0,
+            emoji: getItemEmoji(
+              itemData.name || itemData.type,
+              itemData.category,
+            ),
+            hasReward: false,
+            hasSwarm: false,
+          });
+        }
+      }
+      continue;
+    }
+
+    if (itemData.category === "salt_farm") {
+      const readyAt = itemData.readyAt || null;
+      if (!readyAt) continue;
+
+      const remainingSeconds = Math.round(
+        (readyAt - currentTime) / SECOND_TO_MS,
+      );
+      const canCollect = currentTime >= readyAt;
+
+      if (canCollect) {
+        if (!isNotificationMode) {
+          processedItems.push({
+            name: itemData.name || itemData.type,
+            category: itemData.category,
+            readyTime: readyAt,
+            remainingSeconds: remainingSeconds,
+            totalAmount: itemData.storedCharges || 0,
+            emoji: getItemEmoji(
+              itemData.name || itemData.type,
+              itemData.category,
+            ),
+            hasReward: false,
+            hasSwarm: false,
+          });
+        }
+      } else if (remainingSeconds > 0) {
+        if (!isNotificationMode || readyAt <= lookaheadLimitMs) {
+          processedItems.push({
+            name: itemData.name || itemData.type,
+            category: itemData.category,
+            readyTime: readyAt,
+            remainingSeconds: remainingSeconds,
+            totalAmount: 0,
             emoji: getItemEmoji(
               itemData.name || itemData.type,
               itemData.category,
@@ -1587,6 +1707,10 @@ function getItemEmoji(itemType, category, groupData) {
   if (category === "cooking") return "🍳";
   if (category === "composter") return "♻️";
   if (category === "crab_trap") return "🦀";
+  if (category === "aging_rack") return "🐟";
+  if (category === "fermentation_rack") return "🥒";
+  if (category === "spice_rack") return "🥫";
+  if (category === "salt_farm") return "🧂";
   if (category === "bud_box") return "👽";
   if (category === "crop_machine") return emojis[itemType] || "🚜";
   if (category === "power") return "⚡";
@@ -1862,6 +1986,53 @@ function parseLavaPits(apiData, allItems) {
     }
   }
 }
+
+function parseSaltFarm(apiData, allItems) {
+  if (!SFL_USER_CONFIG.categoryFilters.salt_farm) return;
+  if (!apiData.farm?.saltFarm?.nodes) return;
+
+  const now = Date.now();
+  const INTERVAL_MS = 7 * 60 * 60 * 1000;
+  const MAX_CHARGES = 3;
+
+  for (const [id, node] of Object.entries(apiData.farm.saltFarm.nodes)) {
+    const salt = node.salt;
+    if (!salt) continue;
+
+    let storedCharges = Math.min(
+      Math.max(salt.storedCharges || 0, 0),
+      MAX_CHARGES,
+    );
+    let nextChargeAt = salt.nextChargeAt || now + INTERVAL_MS;
+
+    while (now >= nextChargeAt && storedCharges < MAX_CHARGES) {
+      storedCharges += 1;
+      nextChargeAt += INTERVAL_MS;
+    }
+
+    let readyAt;
+    if (storedCharges > 0) {
+      readyAt = nextChargeAt - storedCharges * INTERVAL_MS;
+    } else {
+      readyAt = nextChargeAt;
+    }
+
+    const remainingSeconds = Math.round((readyAt - now) / 1000);
+    const canCollect = now >= readyAt;
+
+    allItems[`Salt Node ${id}`] = {
+      category: "salt_farm",
+      type: "Salt Node",
+      name: "Salt Node",
+      storedCharges: storedCharges,
+      readyAt: readyAt,
+      remainingSeconds: remainingSeconds,
+      canCollect: canCollect,
+      amount: storedCharges,
+    };
+  }
+}
+
 function parseCrops(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.crop) return;
   if (apiData.farm && apiData.farm.crops) {
@@ -2435,6 +2606,54 @@ function parseCrabTraps(apiData, allItems) {
   }
 }
 
+function parseAgingShed(apiData, allItems) {
+  if (!SFL_USER_CONFIG.categoryFilters.aging_shed) return;
+
+  const shed = apiData.farm?.agingShed;
+  if (!shed || !shed.racks) return;
+
+  const now = Date.now();
+
+  const agingSlots = shed.racks.aging || [];
+  agingSlots.forEach((slot) => {
+    if (!slot.readyAt) return;
+    allItems[`Aging Rack ${slot.id}`] = {
+      category: "aging_rack",
+      type: "Aging Rack",
+      name: slot.fish || "Fish",
+      readyAt: slot.readyAt,
+      remainingSeconds: Math.round((slot.readyAt - now) / 1000),
+      canCollect: now >= slot.readyAt,
+    };
+  });
+
+  const fermentSlots = shed.racks.fermentation || [];
+  fermentSlots.forEach((slot) => {
+    if (slot.readyAt === undefined) return;
+    allItems[`Fermentation Rack ${slot.id}`] = {
+      category: "fermentation_rack",
+      type: "Fermentation Rack",
+      name: slot.recipe || "Recipe",
+      readyAt: slot.readyAt,
+      remainingSeconds: Math.round((slot.readyAt - now) / 1000),
+      canCollect: now >= slot.readyAt,
+    };
+  });
+
+  const spiceSlots = shed.racks.spice || [];
+  spiceSlots.forEach((slot) => {
+    if (!slot.readyAt) return;
+    allItems[`Spice Rack ${slot.id}`] = {
+      category: "spice_rack",
+      type: "Spice Rack",
+      name: slot.recipe || "Spice",
+      readyAt: slot.readyAt,
+      remainingSeconds: Math.round((slot.readyAt - now) / 1000),
+      canCollect: now >= slot.readyAt,
+    };
+  });
+}
+
 function parseFloatingIsland(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.floating_island) return;
   if (apiData.farm && apiData.farm.floatingIsland) {
@@ -2701,6 +2920,7 @@ async function loadFromAPI() {
 
     parseResources(apiData, allItems);
     parseLavaPits(apiData, allItems);
+    parseSaltFarm(apiData, allItems);
 
     parseCrops(apiData, allItems);
     parseFruits(apiData, allItems);
@@ -2718,6 +2938,7 @@ async function loadFromAPI() {
     parseComposters(apiData, allItems);
     parseCropMachine(apiData, allItems);
     parseCrabTraps(apiData, allItems);
+    parseAgingShed(apiData, allItems);
     parsePowers(apiData, allItems);
     parseBoosts(apiData, allItems);
 
