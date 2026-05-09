@@ -376,6 +376,12 @@
                 <img src="images/IMG_1016.png" alt="Auctions Widget" style="background: black;">
                 <p>Get notified about upcoming auctions.</p>
             </div>
+
+            <div class="widget-card" onclick="showWidget('flower-usd')" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%);">
+                <h4>🌸 Flower USD</h4>
+                <img src="images/IMG_1895.jpg" alt="Flower USD Widget" style="background: black;">
+                <p>$FLOWER price in USD. No setup required.</p>
+            </div>
         </div>
 
         <div id="farm-setup" class="hidden">
@@ -605,6 +611,22 @@
         </div>
     </div>
 
+        <div id="flower-usd-setup" class="hidden">
+        <div class="step" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%);">
+            <h3>🌸 Flower USD</h3>
+
+            <div id="flowerUsdResult" style="margin-top: 20px;">
+                <p>Paste this into a new Scriptable script named <strong>Flower-USD</strong>.</p>
+                <textarea id="flowerUsdCodeOutput" readonly placeholder="Loading code..."></textarea>
+                <div class="button-group">
+                    <div><button id="copyFlowerUsdBtn">📋 Copy Code</button></div>
+                    <div><button id="downloadFlowerUsdBtn">💾 Download File</button></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
         <div id="auctions-setup" class="hidden">
         <div class="step" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
             <h3>🏛️ SFL Auctions Widget Setup</h3>
@@ -729,6 +751,7 @@
             // Masquer toutes les sections
             document.getElementById('farm-setup').classList.add('hidden');
             document.getElementById('auctions-setup').classList.add('hidden');
+            document.getElementById('flower-usd-setup').classList.add('hidden');
             
             // Afficher la section demandée
             document.getElementById(type + '-setup').classList.remove('hidden');
@@ -890,6 +913,59 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = 'SFL_auctions.js';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // ====== FLOWER USD WIDGET HANDLERS ======
+        const flowerUsdWidgetUrl = 'https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/Flower-USD.js';
+
+        async function loadFlowerUsdCode() {
+            const textarea = document.getElementById('flowerUsdCodeOutput');
+            if (textarea && !textarea.value) {
+                try {
+                    const response = await fetch(flowerUsdWidgetUrl);
+                    if (!response.ok) throw new Error('Download failed');
+                    textarea.value = await response.text();
+                } catch (error) {
+                    textarea.placeholder = 'Error loading code: ' + error.message;
+                }
+            }
+        }
+
+        // Load code when flower-usd section becomes visible
+        const origShowWidget = showWidget;
+        showWidget = function(type) {
+            origShowWidget(type);
+            if (type === 'flower-usd') loadFlowerUsdCode();
+        };
+
+        document.getElementById('copyFlowerUsdBtn').addEventListener('click', async () => {
+            const code = document.getElementById('flowerUsdCodeOutput').value;
+            if (!code) { alert('Code is still loading, please wait.'); return; }
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(code);
+                    alert('Code copied to clipboard!');
+                } else {
+                    const textarea = document.getElementById('flowerUsdCodeOutput');
+                    textarea.select();
+                    document.execCommand('copy');
+                    alert('Code copied!');
+                }
+            } catch (error) {
+                alert('Error copying: ' + error.message);
+            }
+        });
+
+        document.getElementById('downloadFlowerUsdBtn').addEventListener('click', () => {
+            const code = document.getElementById('flowerUsdCodeOutput').value;
+            if (!code) { alert('Code is still loading, please wait.'); return; }
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Flower-USD.js';
             a.click();
             URL.revokeObjectURL(url);
         });
