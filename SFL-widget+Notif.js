@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "May 5th, 2026";
+const WIDGET_VERSION = "May 16th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -208,6 +208,7 @@ const POWER_COOLDOWN_TIMES = {
   "Instant Gratification": 96 * 60 * 60,
   "Petal Blessed": 96 * 60 * 60,
   "Grease Lightning": 96 * 60 * 60,
+  "Salt Surge": 72 * 60 * 60,
 };
 
 const EXPIRY_COOLDOWNS = {
