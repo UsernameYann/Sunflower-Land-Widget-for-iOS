@@ -1123,7 +1123,7 @@
         });
 
         // ====== PRICES WIDGET HANDLERS ======
-        const pricesWidgetUrl = 'https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/sfl.world-prices-v3.js';
+        const pricesWidgetUrl = 'https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/SFL.world-prices-v3.js';
 
         function togglePricesAll(checkbox) {
             document.querySelectorAll('.prices_item').forEach(el => el.checked = checkbox.checked);
@@ -1210,7 +1210,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'sfl.world-prices-v3.js';
+            a.download = 'SFL.world-prices-v3.js';
             a.click();
             URL.revokeObjectURL(url);
         });
