@@ -1,6 +1,14 @@
 {
   "versions": [
     {
+      "date": "June 8th, 2026",
+      "changes": [
+        "📊 New widget: SFL.world prices, P2P market prices with buy/sell signals and 30-day history, powered by sfl.world API",
+        "🤝 Help Limit filter added: hide or show the daily help counter",
+        "⚠️ Help Limit calibration: the widget needs ~24h to calibrate — on the first day it may show helps already done as pending, this is normal"
+      ]
+    },
+    {
       "date": "May 16th, 2026",
       "changes": [
         "⚡ Salt Surge added",

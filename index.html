@@ -505,7 +505,9 @@
                 <div class="checkbox-item"><input type="checkbox" id="daily" checked> <label for="daily">📅 Daily Collectibles</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="vip_chest" checked> <label for="vip_chest">💎 VIP Chest</label></div>
                 <div class="checkbox-item"><input type="checkbox" id="bud_box" checked> <label for="bud_box">👽 Bud Box</label></div>
+                <div class="checkbox-item"><input type="checkbox" id="help_limit" checked> <label for="help_limit">🤝 Help Limit</label></div>
             </div>
+            <p class="filter-note">💡 <em>Help Limit needs ~24h to calibrate — on the first day it may show helps already done as pending. This is normal.</em></p>
         </div>
 
         <!-- Pets Section -->
@@ -935,7 +937,7 @@
                 code = code.replace(/themeMode: __THEME_MODE__,/, `themeMode: "${themeMode}",`);
 
                 // Remplacer tous les placeholders de filtres individuellement
-                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'aging_shed', 'power', 'boosts', 'crop_machine', 'floating_island', 'lava_pit', 'crab_trap', 'salt_farm', 'daily', 'vip_chest', 'bud_box', 'pet', 'pet_caress', 'pet_feed', 'pet_neglect', 'sick_animal', 'power_notification', 'trades', 'social_projects'];
+                const filters = ['animal', 'chicken', 'chickenLove', 'cow', 'cowLove', 'sheep', 'sheepLove', 'resource', 'tree', 'stone', 'iron', 'gold', 'crimstone', 'sunstone', 'oil', 'crop', 'fruit', 'flower', 'beehive', 'greenhouse', 'mushroom', 'crafting', 'cooking', 'composter', 'aging_shed', 'power', 'boosts', 'crop_machine', 'floating_island', 'lava_pit', 'crab_trap', 'salt_farm', 'daily', 'vip_chest', 'bud_box', 'help_limit', 'pet', 'pet_caress', 'pet_feed', 'pet_neglect', 'sick_animal', 'power_notification', 'trades', 'social_projects'];
                 
                 filters.forEach(filter => {
                     const checked = document.getElementById(filter).checked;

@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "May 16th, 2026";
+const WIDGET_VERSION = "June 8th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -35,6 +35,7 @@ const SFL_USER_CONFIG = {
     crab_trap: __FILTER_CRAB_TRAP__,
     aging_shed: __FILTER_AGING_SHED__,
     salt_farm: __FILTER_SALT_FARM__,
+    help_limit: __FILTER_HELP_LIMIT__,
     daily: __FILTER_DAILY__,
     vip_chest: __FILTER_VIP_CHEST__,
     bud_box: __FILTER_BUD_BOX__,
@@ -231,8 +232,6 @@ const EXPIRY_COOLDOWNS = {
 };
 
 const DEFAULT_HONEY_PRODUCTION_TIME = 24 * 60 * 60 * 1000;
-
-// ====== UI CONSTANTS (modularized) ======
 
 const WIDGET_LIMITS = {
   small: 9,
@@ -555,6 +554,12 @@ function addToGenericGroup(groupedItems, itemName, itemData, remainingTime) {
   const category = itemData.category || "resource";
   const itemType = itemData.name || itemData.type;
   const itemCount = itemData.count || 1;
+  const helpsRemaining =
+    typeof itemData.helpsRemaining === "number"
+      ? itemData.helpsRemaining
+      : category === "help_limit" && typeof itemData.amount === "number"
+        ? itemData.amount
+        : null;
 
   let foundGroup = false;
   for (let [, existingGroup] of Object.entries(groupedItems)) {
@@ -566,6 +571,10 @@ function addToGenericGroup(groupedItems, itemName, itemData, remainingTime) {
         existingGroup.count += itemCount;
         existingGroup.totalAmount += itemData.amount || 0;
         existingGroup.ids.push(itemName);
+
+        if (helpsRemaining !== null) {
+          existingGroup.helpsRemaining = helpsRemaining;
+        }
 
         if (itemData.hasReward && !existingGroup.hasReward) {
           existingGroup.hasReward = true;
@@ -600,6 +609,7 @@ function addToGenericGroup(groupedItems, itemName, itemData, remainingTime) {
       type: itemType,
       count: itemCount,
       totalAmount: itemData.amount || 0,
+      helpsRemaining: helpsRemaining,
       remainingTime: remainingTime,
       ids: [itemName],
       isReady: remainingTime <= 0,
@@ -642,6 +652,13 @@ function getTimeRemaining(itemData) {
       return -(currentTime - getTodayStart()) / 1000;
     }
     return (normalizeTs(itemData.nextResetAt) - currentTime) / 1000;
+  }
+
+  if (itemData.category === "help_limit") {
+    if ((itemData.helpsRemaining || 0) <= 0) {
+      return null;
+    }
+    return -(currentTime - getTodayStart()) / 1000;
   }
 
   if (itemData.category === "pet" && itemData.action === "caress") {
@@ -913,6 +930,7 @@ function shouldShowSocialProjectIcon(allItems) {
   }
 }
 
+// ====== POWER DETECTION ======
 function getCurrentPowerSnapshot(allItems) {
   const snapshot = {};
   const now = Date.now();
@@ -1228,6 +1246,33 @@ function processItems(allItems, options = {}) {
           message: itemData.message || null,
         });
       }
+      continue;
+    }
+
+    if (itemData.category === "help_limit") {
+      const remainingSeconds = getTimeRemaining(itemData);
+      if (remainingSeconds === null) continue;
+
+      const readyTime = currentTime + remainingSeconds * SECOND_TO_MS;
+      const helpsRemaining =
+        typeof itemData.helpsRemaining === "number"
+          ? itemData.helpsRemaining
+          : typeof itemData.amount === "number"
+            ? itemData.amount
+            : 0;
+
+      processedItems.push({
+        name: itemData.name || itemData.type,
+        category: itemData.category,
+        readyTime: readyTime,
+        remainingSeconds: remainingSeconds,
+        totalAmount: helpsRemaining,
+        helpsRemaining: helpsRemaining,
+        count: 1,
+        emoji: getItemEmoji(itemData.name || itemData.type, itemData.category),
+        hasReward: false,
+        hasSwarm: false,
+      });
       continue;
     }
 
@@ -1712,6 +1757,7 @@ function getItemEmoji(itemType, category, groupData) {
   if (category === "fermentation_rack") return "🥒";
   if (category === "spice_rack") return "🥫";
   if (category === "salt_farm") return "🧂";
+  if (category === "help_limit") return "🤝";
   if (category === "bud_box") return "👽";
   if (category === "crop_machine") return emojis[itemType] || "🚜";
   if (category === "power") return "⚡";
@@ -2032,6 +2078,84 @@ function parseSaltFarm(apiData, allItems) {
       amount: storedCharges,
     };
   }
+}
+
+function parseHelpLimit(apiData, allItems) {
+  if (!SFL_USER_CONFIG.categoryFilters.help_limit) return;
+
+  const farm = apiData.farm;
+  if (!farm) return;
+
+  const socialFarming = farm.socialFarming || {};
+  const villageProjects = socialFarming.villageProjects || {};
+  const collectibles = farm.collectibles || {};
+  const homeCollectibles = farm.home?.collectibles || {};
+
+  const requiredCheers = {
+    "Farmer's Monument": 100,
+    "Woodcutter's Monument": 1000,
+    "Miner's Monument": 10000,
+    "Teamwork Monument": 100,
+  };
+
+  function isPlaced(name) {
+    return (
+      (collectibles[name] || []).some((item) => item.coordinates) ||
+      (homeCollectibles[name] || []).some((item) => item.coordinates)
+    );
+  }
+
+  function isActive(name) {
+    const cheers = (villageProjects[name] || {}).cheers || 0;
+    return cheers >= requiredCheers[name] && isPlaced(name);
+  }
+
+  let helpLimit = 5;
+  for (const monumentName of Object.keys(requiredCheers)) {
+    if (isActive(monumentName)) {
+      helpLimit += 1;
+    }
+  }
+
+  const currentFarmHelped = (farm.farmActivity || {})["Farm Helped"] || 0;
+  const todayUTC = new Date().toISOString().split("T")[0];
+  const keychainKey = "sfl_help_baseline";
+
+  let saved = {};
+  try {
+    saved = JSON.parse(Keychain.get(keychainKey));
+  } catch (error) {
+    saved = {};
+  }
+
+  if (!saved.date || saved.date !== todayUTC) {
+    saved = {
+      date: todayUTC,
+      baseline: saved.lastKnown ?? currentFarmHelped,
+      lastKnown: currentFarmHelped,
+    };
+  } else {
+    saved.lastKnown = currentFarmHelped;
+  }
+
+  Keychain.set(keychainKey, JSON.stringify(saved));
+
+  const helpsUsed = Math.max(currentFarmHelped - saved.baseline, 0);
+  const helpsRemaining = Math.max(helpLimit - helpsUsed, 0);
+
+  if (helpsRemaining <= 0) return;
+
+  allItems["Help Limit"] = {
+    category: "help_limit",
+    name: `Helps ${helpsRemaining}`,
+    type: "help_limit",
+    helpsRemaining: helpsRemaining,
+    helpLimit: helpLimit,
+    helpsUsed: helpsUsed,
+    nextResetAt: getNextDailyReset(),
+    amount: helpsRemaining,
+    count: 1,
+  };
 }
 
 function parseCrops(apiData, allItems) {
@@ -2945,6 +3069,7 @@ async function loadFromAPI() {
 
     parseFloatingIsland(apiData, allItems);
     parseDailyCollectibles(apiData, allItems);
+    parseHelpLimit(apiData, allItems);
     parseBuds(apiData, allItems);
     parseBudBox(apiData, allItems);
     parseSeasonAndEvents(apiData, allItems);
@@ -3709,9 +3834,20 @@ function renderWidgetRows(widget, displayedGroups, themeColors) {
       }
     }
 
+    if (group.category === "help_limit" && config.widgetFamily !== "small") {
+      itemName = "Helps";
+    }
+
     const finalItemName = itemName;
 
-    const quantity = `x${group.count}`;
+    const helpCount =
+      typeof group.helpsRemaining === "number"
+        ? group.helpsRemaining
+        : typeof group.totalAmount === "number"
+          ? group.totalAmount
+          : group.count || 0;
+    const quantity =
+      group.category === "help_limit" ? `x${helpCount}` : `x${group.count}`;
     const totalText = "";
 
     let timeStatus = formatTime(group.remainingTime, config.widgetFamily);
@@ -3748,9 +3884,28 @@ function renderWidgetRows(widget, displayedGroups, themeColors) {
     emojiText.font = Font.mediumMonospacedSystemFont(emojiSize);
     emojiText.lineLimit = 1;
 
-    let col1Text = col1Stack.addText(finalItemName);
-    col1Text.font = Font.mediumMonospacedSystemFont(fontSize);
-    col1Text.lineLimit = 1;
+    let col1Text = null;
+    let helpLimitValueText = null;
+    if (config.widgetFamily === "small" && group.category === "help_limit") {
+      const helpMatch = finalItemName.match(/^Helps\s+(\d+)$/);
+      if (helpMatch) {
+        col1Text = col1Stack.addText("Helps ");
+        col1Text.font = Font.mediumMonospacedSystemFont(fontSize);
+        col1Text.lineLimit = 1;
+
+        helpLimitValueText = col1Stack.addText(helpMatch[1]);
+        helpLimitValueText.font = Font.mediumMonospacedSystemFont(fontSize);
+        helpLimitValueText.lineLimit = 1;
+      } else {
+        col1Text = col1Stack.addText(finalItemName);
+        col1Text.font = Font.mediumMonospacedSystemFont(fontSize);
+        col1Text.lineLimit = 1;
+      }
+    } else {
+      col1Text = col1Stack.addText(finalItemName);
+      col1Text.font = Font.mediumMonospacedSystemFont(fontSize);
+      col1Text.lineLimit = 1;
+    }
 
     let petActionEmojiText = null;
     if (petActionEmoji) {
@@ -3818,6 +3973,11 @@ function renderWidgetRows(widget, displayedGroups, themeColors) {
 
     emojiText.textColor = themeColors.TEXT_COLOR;
     col1Text.textColor = themeColors.TEXT_COLOR;
+    if (helpLimitValueText) {
+      helpLimitValueText.textColor = isDarkMode
+        ? Color.green()
+        : new Color("#008000");
+    }
 
     if (petActionEmojiText) {
       petActionEmojiText.textColor = themeColors.TEXT_COLOR;
