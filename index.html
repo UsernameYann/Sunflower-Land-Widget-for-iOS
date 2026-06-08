@@ -382,6 +382,12 @@
                 <img src="images/IMG_1895.jpg" alt="Flower USD Widget" style="background: black;">
                 <p>$FLOWER price in USD. No setup required.</p>
             </div>
+
+            <div class="widget-card" onclick="showWidget('prices')" style="background: linear-gradient(135deg, #1c1c2e 0%, #2d2d44 100%); color: white;">
+                <h4 style="color: white;">📊 SFL.world prices</h4>
+                <img src="images/IMG_2272.jpg" alt="SFL.world Prices Widget" style="background: black;">
+                <p style="color: rgba(255,255,255,0.75);">P2P market prices with buy/sell signals and 30-day history.</p>
+            </div>
         </div>
 
         <div id="farm-setup" class="hidden">
@@ -611,6 +617,151 @@
         </div>
     </div>
 
+        <div id="prices-setup" class="hidden">
+        <div class="step" style="background: linear-gradient(135deg, #1c1c2e 0%, #2d2d44 100%); color: white;">
+            <h3 style="color: white;">📊 SFL.world Prices Widget Setup</h3>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9em; margin-top: -15px; margin-bottom: 10px;">Prices sourced from <a href="https://sfl.world" target="_blank" style="color: #9db;">sfl.world</a> P2P market, not from the game directly. Refreshed every 15 min.</p>
+
+            <form id="pricesConfigForm" style="background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15);">
+                <label style="color: rgba(255,255,255,0.9);">Notifications</label>
+                <div class="radio-group">
+                    <label style="color: #ddd;"><input type="radio" name="pricesNotifications" value="true" checked> Yes</label>
+                    <label style="color: #ddd;"><input type="radio" name="pricesNotifications" value="false"> No</label>
+                </div>
+
+                <div style="display: flex; gap: 20px; margin: 15px 0; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,255,100,0.08); border: 1px solid rgba(0,255,100,0.25); border-radius: 8px; padding: 10px 16px;">
+                        <span style="color: #6eff9a; font-weight: 600; white-space: nowrap;">🟢 Buy below</span>
+                        <input type="number" id="pricesGreenThreshold" value="5" min="0" max="100" style="width: 60px; background: #1a1a2e; color: #6eff9a; border: 1px solid rgba(0,255,100,0.3); border-radius: 6px; padding: 6px 8px; font-size: 15px; font-weight: 700; text-align: center;">
+                        <span style="color: rgba(255,255,255,0.5); font-size: 0.9em;">%</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,60,60,0.08); border: 1px solid rgba(255,60,60,0.25); border-radius: 8px; padding: 10px 16px;">
+                        <span style="color: #ff7070; font-weight: 600; white-space: nowrap;">🔴 Sell above</span>
+                        <input type="number" id="pricesRedThreshold" value="95" min="0" max="100" style="width: 60px; background: #1a1a2e; color: #ff7070; border: 1px solid rgba(255,60,60,0.3); border-radius: 6px; padding: 6px 8px; font-size: 15px; font-weight: 700; text-align: center;">
+                        <span style="color: rgba(255,255,255,0.5); font-size: 0.9em;">%</span>
+                    </div>
+                </div>
+
+                <label style="color: rgba(255,255,255,0.9);">📦 Items to display</label>
+                <div class="filter-section" style="background: rgba(255,255,255,0.08); border: none;">
+                    <div class="checkbox-item" style="margin-bottom: 10px;"><input type="checkbox" id="prices_all" checked onchange="togglePricesAll(this)"> <label for="prices_all" style="color: #ddd;"><strong>All items</strong></label></div>
+                    <div id="pricesCatGroup">
+
+                        <div style="margin: 8px 0;">
+                            <div class="checkbox-item"><input type="checkbox" id="prices_cat_vegetables" checked onchange="togglePricesCat('vegetables', this)"> <label for="prices_cat_vegetables" style="color:#9db; font-size:0.82em; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">🥬 Vegetables</label></div>
+                            <div class="checkbox-group" style="padding-left:16px;">
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Sunflower" data-name="Sunflower" checked onchange="updatePricesState()"> <label for="pi_Sunflower" style="color:#ddd;">🌻 Sunflower</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Potato" data-name="Potato" checked onchange="updatePricesState()"> <label for="pi_Potato" style="color:#ddd;">🥔 Potato</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Pumpkin" data-name="Pumpkin" checked onchange="updatePricesState()"> <label for="pi_Pumpkin" style="color:#ddd;">🎃 Pumpkin</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Carrot" data-name="Carrot" checked onchange="updatePricesState()"> <label for="pi_Carrot" style="color:#ddd;">🥕 Carrot</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Cabbage" data-name="Cabbage" checked onchange="updatePricesState()"> <label for="pi_Cabbage" style="color:#ddd;">🥬 Cabbage</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Beetroot" data-name="Beetroot" checked onchange="updatePricesState()"> <label for="pi_Beetroot" style="color:#ddd;">🌰 Beetroot</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Cauliflower" data-name="Cauliflower" checked onchange="updatePricesState()"> <label for="pi_Cauliflower" style="color:#ddd;">🥦 Cauliflower</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Parsnip" data-name="Parsnip" checked onchange="updatePricesState()"> <label for="pi_Parsnip" style="color:#ddd;">🥕 Parsnip</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Radish" data-name="Radish" checked onchange="updatePricesState()"> <label for="pi_Radish" style="color:#ddd;">🫜 Radish</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Wheat" data-name="Wheat" checked onchange="updatePricesState()"> <label for="pi_Wheat" style="color:#ddd;">🌾 Wheat</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Kale" data-name="Kale" checked onchange="updatePricesState()"> <label for="pi_Kale" style="color:#ddd;">🥬 Kale</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Eggplant" data-name="Eggplant" checked onchange="updatePricesState()"> <label for="pi_Eggplant" style="color:#ddd;">🍆 Eggplant</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Corn" data-name="Corn" checked onchange="updatePricesState()"> <label for="pi_Corn" style="color:#ddd;">🌽 Corn</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Soybean" data-name="Soybean" checked onchange="updatePricesState()"> <label for="pi_Soybean" style="color:#ddd;">🫛 Soybean</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Rice" data-name="Rice" checked onchange="updatePricesState()"> <label for="pi_Rice" style="color:#ddd;">🌾 Rice</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Tomato" data-name="Tomato" checked onchange="updatePricesState()"> <label for="pi_Tomato" style="color:#ddd;">🍅 Tomato</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Barley" data-name="Barley" checked onchange="updatePricesState()"> <label for="pi_Barley" style="color:#ddd;">🌾 Barley</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Rhubarb" data-name="Rhubarb" checked onchange="updatePricesState()"> <label for="pi_Rhubarb" style="color:#ddd;">🥬 Rhubarb</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Zucchini" data-name="Zucchini" checked onchange="updatePricesState()"> <label for="pi_Zucchini" style="color:#ddd;">🥒 Zucchini</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Yam" data-name="Yam" checked onchange="updatePricesState()"> <label for="pi_Yam" style="color:#ddd;">🍠 Yam</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Broccoli" data-name="Broccoli" checked onchange="updatePricesState()"> <label for="pi_Broccoli" style="color:#ddd;">🥦 Broccoli</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Pepper" data-name="Pepper" checked onchange="updatePricesState()"> <label for="pi_Pepper" style="color:#ddd;">🌶️ Pepper</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Onion" data-name="Onion" checked onchange="updatePricesState()"> <label for="pi_Onion" style="color:#ddd;">🧅 Onion</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Turnip" data-name="Turnip" checked onchange="updatePricesState()"> <label for="pi_Turnip" style="color:#ddd;">🥬 Turnip</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_vegetables" id="pi_Artichoke" data-name="Artichoke" checked onchange="updatePricesState()"> <label for="pi_Artichoke" style="color:#ddd;">🥦 Artichoke</label></div>
+                            </div>
+                        </div>
+
+                        <div style="margin: 8px 0;">
+                            <div class="checkbox-item"><input type="checkbox" id="prices_cat_fruits" checked onchange="togglePricesCat('fruits', this)"> <label for="prices_cat_fruits" style="color:#9db; font-size:0.82em; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">🍎 Fruits</label></div>
+                            <div class="checkbox-group" style="padding-left:16px;">
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Apple" data-name="Apple" checked onchange="updatePricesState()"> <label for="pi_Apple" style="color:#ddd;">🍎 Apple</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Blueberry" data-name="Blueberry" checked onchange="updatePricesState()"> <label for="pi_Blueberry" style="color:#ddd;">🫐 Blueberry</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Orange" data-name="Orange" checked onchange="updatePricesState()"> <label for="pi_Orange" style="color:#ddd;">🍊 Orange</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Banana" data-name="Banana" checked onchange="updatePricesState()"> <label for="pi_Banana" style="color:#ddd;">🍌 Banana</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Grape" data-name="Grape" checked onchange="updatePricesState()"> <label for="pi_Grape" style="color:#ddd;">🍇 Grape</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Olive" data-name="Olive" checked onchange="updatePricesState()"> <label for="pi_Olive" style="color:#ddd;">🫒 Olive</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Lemon" data-name="Lemon" checked onchange="updatePricesState()"> <label for="pi_Lemon" style="color:#ddd;">🍋 Lemon</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Duskberry" data-name="Duskberry" checked onchange="updatePricesState()"> <label for="pi_Duskberry" style="color:#ddd;">🌝 Duskberry</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Lunara" data-name="Lunara" checked onchange="updatePricesState()"> <label for="pi_Lunara" style="color:#ddd;">🌙 Lunara</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_fruits" id="pi_Celestine" data-name="Celestine" checked onchange="updatePricesState()"> <label for="pi_Celestine" style="color:#ddd;">✨ Celestine</label></div>
+                            </div>
+                        </div>
+
+                        <div style="margin: 8px 0;">
+                            <div class="checkbox-item"><input type="checkbox" id="prices_cat_animals" checked onchange="togglePricesCat('animals', this)"> <label for="prices_cat_animals" style="color:#9db; font-size:0.82em; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">🐄 Animals</label></div>
+                            <div class="checkbox-group" style="padding-left:16px;">
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_animals" id="pi_Egg" data-name="Egg" checked onchange="updatePricesState()"> <label for="pi_Egg" style="color:#ddd;">🥚 Egg</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_animals" id="pi_Honey" data-name="Honey" checked onchange="updatePricesState()"> <label for="pi_Honey" style="color:#ddd;">🍯 Honey</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_animals" id="pi_Leather" data-name="Leather" checked onchange="updatePricesState()"> <label for="pi_Leather" style="color:#ddd;">🧳 Leather</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_animals" id="pi_Wool" data-name="Wool" checked onchange="updatePricesState()"> <label for="pi_Wool" style="color:#ddd;">🧶 Wool</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_animals" id="pi_Merino_Wool" data-name="Merino Wool" checked onchange="updatePricesState()"> <label for="pi_Merino_Wool" style="color:#ddd;">🐑 Merino Wool</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_animals" id="pi_Feather" data-name="Feather" checked onchange="updatePricesState()"> <label for="pi_Feather" style="color:#ddd;">🪶 Feather</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_animals" id="pi_Milk" data-name="Milk" checked onchange="updatePricesState()"> <label for="pi_Milk" style="color:#ddd;">🥛 Milk</label></div>
+                            </div>
+                        </div>
+
+                        <div style="margin: 8px 0;">
+                            <div class="checkbox-item"><input type="checkbox" id="prices_cat_resources" checked onchange="togglePricesCat('resources', this)"> <label for="prices_cat_resources" style="color:#9db; font-size:0.82em; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">⛏️ Resources</label></div>
+                            <div class="checkbox-group" style="padding-left:16px;">
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_resources" id="pi_Wood" data-name="Wood" checked onchange="updatePricesState()"> <label for="pi_Wood" style="color:#ddd;">🪵 Wood</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_resources" id="pi_Stone" data-name="Stone" checked onchange="updatePricesState()"> <label for="pi_Stone" style="color:#ddd;">🪨 Stone</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_resources" id="pi_Iron" data-name="Iron" checked onchange="updatePricesState()"> <label for="pi_Iron" style="color:#ddd;">⚒️ Iron</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_resources" id="pi_Gold" data-name="Gold" checked onchange="updatePricesState()"> <label for="pi_Gold" style="color:#ddd;">⚜️ Gold</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_resources" id="pi_Crimstone" data-name="Crimstone" checked onchange="updatePricesState()"> <label for="pi_Crimstone" style="color:#ddd;">♦️ Crimstone</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_resources" id="pi_Obsidian" data-name="Obsidian" checked onchange="updatePricesState()"> <label for="pi_Obsidian" style="color:#ddd;">⚫ Obsidian</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_resources" id="pi_Salt" data-name="Salt" checked onchange="updatePricesState()"> <label for="pi_Salt" style="color:#ddd;">🧂 Salt</label></div>
+                            </div>
+                        </div>
+
+                        <div style="margin: 8px 0;">
+                            <div class="checkbox-item"><input type="checkbox" id="prices_cat_pet" checked onchange="togglePricesCat('pet', this)"> <label for="prices_cat_pet" style="color:#9db; font-size:0.82em; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">🐾 Pet items</label></div>
+                            <div class="checkbox-group" style="padding-left:16px;">
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_pet" id="pi_Ruffroot" data-name="Ruffroot" checked onchange="updatePricesState()"> <label for="pi_Ruffroot" style="color:#ddd;">🌿 Ruffroot</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_pet" id="pi_Chewed_Bone" data-name="Chewed Bone" checked onchange="updatePricesState()"> <label for="pi_Chewed_Bone" style="color:#ddd;">🦴 Chewed Bone</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_pet" id="pi_Heart_Leaf" data-name="Heart Leaf" checked onchange="updatePricesState()"> <label for="pi_Heart_Leaf" style="color:#ddd;">💚 Heart Leaf</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_pet" id="pi_Moonfur" data-name="Moonfur" checked onchange="updatePricesState()"> <label for="pi_Moonfur" style="color:#ddd;">🌙 Moonfur</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_pet" id="pi_Ribbon" data-name="Ribbon" checked onchange="updatePricesState()"> <label for="pi_Ribbon" style="color:#ddd;">🎀 Ribbon</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_pet" id="pi_Dewberry" data-name="Dewberry" checked onchange="updatePricesState()"> <label for="pi_Dewberry" style="color:#ddd;">🫐 Dewberry</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_pet" id="pi_Wild_Grass" data-name="Wild Grass" checked onchange="updatePricesState()"> <label for="pi_Wild_Grass" style="color:#ddd;">🌱 Wild Grass</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_pet" id="pi_Frost_Pebble" data-name="Frost Pebble" checked onchange="updatePricesState()"> <label for="pi_Frost_Pebble" style="color:#ddd;">❄️ Frost Pebble</label></div>
+                            </div>
+                        </div>
+
+                        <div style="margin: 8px 0;">
+                            <div class="checkbox-item"><input type="checkbox" id="prices_cat_baits" checked onchange="togglePricesCat('baits', this)"> <label for="prices_cat_baits" style="color:#9db; font-size:0.82em; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">🎣 Baits</label></div>
+                            <div class="checkbox-group" style="padding-left:16px;">
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_baits" id="pi_Capsule_Bait" data-name="Capsule Bait" checked onchange="updatePricesState()"> <label for="pi_Capsule_Bait" style="color:#ddd;">🎣 Capsule Bait</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_baits" id="pi_Umbrella_Bait" data-name="Umbrella Bait" checked onchange="updatePricesState()"> <label for="pi_Umbrella_Bait" style="color:#ddd;">☂️ Umbrella Bait</label></div>
+                                <div class="checkbox-item"><input type="checkbox" class="prices_item prices_cat_item_baits" id="pi_Crimson_Baitfish" data-name="Crimson Baitfish" checked onchange="updatePricesState()"> <label for="pi_Crimson_Baitfish" style="color:#ddd;">🐟 Crimson Baitfish</label></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="button" id="generatePricesBtn">🚀 Generate Widget Code</button>
+                </div>
+            </form>
+
+            <div id="pricesResult" class="hidden" style="margin-top: 20px;">
+                <p style="color: rgba(255,255,255,0.9);">Paste this into a new Scriptable script named <strong>sfl.world-prices-v3</strong>.</p>
+                <textarea id="pricesCodeOutput" readonly></textarea>
+                <div class="button-group">
+                    <div><button id="copyPricesBtn">📋 Copy Code</button></div>
+                    <div><button id="downloadPricesBtn">💾 Download File</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
         <div id="flower-usd-setup" class="hidden">
         <div class="step" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%);">
             <h3>🌸 Flower USD</h3>
@@ -752,6 +903,7 @@
             document.getElementById('farm-setup').classList.add('hidden');
             document.getElementById('auctions-setup').classList.add('hidden');
             document.getElementById('flower-usd-setup').classList.add('hidden');
+            document.getElementById('prices-setup').classList.add('hidden');
             
             // Afficher la section demandée
             document.getElementById(type + '-setup').classList.remove('hidden');
@@ -966,6 +1118,99 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = 'Flower-USD.js';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // ====== PRICES WIDGET HANDLERS ======
+        const pricesWidgetUrl = 'https://raw.githubusercontent.com/UsernameYann/Sunflower-Land-Widget-for-iOS/main/sfl.world-prices-v3.js';
+
+        function togglePricesAll(checkbox) {
+            document.querySelectorAll('.prices_item').forEach(el => el.checked = checkbox.checked);
+            document.querySelectorAll('[id^="prices_cat_"]').forEach(el => { el.checked = checkbox.checked; el.indeterminate = false; });
+        }
+
+        function togglePricesCat(cat, checkbox) {
+            document.querySelectorAll('.prices_cat_item_' + cat).forEach(el => el.checked = checkbox.checked);
+            updatePricesState();
+        }
+
+        function updatePricesState() {
+            const all = document.querySelectorAll('.prices_item');
+            const checked = document.querySelectorAll('.prices_item:checked');
+            const masterCb = document.getElementById('prices_all');
+            masterCb.indeterminate = checked.length > 0 && checked.length < all.length;
+            masterCb.checked = checked.length === all.length;
+            ['vegetables', 'fruits', 'animals', 'resources', 'pet', 'baits'].forEach(cat => {
+                const catItems = document.querySelectorAll('.prices_cat_item_' + cat);
+                const catChecked = document.querySelectorAll('.prices_cat_item_' + cat + ':checked');
+                const catCb = document.getElementById('prices_cat_' + cat);
+                if (!catCb) return;
+                catCb.indeterminate = catChecked.length > 0 && catChecked.length < catItems.length;
+                catCb.checked = catChecked.length === catItems.length;
+            });
+        }
+
+        document.getElementById('generatePricesBtn').addEventListener('click', async () => {
+            const enableNotifications = document.querySelector('input[name="pricesNotifications"]:checked').value === 'true';
+            const greenThreshold = parseInt(document.getElementById('pricesGreenThreshold').value, 10);
+            const redThreshold = parseInt(document.getElementById('pricesRedThreshold').value, 10);
+
+            const allItems = [...document.querySelectorAll('.prices_item')];
+            const checkedItems = allItems.filter(el => el.checked).map(el => el.dataset.name);
+            let filterCategory;
+            if (checkedItems.length === allItems.length) {
+                filterCategory = '"all"';
+            } else {
+                filterCategory = checkedItems.length ? '[' + checkedItems.map(n => `"${n}"`).join(', ') + ']' : '"all"';
+            }
+
+            try {
+                const response = await fetch(pricesWidgetUrl);
+                if (!response.ok) throw new Error('Download failed');
+                let code = await response.text();
+
+                code = code.replace(/__ENABLE_NOTIFICATIONS__/, enableNotifications);
+                code = code.replace(/__GREEN_THRESHOLD__/, greenThreshold);
+                code = code.replace(/__RED_THRESHOLD__/, redThreshold);
+                code = code.replace(/__FILTER_CATEGORY__/, filterCategory);
+
+                document.getElementById('pricesCodeOutput').value = code;
+                document.getElementById('pricesResult').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('pricesResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            } catch (error) {
+                alert('Error during generation: ' + error.message);
+            }
+        });
+
+        document.getElementById('copyPricesBtn').addEventListener('click', async () => {
+            const code = document.getElementById('pricesCodeOutput').value;
+            if (!code) { alert('Generate the code first.'); return; }
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(code);
+                    alert('Code copied to clipboard!');
+                } else {
+                    const textarea = document.getElementById('pricesCodeOutput');
+                    textarea.select();
+                    document.execCommand('copy');
+                    alert('Code copied!');
+                }
+            } catch (error) {
+                alert('Error copying: ' + error.message);
+            }
+        });
+
+        document.getElementById('downloadPricesBtn').addEventListener('click', () => {
+            const code = document.getElementById('pricesCodeOutput').value;
+            if (!code) { alert('Generate the code first.'); return; }
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sfl.world-prices-v3.js';
             a.click();
             URL.revokeObjectURL(url);
         });
