@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "June 8th, 2026";
+const WIDGET_VERSION = "July 15th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -102,6 +102,7 @@ const CROPS_TIMES = {
   Pepper: { harvestSeconds: 4 * 60 * 60 },
   Cauliflower: { harvestSeconds: 8 * 60 * 60 },
   Parsnip: { harvestSeconds: 12 * 60 * 60 },
+  Saltwort: { harvestSeconds: 12 * 60 * 60 },
   Eggplant: { harvestSeconds: 16 * 60 * 60 },
   Corn: { harvestSeconds: 20 * 60 * 60 },
   Onion: { harvestSeconds: 20 * 60 * 60 },
@@ -930,7 +931,6 @@ function shouldShowSocialProjectIcon(allItems) {
   }
 }
 
-// ====== POWER DETECTION ======
 function getCurrentPowerSnapshot(allItems) {
   const snapshot = {};
   const now = Date.now();
@@ -1718,6 +1718,7 @@ function getItemEmoji(itemType, category, groupData) {
     Kale: "🥬",
     Artichoke: "🥦",
     Barley: "🌾",
+    Saltwort: " 🌿",
     Tomato: "🍅",
     Apple: "🍎",
     Banana: "🍌",

@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "date": "July 15th, 2026",
+      "changes": [
+        "📋 Chapter Crop Week: July 20th to July 27th, 2026, Saltwort support added"
+      ]
+    },
+    {
       "date": "June 8th, 2026",
       "changes": [
         "📊 New widget: SFL.world prices, P2P market prices with buy/sell signals and 30-day history, powered by sfl.world API",
