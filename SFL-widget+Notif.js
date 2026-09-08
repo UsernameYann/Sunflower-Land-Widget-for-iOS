@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "July 15th, 2026";
+const WIDGET_VERSION = "September 9th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -33,6 +33,7 @@ const SFL_USER_CONFIG = {
     floating_island: __FILTER_FLOATING_ISLAND__,
     lava_pit: __FILTER_LAVA_PIT__,
     crab_trap: __FILTER_CRAB_TRAP__,
+    land_expansion: __FILTER_LAND_EXPANSION__,
     aging_shed: __FILTER_AGING_SHED__,
     salt_farm: __FILTER_SALT_FARM__,
     help_limit: __FILTER_HELP_LIMIT__,
@@ -443,16 +444,24 @@ function calculateAnimalTimes(itemData, currentTime) {
     const lovePeriodDuration = sleepCycleDuration / 3;
 
     const firstLoveAvailableAt = asleepAtMs + lovePeriodDuration;
+    const loveWindowStartAt = Math.max(firstLoveAvailableAt, asleepAtMs);
+    const loveWindowEndAt = awakeAtMs;
 
     if (lovedAtMs) {
       const nextLoveAvailableAt = lovedAtMs + lovePeriodDuration;
       const actualLoveAvailableAt = Math.max(
-        firstLoveAvailableAt,
+        loveWindowStartAt,
         nextLoveAvailableAt,
       );
-      loveTimeRemaining = (actualLoveAvailableAt - currentTime) / SECOND_TO_MS;
+
+      if (actualLoveAvailableAt < loveWindowEndAt) {
+        loveTimeRemaining =
+          (actualLoveAvailableAt - currentTime) / SECOND_TO_MS;
+      }
     } else {
-      loveTimeRemaining = (firstLoveAvailableAt - currentTime) / SECOND_TO_MS;
+      if (firstLoveAvailableAt < loveWindowEndAt) {
+        loveTimeRemaining = (firstLoveAvailableAt - currentTime) / SECOND_TO_MS;
+      }
     }
   }
 
@@ -1357,6 +1366,46 @@ function processItems(allItems, options = {}) {
       continue;
     }
 
+    if (itemData.category === "land_expansion") {
+      const readyAt = itemData.readyAt || null;
+      if (!readyAt) continue;
+
+      const remainingSeconds = Math.round(
+        (readyAt - currentTime) / SECOND_TO_MS,
+      );
+
+      if (!isNotificationMode) {
+        processedItems.push({
+          name: itemData.name || itemData.type,
+          category: itemData.category,
+          readyTime: readyAt,
+          remainingSeconds: remainingSeconds,
+          totalAmount: 1,
+          emoji: getItemEmoji(
+            itemData.name || itemData.type,
+            itemData.category,
+          ),
+          hasReward: false,
+          hasSwarm: false,
+        });
+      } else if (remainingSeconds > 0 && readyAt <= lookaheadLimitMs) {
+        processedItems.push({
+          name: itemData.name || itemData.type,
+          category: itemData.category,
+          readyTime: readyAt,
+          remainingSeconds: remainingSeconds,
+          totalAmount: 1,
+          emoji: getItemEmoji(
+            itemData.name || itemData.type,
+            itemData.category,
+          ),
+          hasReward: false,
+          hasSwarm: false,
+        });
+      }
+      continue;
+    }
+
     if (
       ["aging_rack", "fermentation_rack", "spice_rack"].includes(
         itemData.category,
@@ -1764,6 +1813,7 @@ function getItemEmoji(itemType, category, groupData) {
   if (category === "power") return "⚡";
   if (category === "boosts") return "⛩️";
   if (category === "floating_island") return "🏝️";
+  if (category === "land_expansion") return "🗺️";
   if (category === "update") return "🔄";
   if (itemType === "Desert Dig" || itemType === "Desert Dig:") return "🪏";
 
@@ -1824,6 +1874,41 @@ function checkDailyReset(allItems, itemName, lastCollectedAt) {
   }
 }
 
+function getCollectibleSources(farm) {
+  if (!farm) return [];
+
+  const sources = [
+    { label: "Farm", collectibles: farm.collectibles },
+    { label: "Home", collectibles: farm.home?.collectibles },
+  ];
+
+  const interior = farm.interior;
+  if (interior && typeof interior === "object") {
+    if (interior.ground?.collectibles) {
+      sources.push({
+        label: "Interior Ground",
+        collectibles: interior.ground.collectibles,
+      });
+    }
+
+    for (const [sectionKey, sectionValue] of Object.entries(interior)) {
+      if (sectionKey === "ground" || sectionKey === "expansion") continue;
+
+      const collectibles = sectionValue?.collectibles;
+      if (collectibles && typeof collectibles === "object") {
+        sources.push({
+          label: `Interior ${sectionKey.replace(/_/g, " ")}`,
+          collectibles: collectibles,
+        });
+      }
+    }
+  }
+
+  return sources.filter(
+    (source) => source.collectibles && typeof source.collectibles === "object",
+  );
+}
+
 function parseDailyCollectibles(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.daily) return;
 
@@ -1842,40 +1927,23 @@ function parseDailyCollectibles(apiData, allItems) {
     checkDailyReset(allItems, "Daily Rewards", null);
   }
 
-  let manekiFound = false;
-  if (
-    apiData.farm &&
-    apiData.farm.collectibles &&
-    apiData.farm.collectibles["Maneki Neko"]
-  ) {
-    const manekiArray = apiData.farm.collectibles["Maneki Neko"];
-    if (
-      Array.isArray(manekiArray) &&
-      manekiArray.length > 0 &&
-      manekiArray[0].shakenAt
-    ) {
-      checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
-      manekiFound = true;
+  let manekiLatestShakenAt = null;
+  const collectibleSources = getCollectibleSources(apiData.farm);
+  for (const source of collectibleSources) {
+    const manekiArray = source.collectibles["Maneki Neko"];
+    if (!Array.isArray(manekiArray)) continue;
+
+    for (const maneki of manekiArray) {
+      if (!maneki?.shakenAt) continue;
+      if (!manekiLatestShakenAt || maneki.shakenAt > manekiLatestShakenAt) {
+        manekiLatestShakenAt = maneki.shakenAt;
+      }
     }
   }
-  if (
-    !manekiFound &&
-    apiData.farm &&
-    apiData.farm.home &&
-    apiData.farm.home.collectibles &&
-    apiData.farm.home.collectibles["Maneki Neko"]
-  ) {
-    const manekiArray = apiData.farm.home.collectibles["Maneki Neko"];
-    if (
-      Array.isArray(manekiArray) &&
-      manekiArray.length > 0 &&
-      manekiArray[0].shakenAt
-    ) {
-      checkDailyReset(allItems, "Maneki Neko", manekiArray[0].shakenAt);
-      manekiFound = true;
-    }
-  }
-  if (!manekiFound) {
+
+  if (manekiLatestShakenAt) {
+    checkDailyReset(allItems, "Maneki Neko", manekiLatestShakenAt);
+  } else {
     checkDailyReset(allItems, "Maneki Neko", null);
   }
 
@@ -2035,6 +2103,27 @@ function parseLavaPits(apiData, allItems) {
   }
 }
 
+function parseLandExpansion(apiData, allItems) {
+  if (!SFL_USER_CONFIG.categoryFilters.land_expansion) return;
+
+  const expansion = apiData?.farm?.expansionConstruction;
+  if (!expansion || !expansion.readyAt) return;
+
+  const now = Date.now();
+  const remainingSeconds = Math.round((expansion.readyAt - now) / 1000);
+
+  allItems["Land Expansion"] = {
+    category: "land_expansion",
+    type: "Land Expansion",
+    name: "Land Expansion",
+    createdAt: expansion.createdAt,
+    readyAt: expansion.readyAt,
+    remainingSeconds: remainingSeconds,
+    isReady: remainingSeconds <= 0,
+    amount: 1,
+  };
+}
+
 function parseSaltFarm(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.salt_farm) return;
   if (!apiData.farm?.saltFarm?.nodes) return;
@@ -2089,8 +2178,7 @@ function parseHelpLimit(apiData, allItems) {
 
   const socialFarming = farm.socialFarming || {};
   const villageProjects = socialFarming.villageProjects || {};
-  const collectibles = farm.collectibles || {};
-  const homeCollectibles = farm.home?.collectibles || {};
+  const collectibleSources = getCollectibleSources(farm);
 
   const requiredCheers = {
     "Farmer's Monument": 100,
@@ -2100,10 +2188,13 @@ function parseHelpLimit(apiData, allItems) {
   };
 
   function isPlaced(name) {
-    return (
-      (collectibles[name] || []).some((item) => item.coordinates) ||
-      (homeCollectibles[name] || []).some((item) => item.coordinates)
-    );
+    for (const source of collectibleSources) {
+      const placedItems = source.collectibles[name] || [];
+      if (placedItems.some((item) => item.coordinates)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function isActive(name) {
@@ -2629,10 +2720,7 @@ function parseBoosts(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.boosts) return;
 
   const now = Date.now();
-  const sources = [
-    { label: "Farm", collectibles: apiData.farm?.collectibles },
-    { label: "Home", collectibles: apiData.farm?.home?.collectibles },
-  ];
+  const sources = getCollectibleSources(apiData.farm);
 
   for (const source of sources) {
     if (!source.collectibles) continue;
@@ -3046,6 +3134,7 @@ async function loadFromAPI() {
 
     parseResources(apiData, allItems);
     parseLavaPits(apiData, allItems);
+    parseLandExpansion(apiData, allItems);
     parseSaltFarm(apiData, allItems);
 
     parseCrops(apiData, allItems);
