@@ -1,6 +1,13 @@
 {
   "versions": [
     {
+      "date": "November 16th, 2026",
+      "changes": [
+        "🧩 New filters added: Pig, Cave, and Salt Farm Optimal",
+        "⏱️ Timers updated based on API changes"
+      ]
+    },
+    {
       "date": "September 9th, 2026",
       "changes": [
         "📅 New widget: Faction Weekly (Kitchen, Pet, Minigames)",

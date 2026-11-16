@@ -1,4 +1,4 @@
-const WIDGET_VERSION = "September 9th, 2026";
+const WIDGET_VERSION = "November 16th, 2026";
 
 const SFL_USER_CONFIG = {
   FARM_ID: "__FARM_ID__",
@@ -6,10 +6,6 @@ const SFL_USER_CONFIG = {
   enableNotifications: __ENABLE_NOTIFICATIONS__,
   themeMode: __THEME_MODE__,
   categoryFilters: {
-    animal: __FILTER_ANIMAL__,
-
-    resource: __FILTER_RESOURCE__,
-
     tree: __FILTER_TREE__,
     stone: __FILTER_STONE__,
     iron: __FILTER_IRON__,
@@ -36,12 +32,12 @@ const SFL_USER_CONFIG = {
     land_expansion: __FILTER_LAND_EXPANSION__,
     aging_shed: __FILTER_AGING_SHED__,
     salt_farm: __FILTER_SALT_FARM__,
+    salt_farm_optimal: __FILTER_SALT_FARM_OPTIMAL__,
     help_limit: __FILTER_HELP_LIMIT__,
     daily: __FILTER_DAILY__,
     vip_chest: __FILTER_VIP_CHEST__,
     bud_box: __FILTER_BUD_BOX__,
 
-    pet: __FILTER_PET__,
     pet_caress: __FILTER_PET_CARESS__,
     pet_feed: __FILTER_PET_FEED__,
 
@@ -57,10 +53,19 @@ const SFL_USER_CONFIG = {
     cowLove: __FILTER_COW_LOVE__,
     sheep: __FILTER_SHEEP__,
     sheepLove: __FILTER_SHEEP_LOVE__,
+    pig: __FILTER_PIG__,
+    pigLove: __FILTER_PIG_LOVE__,
+    cave: __FILTER_CAVE__,
   },
 };
 
 globalThis.SFL_USER_CONFIG = globalThis.SFL_USER_CONFIG || SFL_USER_CONFIG;
+
+const ACTIVE_CATEGORY_FILTERS = new Set(
+  Object.entries(SFL_USER_CONFIG.categoryFilters)
+    .filter(([, enabled]) => enabled)
+    .map(([key]) => key),
+);
 
 const SECOND_TO_MS = 1000;
 const MINUTE_TO_MS = 60 * SECOND_TO_MS;
@@ -383,8 +388,12 @@ function loadResources() {
   return data ? safeJSONParse(data, "Resources", {}) : {};
 }
 
+function saveSerializedResources(serializedResources) {
+  return safeKeychain("set", RESOURCES_KEY, serializedResources);
+}
+
 function saveResources(resources) {
-  return safeKeychain("set", RESOURCES_KEY, JSON.stringify(resources));
+  return saveSerializedResources(JSON.stringify(resources));
 }
 
 function timeRemainingSeconds(plantedAt, itemName, itemType = "resource") {
@@ -431,9 +440,24 @@ function timeRemainingSeconds(plantedAt, itemName, itemType = "resource") {
   return timeRemainingMs / 1000;
 }
 
+function timeRemainingFromBaseDuration(itemData, startAt) {
+  const baseDurationMs = itemData?.baseDurationMs;
+  if (typeof baseDurationMs !== "number") return null;
+
+  const startAtMs = normalizeTs(startAt);
+  if (!startAtMs) return null;
+
+  const readyAt = startAtMs + baseDurationMs;
+  return (readyAt - Date.now()) / 1000;
+}
+
 function calculateAnimalTimes(itemData, currentTime) {
-  const awakeAtMs = normalizeTs(itemData.awakeAt);
   const asleepAtMs = normalizeTs(itemData.asleepAt);
+  const computedAwakeAt =
+    typeof itemData.baseDurationMs === "number" && asleepAtMs
+      ? asleepAtMs + itemData.baseDurationMs
+      : itemData.awakeAt;
+  const awakeAtMs = normalizeTs(computedAwakeAt);
   const lovedAtMs = normalizeTs(itemData.lovedAt);
 
   const wakeTimeRemaining = (awakeAtMs - currentTime) / SECOND_TO_MS;
@@ -634,29 +658,89 @@ function groupByReadyTimeWindow(
   upcomingItems,
   toleranceMinutes = GROUPING_TOLERANCE_MINUTES,
 ) {
-  upcomingItems.sort((a, b) => a.readyTime - b.readyTime);
-  const tolerance = toleranceMinutes * MINUTE_TO_MS;
+  if (!Array.isArray(upcomingItems) || upcomingItems.length === 0) {
+    return [];
+  }
 
+  const sortedItems = [...upcomingItems].sort(
+    (a, b) => a.readyTime - b.readyTime,
+  );
+  const tolerance = toleranceMinutes * MINUTE_TO_MS;
   const groups = [];
-  for (let item of upcomingItems) {
-    let foundGroup = false;
-    for (let group of groups) {
-      if (Math.abs(item.readyTime - group.referenceTime) <= tolerance) {
-        group.items.push(item);
-        foundGroup = true;
-        break;
-      }
-    }
-    if (!foundGroup) {
+
+  for (const item of sortedItems) {
+    const lastGroup = groups[groups.length - 1];
+    if (
+      lastGroup &&
+      Math.abs(item.readyTime - lastGroup.referenceTime) <= tolerance
+    ) {
+      lastGroup.items.push(item);
+    } else {
       groups.push({ referenceTime: item.readyTime, items: [item] });
     }
   }
+
   return groups;
 }
 
-function getTimeRemaining(itemData) {
-  const currentTime = Date.now();
+const BASE_DURATION_CATEGORIES = [
+  "resource",
+  "crop",
+  "fruit",
+  "flower",
+  "greenhouse",
+];
+const READY_AT_CATEGORIES = [
+  "crafting",
+  "cooking",
+  "composter",
+  "crop_machine",
+  "crab_trap",
+  "cave",
+  "salt_farm_optimal",
+];
 
+function getRemainingFromReadyAt(readyAt, currentTime) {
+  const readyAtMs = normalizeTs(readyAt);
+  return (readyAtMs - currentTime) / 1000;
+}
+
+function getPetFeedRemainingSeconds(itemData, currentTime = Date.now()) {
+  const fedAtMs = normalizeTs(itemData.fedAt);
+  if (!fedAtMs) return -1000;
+
+  const todayStartMs = getTodayStart();
+  if (fedAtMs >= todayStartMs) {
+    const tomorrowStartMs = todayStartMs + SECONDS_PER_DAY * SECOND_TO_MS;
+    return (tomorrowStartMs - currentTime) / 1000;
+  }
+
+  const readySinceMs = currentTime - todayStartMs;
+  return -(readySinceMs / 1000);
+}
+
+function getVipChestRemainingSeconds(itemData, currentTime = Date.now()) {
+  const availableAtMs = normalizeTs(itemData.availableAt) || 0;
+  const availableUntilMs =
+    normalizeTs(itemData.availableUntil) || availableAtMs + 24 * 60 * 60 * 1000;
+  const openedAtMs = normalizeTs(itemData.openedAt) || 0;
+  const nextResetAtMs = normalizeTs(itemData.nextResetAt) || 0;
+
+  if (currentTime >= availableAtMs && currentTime < availableUntilMs) {
+    if (openedAtMs && openedAtMs >= availableAtMs) {
+      return (nextResetAtMs - currentTime) / 1000;
+    }
+    return -1000;
+  }
+
+  if (currentTime < availableAtMs) {
+    return (availableAtMs - currentTime) / 1000;
+  }
+
+  return (nextResetAtMs - currentTime) / 1000;
+}
+
+function getTimeRemaining(itemData, currentTime = Date.now()) {
   if (itemData.category === "daily" || itemData.category === "bud_box") {
     if (!itemData.isCollected) {
       return -(currentTime - getTodayStart()) / 1000;
@@ -677,19 +761,7 @@ function getTimeRemaining(itemData) {
   }
 
   if (itemData.category === "pet" && itemData.action === "feed") {
-    const fedAtMs = normalizeTs(itemData.fedAt);
-    if (!fedAtMs) return -1000;
-
-    const fedDate = new Date(fedAtMs);
-    const todayStartMs = getTodayStart();
-
-    if (fedDate.getTime() >= todayStartMs) {
-      const tomorrowStartMs = todayStartMs + SECONDS_PER_DAY * SECOND_TO_MS;
-      return (tomorrowStartMs - currentTime) / 1000;
-    }
-
-    const readySinceMs = currentTime - todayStartMs;
-    return -(readySinceMs / 1000);
+    return getPetFeedRemainingSeconds(itemData, currentTime);
   }
 
   if (itemData.category === "animal" && itemData.awakeAt && itemData.asleepAt) {
@@ -697,53 +769,48 @@ function getTimeRemaining(itemData) {
   }
 
   if (itemData.category === "power" && itemData.nextAvailableAt) {
-    const nextAvailableAtMs = normalizeTs(itemData.nextAvailableAt);
-    return (nextAvailableAtMs - currentTime) / 1000;
+    return getRemainingFromReadyAt(itemData.nextAvailableAt, currentTime);
   }
 
   if (itemData.category === "boosts" && itemData.readyAt) {
-    const readyAtMs = normalizeTs(itemData.readyAt);
-    return (readyAtMs - currentTime) / 1000;
+    return getRemainingFromReadyAt(itemData.readyAt, currentTime);
   }
 
   if (itemData.category === "vip_chest") {
-    const nowMs = Date.now();
-    const availableAtMs = normalizeTs(itemData.availableAt) || 0;
-    const availableUntilMs =
-      normalizeTs(itemData.availableUntil) ||
-      availableAtMs + 24 * 60 * 60 * 1000;
-    const openedAtMs = normalizeTs(itemData.openedAt) || 0;
-    const nextResetAtMs = normalizeTs(itemData.nextResetAt) || 0;
-
-    if (nowMs >= availableAtMs && nowMs < availableUntilMs) {
-      if (openedAtMs && openedAtMs >= availableAtMs) {
-        return (nextResetAtMs - nowMs) / 1000;
-      }
-      return -1000;
-    }
-
-    if (nowMs < availableAtMs) {
-      return (availableAtMs - nowMs) / 1000;
-    }
-
-    return (nextResetAtMs - nowMs) / 1000;
+    return getVipChestRemainingSeconds(itemData, currentTime);
   }
 
   if (itemData.category === "beehive") {
     if (!itemData.readyAt) {
       return null;
     }
-    const readyAtMs = normalizeTs(itemData.readyAt);
-    return (readyAtMs - currentTime) / 1000;
+    return getRemainingFromReadyAt(itemData.readyAt, currentTime);
   }
 
-  if (
-    ["crafting", "cooking", "composter", "crop_machine", "crab_trap"].includes(
-      itemData.category,
-    ) &&
-    itemData.readyAt
-  ) {
-    return (normalizeTs(itemData.readyAt) - currentTime) / 1000;
+  if (BASE_DURATION_CATEGORIES.includes(itemData.category)) {
+    if (itemData.readyAt) {
+      return getRemainingFromReadyAt(itemData.readyAt, currentTime);
+    }
+
+    const categoryStartKey = {
+      resource: itemData.plantedAt || itemData.choppedAt || itemData.drilledAt,
+      crop: itemData.plantedAt,
+      fruit: itemData.plantedAt,
+      flower: itemData.plantedAt,
+      greenhouse: itemData.plantedAt,
+    };
+
+    const remainingFromBaseDuration = timeRemainingFromBaseDuration(
+      itemData,
+      categoryStartKey[itemData.category],
+    );
+    if (remainingFromBaseDuration !== null) {
+      return remainingFromBaseDuration;
+    }
+  }
+
+  if (READY_AT_CATEGORIES.includes(itemData.category) && itemData.readyAt) {
+    return getRemainingFromReadyAt(itemData.readyAt, currentTime);
   }
 
   if (
@@ -831,7 +898,7 @@ function formatTime(timeRemainingSeconds, widgetFamily = "medium") {
 async function checkForUpdates() {
   try {
     const CACHE_KEY_UPDATES = "update_check_cache";
-    const CACHE_DURATION_MS = 6 * 60 * 60 * 1000;
+    const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
     const cachedResult = safeKeychain("get", CACHE_KEY_UPDATES);
     if (cachedResult) {
@@ -848,7 +915,7 @@ async function checkForUpdates() {
           } catch (e) {}
         } else {
           const cacheAge = Date.now() - cacheData.timestamp;
-          if (cacheAge < CACHE_DURATION_MS) {
+          if (cacheAge < UPDATE_CHECK_INTERVAL_MS) {
             return cacheData.result;
           }
         }
@@ -1232,7 +1299,9 @@ function processItems(allItems, options = {}) {
   const lookaheadLimitMs = currentTime + lookaheadHours * HOUR_TO_MS;
   const categoryFilters = SFL_USER_CONFIG.categoryFilters;
 
-  for (const [itemName, itemData] of Object.entries(allItems)) {
+  for (const itemName in allItems) {
+    if (!Object.prototype.hasOwnProperty.call(allItems, itemName)) continue;
+    const itemData = allItems[itemName];
     if (itemName.startsWith("__")) continue;
     if (!itemData || (!itemData.name && !itemData.type && !itemData.category))
       continue;
@@ -1259,7 +1328,7 @@ function processItems(allItems, options = {}) {
     }
 
     if (itemData.category === "help_limit") {
-      const remainingSeconds = getTimeRemaining(itemData);
+      const remainingSeconds = getTimeRemaining(itemData, currentTime);
       if (remainingSeconds === null) continue;
 
       const readyTime = currentTime + remainingSeconds * SECOND_TO_MS;
@@ -1293,18 +1362,20 @@ function processItems(allItems, options = {}) {
       ? "aging_shed"
       : itemData.category;
 
-    if (!categoryFilters[categoryFilterKey]) {
+    const isPetActionEnabled =
+      itemData.category === "pet" &&
+      ((itemData.action === "caress" && categoryFilters.pet_caress) ||
+        (itemData.action === "feed" && categoryFilters.pet_feed));
+    const isCategoryEnabled =
+      ACTIVE_CATEGORY_FILTERS.has(categoryFilterKey) || isPetActionEnabled;
+    if (!isCategoryEnabled) {
       if (itemData.category === "animal") {
         const typeLower = itemData.type.toLowerCase();
-        if (
-          !categoryFilters.animal &&
-          !categoryFilters[typeLower] &&
-          !categoryFilters[typeLower + "Love"]
-        )
+        if (!categoryFilters[typeLower] && !categoryFilters[typeLower + "Love"])
           continue;
       } else if (itemData.category === "resource") {
         const nameLower = (itemData.name || itemData.type).toLowerCase();
-        if (!categoryFilters.resource && !categoryFilters[nameLower]) continue;
+        if (!categoryFilters[nameLower]) continue;
       } else {
         continue;
       }
@@ -1514,7 +1585,7 @@ function processItems(allItems, options = {}) {
       continue;
     }
 
-    const timeResult = getTimeRemaining(itemData);
+    const timeResult = getTimeRemaining(itemData, currentTime);
 
     if (timeResult === null) {
       continue;
@@ -1522,9 +1593,8 @@ function processItems(allItems, options = {}) {
 
     if (timeResult.isAnimal) {
       const typeLower = itemData.type.toLowerCase();
-      const wakeFilter = categoryFilters.animal || categoryFilters[typeLower];
-      const loveFilter =
-        categoryFilters.animal || categoryFilters[typeLower + "Love"];
+      const wakeFilter = categoryFilters[typeLower];
+      const loveFilter = categoryFilters[typeLower + "Love"];
 
       const wakeRemaining = timeResult.wakeTime;
       const wakeReadyTime = currentTime + wakeRemaining * SECOND_TO_MS;
@@ -1694,11 +1764,12 @@ function processItems(allItems, options = {}) {
     const remainingSeconds = timeResult;
     const readyTime = currentTime + remainingSeconds * SECOND_TO_MS;
 
-    const amountCount = ["crab_trap", "cooking", "crafting"].includes(
-      itemData.category,
-    )
-      ? itemData.amount || 1
-      : 1;
+    const amountCount =
+      typeof itemData.count === "number"
+        ? itemData.count
+        : ["crab_trap", "cooking", "crafting"].includes(itemData.category)
+          ? itemData.amount || 1
+          : 1;
 
     if (isNotificationMode) {
       if (remainingSeconds > 0 && readyTime <= lookaheadLimitMs) {
@@ -1780,6 +1851,7 @@ function getItemEmoji(itemType, category, groupData) {
     Chicken: "🐔",
     Cow: "🐄",
     Sheep: "🐑",
+    Pig: "🐷",
     Rice: "🌾",
     Olive: "🫒",
     Grape: "🍇",
@@ -1807,6 +1879,7 @@ function getItemEmoji(itemType, category, groupData) {
   if (category === "fermentation_rack") return "🥒";
   if (category === "spice_rack") return "🥫";
   if (category === "salt_farm") return "🧂";
+  if (category === "salt_farm_optimal") return "🧂";
   if (category === "help_limit") return "🤝";
   if (category === "bud_box") return "👽";
   if (category === "crop_machine") return emojis[itemType] || "🚜";
@@ -1816,6 +1889,7 @@ function getItemEmoji(itemType, category, groupData) {
   if (category === "land_expansion") return "🗺️";
   if (category === "update") return "🔄";
   if (itemType === "Desert Dig" || itemType === "Desert Dig:") return "🪏";
+  if (category === "cave") return "⛰️";
 
   return emojis[itemType] || "🌱";
 }
@@ -1872,6 +1946,511 @@ function checkDailyReset(allItems, itemName, lastCollectedAt) {
       amount: 0,
     };
   }
+}
+
+function extractSpeedRateTiming(rawStartAt, rawBaseDurationMs) {
+  const startAt = normalizeTs(rawStartAt);
+  const baseDurationMs =
+    typeof rawBaseDurationMs === "number" ? rawBaseDurationMs : null;
+  const readyAt =
+    startAt && baseDurationMs !== null ? startAt + baseDurationMs : null;
+  return { startAt, baseDurationMs, readyAt };
+}
+
+const BOOST_WINDOW_CACHE = new WeakMap();
+
+function pushWindowInterval(target, from, to) {
+  const fromMs = normalizeTs(from);
+  const toMs = normalizeTs(to);
+  if (!fromMs || !toMs || toMs <= fromMs) return;
+  target.push({ from: fromMs, to: toMs });
+}
+
+function mergeIntervals(intervals) {
+  if (!Array.isArray(intervals) || intervals.length === 0) return [];
+
+  const sorted = intervals
+    .filter(
+      (interval) =>
+        interval?.from && interval?.to && interval.to > interval.from,
+    )
+    .sort((a, b) => a.from - b.from);
+
+  if (sorted.length === 0) return [];
+
+  const merged = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    const current = sorted[i];
+    const previous = merged[merged.length - 1];
+    if (current.from <= previous.to) {
+      previous.to = Math.max(previous.to, current.to);
+    } else {
+      merged.push({ from: current.from, to: current.to });
+    }
+  }
+
+  return merged;
+}
+
+function buildBoostWindowContext(apiData) {
+  const farm = apiData?.farm;
+  const byName = {};
+
+  function addInterval(name, from, to) {
+    if (!name) return;
+    if (!byName[name]) byName[name] = [];
+    pushWindowInterval(byName[name], from, to);
+  }
+
+  const boostHistory = farm?.boostHistory || {};
+  for (const [boostName, windows] of Object.entries(boostHistory)) {
+    if (!Array.isArray(windows)) continue;
+    for (const window of windows) {
+      addInterval(boostName, window?.from, window?.to);
+    }
+  }
+
+  const buffs = farm?.buffs || {};
+  for (const [buffName, buffData] of Object.entries(buffs)) {
+    const startedAt = normalizeTs(buffData?.startedAt);
+    const durationMs =
+      typeof buffData?.durationMS === "number" ? buffData.durationMS : null;
+    if (!startedAt || durationMs === null || durationMs <= 0) continue;
+    addInterval(buffName, startedAt, startedAt + durationMs);
+  }
+
+  const collectibleSources = getCollectibleSources(farm);
+  const expiryMap =
+    typeof EXPIRY_COOLDOWNS === "object" && EXPIRY_COOLDOWNS
+      ? EXPIRY_COOLDOWNS
+      : {};
+  for (const source of collectibleSources) {
+    for (const [collectibleName, placedList] of Object.entries(
+      source.collectibles || {},
+    )) {
+      const cooldownMs = expiryMap[collectibleName];
+      if (!cooldownMs || !Array.isArray(placedList)) continue;
+      for (const placed of placedList) {
+        const createdAt = normalizeTs(placed?.createdAt);
+        if (!createdAt) continue;
+        addInterval(collectibleName, createdAt, createdAt + cooldownMs);
+      }
+    }
+  }
+
+  return { byName };
+}
+
+function getBoostWindowContext(apiData) {
+  if (!apiData || typeof apiData !== "object") return { byName: {} };
+  if (BOOST_WINDOW_CACHE.has(apiData)) return BOOST_WINDOW_CACHE.get(apiData);
+  const context = buildBoostWindowContext(apiData);
+  BOOST_WINDOW_CACHE.set(apiData, context);
+  return context;
+}
+
+function getNamedBoostWindows(windowContext, boostName, speed) {
+  if (
+    !windowContext?.byName?.[boostName] ||
+    typeof speed !== "number" ||
+    speed <= 0
+  )
+    return [];
+  return windowContext.byName[boostName].map((interval) => ({
+    from: interval.from,
+    to: interval.to,
+    speed: speed,
+  }));
+}
+
+function getMergedNamedBoostWindows(windowContext, boostNames, speed) {
+  if (!Array.isArray(boostNames) || typeof speed !== "number" || speed <= 0)
+    return [];
+  const allIntervals = [];
+  for (const boostName of boostNames) {
+    const intervals = windowContext?.byName?.[boostName] || [];
+    for (const interval of intervals) {
+      allIntervals.push({ from: interval.from, to: interval.to });
+    }
+  }
+
+  return mergeIntervals(allIntervals).map((interval) => ({
+    from: interval.from,
+    to: interval.to,
+    speed: speed,
+  }));
+}
+
+function getOpenEndedFertiliserWindow(fertiliser, namesToSpeedMap) {
+  const name = fertiliser?.name;
+  const speed = namesToSpeedMap?.[name];
+  const fertilisedAt = normalizeTs(fertiliser?.fertilisedAt);
+  if (!name || !speed || !fertilisedAt) return [];
+
+  return [
+    {
+      from: fertilisedAt,
+      to: Number.MAX_SAFE_INTEGER,
+      speed: speed,
+    },
+  ];
+}
+
+function buildWindowSegments(startAt, windows) {
+  const effectiveWindows = (windows || [])
+    .filter((window) => {
+      if (!window) return false;
+      if (typeof window.speed !== "number" || window.speed <= 0) return false;
+      if (!window.from || !window.to || window.to <= window.from) return false;
+      return window.to > startAt;
+    })
+    .map((window) => ({
+      from: Math.max(window.from, startAt),
+      to: window.to,
+      speed: window.speed,
+    }));
+
+  if (effectiveWindows.length === 0) return [];
+
+  const boundaries = new Set([startAt]);
+  for (const window of effectiveWindows) {
+    boundaries.add(window.from);
+    boundaries.add(window.to);
+  }
+
+  const orderedBoundaries = Array.from(boundaries).sort((a, b) => a - b);
+  const segments = [];
+  for (let i = 0; i < orderedBoundaries.length - 1; i++) {
+    const from = orderedBoundaries[i];
+    const to = orderedBoundaries[i + 1];
+    if (to <= from) continue;
+
+    let speed = 1;
+    for (const window of effectiveWindows) {
+      if (window.from <= from && from < window.to) {
+        speed *= window.speed;
+      }
+    }
+    segments.push({ from, to, speed });
+  }
+
+  return segments;
+}
+
+function computeReadyAtWithWindows(startAt, baseDurationMs, windows) {
+  if (!startAt || typeof baseDurationMs !== "number") return null;
+  if (baseDurationMs <= 0) return startAt;
+
+  const segments = buildWindowSegments(startAt, windows);
+  if (segments.length === 0) {
+    return startAt + baseDurationMs;
+  }
+
+  let accumulatedWork = 0;
+  for (const segment of segments) {
+    const segmentWork = (segment.to - segment.from) * segment.speed;
+    if (accumulatedWork + segmentWork >= baseDurationMs) {
+      return segment.from + (baseDurationMs - accumulatedWork) / segment.speed;
+    }
+    accumulatedWork += segmentWork;
+  }
+
+  const tailStart = segments[segments.length - 1].to;
+  return tailStart + (baseDurationMs - accumulatedWork);
+}
+
+function getCropBoostWindows(windowContext) {
+  return [
+    ...getMergedNamedBoostWindows(
+      windowContext,
+      ["Super Totem", "Time Warp Totem"],
+      2,
+    ),
+    ...getNamedBoostWindows(windowContext, "Sparrow Shrine", 1.35),
+    ...getNamedBoostWindows(windowContext, "Harvest Hourglass", 1.35),
+    ...getNamedBoostWindows(windowContext, "Power hour", 2),
+    ...getNamedBoostWindows(windowContext, "Sunshower", 2),
+  ];
+}
+
+function getFruitBoostWindows(windowContext) {
+  return [
+    ...getMergedNamedBoostWindows(
+      windowContext,
+      ["Super Totem", "Time Warp Totem"],
+      2,
+    ),
+    ...getNamedBoostWindows(windowContext, "Orchard Hourglass", 1.35),
+    ...getNamedBoostWindows(windowContext, "Toucan Shrine", 1.35),
+  ];
+}
+
+function getFlowerBoostWindows(windowContext) {
+  return [
+    ...getNamedBoostWindows(windowContext, "Blossom Hourglass", 1.35),
+    ...getNamedBoostWindows(windowContext, "Moth Shrine", 1.35),
+  ];
+}
+
+function getGreenhouseBoostWindows(windowContext, plantName) {
+  const shared = [
+    ...getMergedNamedBoostWindows(
+      windowContext,
+      ["Super Totem", "Time Warp Totem"],
+      2,
+    ),
+    ...getNamedBoostWindows(windowContext, "Tortoise Shrine", 1.35),
+  ];
+
+  if (plantName === "Rice" || plantName === "Olive") {
+    return [
+      ...shared,
+      ...getNamedBoostWindows(windowContext, "Harvest Hourglass", 1.35),
+    ];
+  }
+
+  if (plantName === "Grape") {
+    return [
+      ...shared,
+      ...getNamedBoostWindows(windowContext, "Orchard Hourglass", 1.35),
+    ];
+  }
+
+  return shared;
+}
+
+function getTreeBoostWindows(windowContext) {
+  return [
+    ...getMergedNamedBoostWindows(
+      windowContext,
+      ["Super Totem", "Time Warp Totem"],
+      2,
+    ),
+    ...getNamedBoostWindows(windowContext, "Timber Hourglass", 1.35),
+    ...getNamedBoostWindows(windowContext, "Badger Shrine", 1.35),
+  ];
+}
+
+function getMineBoostWindows(windowContext, mineType) {
+  if (mineType === "stone") {
+    return [
+      ...getMergedNamedBoostWindows(
+        windowContext,
+        ["Super Totem", "Time Warp Totem"],
+        2,
+      ),
+      ...getNamedBoostWindows(windowContext, "Ore Hourglass", 2),
+      ...getNamedBoostWindows(windowContext, "Badger Shrine", 1.35),
+    ];
+  }
+
+  if (mineType === "iron" || mineType === "gold") {
+    return [
+      ...getMergedNamedBoostWindows(
+        windowContext,
+        ["Super Totem", "Time Warp Totem"],
+        2,
+      ),
+      ...getNamedBoostWindows(windowContext, "Ore Hourglass", 2),
+      ...getNamedBoostWindows(windowContext, "Mole Shrine", 1.35),
+    ];
+  }
+
+  if (mineType === "crimstone") {
+    return getNamedBoostWindows(windowContext, "Mole Shrine", 1.35);
+  }
+
+  return [];
+}
+
+function getOilBoostWindows(windowContext) {
+  return getNamedBoostWindows(windowContext, "Stag Shrine", 1.35);
+}
+
+function getAnimalBoostWindows(windowContext, animalType) {
+  if (animalType === "Chicken") {
+    return getNamedBoostWindows(windowContext, "Bantam Shrine", 1.35);
+  }
+
+  if (animalType === "Cow" || animalType === "Sheep") {
+    return getNamedBoostWindows(windowContext, "Collie Shrine", 1.35);
+  }
+
+  return [];
+}
+
+function getResourceBoostWindows(windowContext, resourceBoostType) {
+  if (resourceBoostType === "tree") return getTreeBoostWindows(windowContext);
+  if (resourceBoostType === "stone")
+    return getMineBoostWindows(windowContext, "stone");
+  if (resourceBoostType === "iron")
+    return getMineBoostWindows(windowContext, "iron");
+  if (resourceBoostType === "gold")
+    return getMineBoostWindows(windowContext, "gold");
+  if (resourceBoostType === "crimstone")
+    return getMineBoostWindows(windowContext, "crimstone");
+  if (resourceBoostType === "oil") return getOilBoostWindows(windowContext);
+  return [];
+}
+
+function getFruitReadyAtFromPatch(fruit, patchInfo, startedAt, windowContext) {
+  const { startAt, baseDurationMs } = extractSpeedRateTiming(
+    startedAt,
+    fruit?.baseDurationMs,
+  );
+  if (!startAt || baseDurationMs === null) return null;
+
+  const windows = [
+    ...getFruitBoostWindows(windowContext),
+    ...getOpenEndedFertiliserWindow(
+      patchInfo?.fertiliser || fruit?.fertiliser,
+      { "Turbofruit Mix": 1.25 },
+    ),
+  ];
+
+  return computeReadyAtWithWindows(startAt, baseDurationMs, windows);
+}
+
+function getCropReadyAtFromPlot(crop, cropInfo, windowContext) {
+  const { startAt, baseDurationMs } = extractSpeedRateTiming(
+    crop?.plantedAt,
+    crop?.baseDurationMs,
+  );
+  if (!startAt || baseDurationMs === null) return null;
+
+  const windows = [
+    ...getCropBoostWindows(windowContext),
+    ...getOpenEndedFertiliserWindow(cropInfo?.fertiliser || crop?.fertiliser, {
+      "Rapid Root": 2,
+      "Sproutroot Surprise": 2,
+    }),
+  ];
+
+  return computeReadyAtWithWindows(startAt, baseDurationMs, windows);
+}
+
+function getFlowerReadyAtFromBed(flower, windowContext) {
+  const { startAt, baseDurationMs } = extractSpeedRateTiming(
+    flower?.plantedAt,
+    flower?.baseDurationMs,
+  );
+  if (!startAt || baseDurationMs === null) return null;
+
+  return computeReadyAtWithWindows(
+    startAt,
+    baseDurationMs,
+    getFlowerBoostWindows(windowContext),
+  );
+}
+
+function getGreenhouseReadyAtFromPot(plant, potInfo, windowContext) {
+  const { startAt, baseDurationMs } = extractSpeedRateTiming(
+    plant?.plantedAt,
+    plant?.baseDurationMs,
+  );
+  if (!startAt || baseDurationMs === null) return null;
+
+  const windows = [
+    ...getGreenhouseBoostWindows(windowContext, plant?.name),
+    ...getOpenEndedFertiliserWindow(potInfo?.fertiliser || plant?.fertiliser, {
+      "Greenhouse Glow": 1.25,
+    }),
+  ];
+
+  return computeReadyAtWithWindows(startAt, baseDurationMs, windows);
+}
+
+function getResourceReadyAtWithWindows(
+  resourceData,
+  resourceBoostType,
+  windowContext,
+) {
+  const { startAt, baseDurationMs } = extractSpeedRateTiming(
+    resourceData?.timestamp,
+    resourceData?.baseDurationMs,
+  );
+  if (!startAt || baseDurationMs === null) return null;
+
+  return computeReadyAtWithWindows(
+    startAt,
+    baseDurationMs,
+    getResourceBoostWindows(windowContext, resourceBoostType),
+  );
+}
+
+function getAnimalReadyAtWithWindows(animalInfo, windowContext) {
+  const { startAt, baseDurationMs } = extractSpeedRateTiming(
+    animalInfo?.asleepAt,
+    animalInfo?.baseDurationMs,
+  );
+  if (!startAt || baseDurationMs === null)
+    return normalizeTs(animalInfo?.awakeAt);
+
+  return computeReadyAtWithWindows(
+    startAt,
+    baseDurationMs,
+    getAnimalBoostWindows(windowContext, animalInfo?.type),
+  );
+}
+
+function addTimedFarmItem(
+  allItems,
+  {
+    key,
+    plantedAt,
+    baseDurationSource,
+    readyAtOverride = null,
+    type,
+    name,
+    category,
+    amount,
+    hasReward,
+    fertiliser = undefined,
+  },
+) {
+  const { baseDurationMs, readyAt } = extractSpeedRateTiming(
+    plantedAt,
+    baseDurationSource,
+  );
+
+  const item = {
+    plantedAt: plantedAt,
+    readyAt: readyAtOverride ?? readyAt,
+    baseDurationMs: baseDurationMs,
+    type: type,
+    name: name,
+    category: category,
+    amount: parseFloat(amount) || 0,
+  };
+
+  if (hasReward !== undefined) {
+    item.hasReward = !!hasReward;
+  }
+  if (fertiliser !== undefined) {
+    item.fertiliser = fertiliser;
+  }
+
+  allItems[key] = item;
+}
+
+function upsertTimedCountItem(
+  allItems,
+  key,
+  { readyAt, type, name, category, amountIncrement },
+) {
+  if (allItems[key]) {
+    allItems[key].amount += amountIncrement;
+    allItems[key].readyAt = readyAt;
+    return;
+  }
+
+  allItems[key] = {
+    readyAt: readyAt,
+    type: type,
+    name: name,
+    category: category,
+    amount: amountIncrement,
+  };
 }
 
 function getCollectibleSources(farm) {
@@ -2014,40 +2593,64 @@ function parseResources(apiData, allItems) {
       key: "wood",
       timestamp: "choppedAt",
       filter: "tree",
+      boostType: "tree",
     },
     stones: {
       name: "Stone",
       key: "stone",
       timestamp: "minedAt",
       filter: "stone",
+      boostType: "stone",
     },
-    iron: { name: "Iron", key: "stone", timestamp: "minedAt", filter: "iron" },
-    gold: { name: "Gold", key: "stone", timestamp: "minedAt", filter: "gold" },
+    iron: {
+      name: "Iron",
+      key: "stone",
+      timestamp: "minedAt",
+      filter: "iron",
+      boostType: "iron",
+    },
+    gold: {
+      name: "Gold",
+      key: "stone",
+      timestamp: "minedAt",
+      filter: "gold",
+      boostType: "gold",
+    },
     crimstones: {
       name: "Crimstone",
       key: "stone",
       timestamp: "minedAt",
       filter: "crimstone",
+      boostType: "crimstone",
     },
     sunstones: {
       name: "Sunstone",
       key: "stone",
       timestamp: "minedAt",
       filter: "sunstone",
+      boostType: "sunstone",
     },
     oilReserves: {
       name: "Oil",
       key: "oil",
       timestamp: "drilledAt",
       filter: "oil",
+      boostType: "oil",
     },
   };
 
+  const categoryFilters = SFL_USER_CONFIG.categoryFilters;
+  if (
+    !Object.values(resourceTypes).some(
+      (resource) => categoryFilters[resource.filter],
+    )
+  )
+    return;
+
+  const windowContext = getBoostWindowContext(apiData);
+
   for (let [resourceType, config] of Object.entries(resourceTypes)) {
-    const showResource =
-      SFL_USER_CONFIG.categoryFilters.resource ||
-      SFL_USER_CONFIG.categoryFilters[config.filter];
-    if (!showResource) continue;
+    if (!categoryFilters[config.filter]) continue;
 
     if (apiData.farm && apiData.farm[resourceType]) {
       for (let [resourceId, resourceInfo] of Object.entries(
@@ -2058,15 +2661,31 @@ function parseResources(apiData, allItems) {
         let resource = resourceInfo[config.key];
         if (!resource[config.timestamp]) continue;
 
-        let resourceName = `${config.name} ${resourceId}`;
-        allItems[resourceName] = {
+        const { baseDurationMs, readyAt } = extractSpeedRateTiming(
+          resource[config.timestamp],
+          resource.baseDurationMs,
+        );
+        const speedRateReadyAt = getResourceReadyAtWithWindows(
+          {
+            timestamp: resource[config.timestamp],
+            baseDurationMs: resource.baseDurationMs,
+          },
+          config.boostType,
+          windowContext,
+        );
+
+        const resourceName = `${config.name} ${resourceId}`;
+        addTimedFarmItem(allItems, {
+          key: resourceName,
           plantedAt: resource[config.timestamp],
+          baseDurationSource: resource.baseDurationMs,
+          readyAtOverride: speedRateReadyAt ?? readyAt,
           type: config.name,
           name: config.name,
           category: "resource",
-          amount: resource.amount || 0,
-          hasReward: resource.reward ? true : false,
-        };
+          amount: resource.amount,
+          hasReward: resource.reward,
+        });
       }
     }
   }
@@ -2080,6 +2699,7 @@ function parseLavaPits(apiData, allItems) {
         continue;
       }
 
+      // Use readyAt directly (server-computed, includes all boost adjustments).
       const readyAt = pitInfo.readyAt || null;
       if (!readyAt) {
         continue;
@@ -2122,6 +2742,24 @@ function parseLandExpansion(apiData, allItems) {
     isReady: remainingSeconds <= 0,
     amount: 1,
   };
+}
+
+function parseCave(apiData, allItems) {
+  if (!SFL_USER_CONFIG.categoryFilters.cave) return;
+  if (!apiData.farm?.cave) return;
+
+  const machines = apiData.farm.cave.machines || {};
+  for (const [slotId, machine] of Object.entries(machines)) {
+    if (!machine?.batch?.readyAt) continue;
+
+    allItems[`Cave Batch ${slotId}`] = {
+      readyAt: machine.batch.readyAt,
+      type: "Cave",
+      name: "Cave",
+      category: "cave",
+      amount: 0,
+    };
+  }
 }
 
 function parseSaltFarm(apiData, allItems) {
@@ -2168,6 +2806,49 @@ function parseSaltFarm(apiData, allItems) {
       amount: storedCharges,
     };
   }
+}
+
+function parseSaltFarmOptimal(apiData, allItems) {
+  if (!SFL_USER_CONFIG.categoryFilters.salt_farm_optimal) return;
+  if (!apiData.farm?.saltFarm?.nodes) return;
+
+  const now = Date.now();
+  const sculptureLevel =
+    apiData.farm?.sculptures?.["Salt Sculpture"]?.level ?? 0;
+  const maxCharges = sculptureLevel >= 6 ? 5 : sculptureLevel >= 3 ? 4 : 3;
+  const nodeCount = Object.values(apiData.farm.saltFarm.nodes || {}).filter(
+    (node) => node?.salt,
+  ).length;
+  if (nodeCount <= 0) return;
+
+  const firstNode = Object.values(apiData.farm.saltFarm.nodes || {}).find(
+    (node) => node?.salt,
+  );
+  if (!firstNode?.salt) return;
+
+  const claimedAt = normalizeTs(firstNode.salt.claimedAt);
+  const nextChargeAt = normalizeTs(firstNode.salt.nextChargeAt);
+  const intervalMs =
+    claimedAt && nextChargeAt && nextChargeAt > claimedAt
+      ? nextChargeAt - claimedAt
+      : 7 * 60 * 60 * 1000;
+
+  const optimalHarvestTimestamp = claimedAt
+    ? claimedAt + maxCharges * intervalMs
+    : now + maxCharges * intervalMs;
+  const remainingSeconds = Math.round((optimalHarvestTimestamp - now) / 1000);
+  const canCollect = now >= optimalHarvestTimestamp;
+
+  allItems["Salt Farm Optimal"] = {
+    category: "salt_farm_optimal",
+    type: "Salt Farm",
+    name: "Salt Farm",
+    readyAt: optimalHarvestTimestamp,
+    remainingSeconds: remainingSeconds,
+    canCollect: canCollect,
+    count: nodeCount,
+    amount: maxCharges,
+  };
 }
 
 function parseHelpLimit(apiData, allItems) {
@@ -2252,18 +2933,28 @@ function parseHelpLimit(apiData, allItems) {
 
 function parseCrops(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.crop) return;
+  const windowContext = getBoostWindowContext(apiData);
   if (apiData.farm && apiData.farm.crops) {
     for (let [cropId, cropInfo] of Object.entries(apiData.farm.crops)) {
       if (cropInfo.crop && cropInfo.crop.plantedAt && cropInfo.crop.name) {
-        let cropName = `${cropInfo.crop.name} ${cropId}`;
-        allItems[cropName] = {
+        const cropName = `${cropInfo.crop.name} ${cropId}`;
+        const readyAt = getCropReadyAtFromPlot(
+          cropInfo.crop,
+          cropInfo,
+          windowContext,
+        );
+        addTimedFarmItem(allItems, {
+          key: cropName,
           plantedAt: cropInfo.crop.plantedAt,
+          baseDurationSource: cropInfo.crop.baseDurationMs,
+          readyAtOverride: readyAt,
+          fertiliser: cropInfo.fertiliser || cropInfo.crop?.fertiliser || null,
           type: cropInfo.crop.name,
           name: cropInfo.crop.name,
           category: "crop",
-          amount: parseFloat(cropInfo.crop.amount) || 0,
-          hasReward: cropInfo.crop.reward ? true : false,
-        };
+          amount: cropInfo.crop.amount,
+          hasReward: cropInfo.crop.reward,
+        });
       }
     }
   }
@@ -2271,27 +2962,39 @@ function parseCrops(apiData, allItems) {
 
 function parseFruits(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.fruit) return;
+  const windowContext = getBoostWindowContext(apiData);
   if (apiData.farm && apiData.farm.fruitPatches) {
     for (let [patchId, patchInfo] of Object.entries(
       apiData.farm.fruitPatches,
     )) {
       if (patchInfo.fruit && patchInfo.fruit.name) {
-        let fruit = patchInfo.fruit;
-        let plantedAt = fruit.plantedAt;
-        let harvestedAt = fruit.harvestedAt || 0;
+        const fruit = patchInfo.fruit;
+        const plantedAt = normalizeTs(fruit.plantedAt);
+        const harvestedAt = normalizeTs(fruit.harvestedAt || 0);
 
-        let timestampToUse = harvestedAt === 0 ? plantedAt : harvestedAt;
+        const timestampToUse =
+          harvestedAt > plantedAt ? harvestedAt : plantedAt;
 
         if (timestampToUse) {
-          let fruitName = `${fruit.name} ${patchId}`;
-          allItems[fruitName] = {
+          const fruitName = `${fruit.name} ${patchId}`;
+          const readyAt = getFruitReadyAtFromPatch(
+            fruit,
+            patchInfo,
+            timestampToUse,
+            windowContext,
+          );
+          addTimedFarmItem(allItems, {
+            key: fruitName,
             plantedAt: timestampToUse,
+            baseDurationSource: fruit.baseDurationMs,
+            readyAtOverride: readyAt,
+            fertiliser: patchInfo.fertiliser || fruit.fertiliser || null,
             type: fruit.name,
             name: fruit.name,
             category: "fruit",
-            amount: parseFloat(fruit.amount) || 0,
-            hasReward: fruit.reward ? true : false,
-          };
+            amount: fruit.amount,
+            hasReward: fruit.reward,
+          });
         }
       }
     }
@@ -2300,19 +3003,43 @@ function parseFruits(apiData, allItems) {
 
 function parseAnimals(apiData, allItems) {
   const categoryFilters = SFL_USER_CONFIG.categoryFilters;
+  const animalFilterKeys = [
+    "chicken",
+    "chickenLove",
+    "cow",
+    "cowLove",
+    "sheep",
+    "sheepLove",
+    "pig",
+    "pigLove",
+  ];
+  if (!animalFilterKeys.some((filterKey) => categoryFilters[filterKey])) return;
+
+  const windowContext = getBoostWindowContext(apiData);
 
   function addAnimal(animalId, animalInfo) {
-    if (!animalInfo.awakeAt || !animalInfo.asleepAt) return;
+    if (!animalInfo.asleepAt) return;
+
     const typeLower = animalInfo.type.toLowerCase();
-    if (
-      !categoryFilters.animal &&
-      !categoryFilters[typeLower] &&
-      !categoryFilters[typeLower + "Love"]
-    )
+    if (!categoryFilters[typeLower] && !categoryFilters[typeLower + "Love"])
       return;
+
+    const baseDurationMs =
+      typeof animalInfo.baseDurationMs === "number"
+        ? animalInfo.baseDurationMs
+        : null;
+    if (!animalInfo.awakeAt && baseDurationMs === null) return;
+
+    const asleepAt = normalizeTs(animalInfo.asleepAt);
+    const computedAwakeAt = getAnimalReadyAtWithWindows(
+      animalInfo,
+      windowContext,
+    );
+
     allItems[`${animalInfo.type} ${animalId}`] = {
-      awakeAt: animalInfo.awakeAt,
-      asleepAt: animalInfo.asleepAt,
+      awakeAt: computedAwakeAt,
+      asleepAt: asleepAt,
+      baseDurationMs: baseDurationMs,
       lovedAt: animalInfo.lovedAt || null,
       type: animalInfo.type,
       name: animalInfo.type,
@@ -2321,6 +3048,17 @@ function parseAnimals(apiData, allItems) {
       state: animalInfo.state || "unknown",
       hasReward: !!animalInfo.reward,
     };
+
+    if (animalInfo.type === "Pig") {
+      if (animalInfo.mud?.harvestsRemaining > 0) {
+        allItems[`${animalInfo.type} ${animalId}`].mud =
+          animalInfo.mud.harvestsRemaining;
+      }
+      if (animalInfo.feedBuff?.name) {
+        allItems[`${animalInfo.type} ${animalId}`].feedBuff =
+          animalInfo.feedBuff.name;
+      }
+    }
   }
 
   const henAnimals = apiData.farm?.henHouse?.animals || {};
@@ -2332,24 +3070,34 @@ function parseAnimals(apiData, allItems) {
   for (const [id, info] of Object.entries(barnAnimals)) {
     if (info.type === "Cow" || info.type === "Sheep") addAnimal(id, info);
   }
+
+  const pigAnimals = apiData.farm?.pigpen?.animals || {};
+  for (const [id, info] of Object.entries(pigAnimals)) {
+    if (info.type === "Pig") addAnimal(id, info);
+  }
 }
 
 function parseFlowers(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.flower) return;
+  const windowContext = getBoostWindowContext(apiData);
   if (apiData.farm && apiData.farm.flowers && apiData.farm.flowers.flowerBeds) {
     for (let [bedId, bedInfo] of Object.entries(
       apiData.farm.flowers.flowerBeds,
     )) {
       if (bedInfo.flower && bedInfo.flower.plantedAt && bedInfo.flower.name) {
-        let flowerName = `${bedInfo.flower.name} ${bedId}`;
-        allItems[flowerName] = {
+        const flowerName = `${bedInfo.flower.name} ${bedId}`;
+        const readyAt = getFlowerReadyAtFromBed(bedInfo.flower, windowContext);
+        addTimedFarmItem(allItems, {
+          key: flowerName,
           plantedAt: bedInfo.flower.plantedAt,
+          baseDurationSource: bedInfo.flower.baseDurationMs,
+          readyAtOverride: readyAt,
           type: bedInfo.flower.name,
           name: bedInfo.flower.name,
           category: "flower",
-          amount: parseFloat(bedInfo.flower.amount) || 0,
-          hasReward: bedInfo.flower.reward ? true : false,
-        };
+          amount: bedInfo.flower.amount,
+          hasReward: bedInfo.flower.reward,
+        });
       }
     }
   }
@@ -2458,18 +3206,28 @@ function parseBeehives(apiData, allItems) {
 
 function parseGreenhouse(apiData, allItems) {
   if (!SFL_USER_CONFIG.categoryFilters.greenhouse) return;
+  const windowContext = getBoostWindowContext(apiData);
 
   if (apiData.farm && apiData.farm.greenhouse && apiData.farm.greenhouse.pots) {
     for (let [potId, potInfo] of Object.entries(apiData.farm.greenhouse.pots)) {
       if (potInfo.plant && potInfo.plant.plantedAt && potInfo.plant.name) {
-        let plantName = `${potInfo.plant.name} Greenhouse ${potId}`;
-        allItems[plantName] = {
+        const plantName = `${potInfo.plant.name} Greenhouse ${potId}`;
+        const readyAt = getGreenhouseReadyAtFromPot(
+          potInfo.plant,
+          potInfo,
+          windowContext,
+        );
+        addTimedFarmItem(allItems, {
+          key: plantName,
           plantedAt: potInfo.plant.plantedAt,
+          baseDurationSource: potInfo.plant.baseDurationMs,
+          readyAtOverride: readyAt,
+          fertiliser: potInfo.fertiliser || potInfo.plant.fertiliser || null,
           type: potInfo.plant.name,
           name: potInfo.plant.name,
           category: "greenhouse",
-          amount: parseFloat(potInfo.plant.amount) || 0,
-        };
+          amount: potInfo.plant.amount,
+        });
       }
     }
   }
@@ -2540,19 +3298,13 @@ function parseCrafting(apiData, allItems) {
         const itemName =
           queueItem.name || queueItem.collectible || "Unknown Item";
         const key = `Crafting: ${itemName}`;
-
-        if (allItems[key]) {
-          allItems[key].amount += queueItem.amount || 1;
-          allItems[key].readyAt = queueItem.readyAt;
-        } else {
-          allItems[key] = {
-            readyAt: queueItem.readyAt,
-            type: itemName,
-            name: itemName,
-            category: "crafting",
-            amount: queueItem.amount || 1,
-          };
-        }
+        upsertTimedCountItem(allItems, key, {
+          readyAt: queueItem.readyAt,
+          type: itemName,
+          name: itemName,
+          category: "crafting",
+          amountIncrement: queueItem.amount || 1,
+        });
       }
       return;
     }
@@ -2594,18 +3346,13 @@ function parseCooking(apiData, allItems) {
             for (let craft of building.crafting) {
               if (craft.readyAt && craft.name) {
                 let cookingName = `${craft.name} (${COOKING_BUILDINGS[buildingType] || buildingType})`;
-                if (allItems[cookingName]) {
-                  allItems[cookingName].amount += craft.amount || 1;
-                  allItems[cookingName].readyAt = craft.readyAt;
-                } else {
-                  allItems[cookingName] = {
-                    readyAt: craft.readyAt,
-                    type: craft.name,
-                    name: craft.name,
-                    category: "cooking",
-                    amount: craft.amount || 1,
-                  };
-                }
+                upsertTimedCountItem(allItems, cookingName, {
+                  readyAt: craft.readyAt,
+                  type: craft.name,
+                  name: craft.name,
+                  category: "cooking",
+                  amountIncrement: craft.amount || 1,
+                });
               }
             }
           }
@@ -2911,7 +3658,8 @@ function parseFloatingIsland(apiData, allItems) {
 }
 
 function parsePets(apiData, allItems) {
-  if (!SFL_USER_CONFIG.categoryFilters.pet) return;
+  const categoryFilters = SFL_USER_CONFIG.categoryFilters;
+  if (!categoryFilters.pet_caress && !categoryFilters.pet_feed) return;
 
   const petSources = [apiData.farm?.pets, apiData.farm?.petHouse?.pets].filter(
     Boolean,
@@ -2925,7 +3673,7 @@ function parsePets(apiData, allItems) {
         const pettedAt = petData.pettedAt || 0;
         const fedAt = petData.requests?.fedAt || 0;
 
-        if (SFL_USER_CONFIG.categoryFilters.pet_caress) {
+        if (categoryFilters.pet_caress) {
           const napFinishedAt = pettedAt + 2 * 60 * 60 * 1000;
           allItems[`${name} (caress)`] = {
             category: "pet",
@@ -2938,7 +3686,7 @@ function parsePets(apiData, allItems) {
           };
         }
 
-        if (SFL_USER_CONFIG.categoryFilters.pet_feed) {
+        if (categoryFilters.pet_feed) {
           allItems[`${name} (feed)`] = {
             category: "pet",
             action: "feed",
@@ -2957,7 +3705,7 @@ function parsePets(apiData, allItems) {
         const pettedAt = petData.pettedAt || 0;
         const fedAt = petData.requests?.fedAt || 0;
 
-        if (SFL_USER_CONFIG.categoryFilters.pet_caress) {
+        if (categoryFilters.pet_caress) {
           const napFinishedAt = pettedAt + 2 * 60 * 60 * 1000;
           allItems[`${petName} (caress)`] = {
             category: "pet",
@@ -2969,7 +3717,7 @@ function parsePets(apiData, allItems) {
           };
         }
 
-        if (SFL_USER_CONFIG.categoryFilters.pet_feed) {
+        if (categoryFilters.pet_feed) {
           allItems[`${petName} (feed)`] = {
             category: "pet",
             action: "feed",
@@ -3076,10 +3824,8 @@ function parseBudBox(apiData, allItems) {
 
 async function loadFromAPI() {
   const API_RATE_LIMIT_SECONDS = 15;
-  const CACHE_EXPIRATION_MINUTES = 600;
 
   try {
-    const cacheTimestamp = safeKeychain("get", CACHE_TIMESTAMP_KEY);
     const currentTime = Date.now();
     const lastApiCallTime = safeKeychain("get", LAST_API_CALL_KEY);
 
@@ -3090,24 +3836,13 @@ async function loadFromAPI() {
         if (cachedData) {
           const parsedData = safeJSONParse(cachedData, "Cache");
           if (parsedData) {
-            saveResources(parsedData);
+            saveSerializedResources(cachedData);
             console.log("ℹ️ Rate-limit: serving cached data");
             return parsedData;
           }
         }
         console.log("ℹ️ Rate-limit: no cache found, using stored resources");
         return loadResources();
-      }
-    }
-
-    if (cacheTimestamp) {
-      const cacheAgeMinutes =
-        (currentTime - parseInt(cacheTimestamp)) / 1000 / 60;
-      if (cacheAgeMinutes >= CACHE_EXPIRATION_MINUTES) {
-        logInfo(
-          "Cache",
-          `Expired (age ${cacheAgeMinutes.toFixed(1)} min), forcing API refresh`,
-        );
       }
     }
 
@@ -3126,16 +3861,18 @@ async function loadFromAPI() {
     };
     let apiData = await request.loadJSON();
 
-    safeKeychain("set", "RAW_API_CACHE_KEY", JSON.stringify(apiData, null, 2));
-
+    safeKeychain("set", "RAW_API_CACHE_KEY", JSON.stringify(apiData));
     safeKeychain("set", LAST_API_CALL_KEY, currentTime.toString());
 
+    const updateInfoPromise = checkForUpdates();
     let allItems = {};
 
     parseResources(apiData, allItems);
     parseLavaPits(apiData, allItems);
     parseLandExpansion(apiData, allItems);
+    parseCave(apiData, allItems);
     parseSaltFarm(apiData, allItems);
+    parseSaltFarmOptimal(apiData, allItems);
 
     parseCrops(apiData, allItems);
     parseFruits(apiData, allItems);
@@ -3178,7 +3915,7 @@ async function loadFromAPI() {
     }
     allItems["__sickAnimals"] = sickAnimals;
 
-    const updateInfo = await checkForUpdates();
+    const updateInfo = await updateInfoPromise;
     if (updateInfo.updateAvailable) {
       allItems["update_available"] = {
         message: updateInfo.message,
@@ -3189,10 +3926,11 @@ async function loadFromAPI() {
       };
     }
 
-    saveResources(allItems);
+    const serializedItems = JSON.stringify(allItems);
+    saveSerializedResources(serializedItems);
     console.log(`✅ ${Object.keys(allItems).length} items loaded from API`);
 
-    safeKeychain("set", CACHE_KEY, JSON.stringify(allItems));
+    safeKeychain("set", CACHE_KEY, serializedItems);
     safeKeychain("set", CACHE_TIMESTAMP_KEY, currentTime.toString());
     safeKeychain("set", "LAST_SUCCESSFUL_API_UPDATE", currentTime.toString());
 
@@ -3208,7 +3946,7 @@ async function loadFromAPI() {
       const fallbackData = safeJSONParse(cachedData, "Cache Fallback");
       if (fallbackData) {
         console.log("ℹ️ Fallback: Using cached data after API error");
-        saveResources(fallbackData);
+        saveSerializedResources(cachedData);
         return fallbackData;
       } else {
         logWarning("Cache", "Failed to parse cached fallback data");
@@ -3395,8 +4133,8 @@ async function cleanupObsoleteNotifications(
   return removedNotificationsCount;
 }
 
-async function manageNotifications() {
-  let allItems = loadResources();
+async function manageNotifications(allItems = null) {
+  allItems = allItems || loadResources();
   let pendingNotifications = await Notification.allPending();
   let existingNotificationIds = new Set(
     pendingNotifications.map((n) => n.identifier),
@@ -4325,7 +5063,7 @@ async function main() {
 
   if (SFL_USER_CONFIG.enableNotifications) {
     if (!config.runsInWidget) {
-      await manageNotifications();
+      await manageNotifications(allItems);
     } else {
       let lastNotificationCheck = 0;
       const lastCheckData = safeKeychain("get", "sfl_last_notification_check");
@@ -4342,7 +5080,7 @@ async function main() {
       let timeSinceLastCheck = (currentTime - lastNotificationCheck) / 1000;
 
       if (timeSinceLastCheck >= NOTIFICATION_CHECK_INTERVAL_SECONDS) {
-        await manageNotifications();
+        await manageNotifications(allItems);
         safeKeychain(
           "set",
           "sfl_last_notification_check",
